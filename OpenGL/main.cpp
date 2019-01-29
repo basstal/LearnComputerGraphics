@@ -1,10 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <unistd.h>
+//#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <shader.h>
 
 float vertices1[] = {
 	-0.5f, -0.5f, 0.0f,
@@ -19,23 +20,24 @@ float vertices2[] = {
 };
 
 float verticesIBO[] = {
-	0.5f, 0.5f, 0.0f,
-	0.5f, -0.5f, 0.0f,
-	-0.5f, -0.5f, 0.0f,
-	-0.5f, 0.5f, 0.0f
+	// 位置					颜色
+	0.5f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
+	0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,
+	-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,
+	-0.5f, 0.5f, 0.0f,		0.0f, 1.0f, 0.0f,
+	0.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f
 };
 
 unsigned int indices[] = {
-	0, 1, 2,
-	2, 3, 0
+	1, 2, 4,
 };
 
 void frame_buffer_viewport(GLFWwindow *, int, int);
 void processInput(GLFWwindow *);
-void ShaderCode(const char *fileName, std::string &shaderCode);
-void CheckCompileShader(unsigned int vertexShader);
-void CheckLinkProgram(unsigned int shaderProgram);
-unsigned int ProcessShader(const char * vert, const char * frag);
+// void ShaderCode(const char *fileName, std::string &shaderCode);
+// void CheckCompileShader(unsigned int vertexShader);
+// void CheckLinkProgram(unsigned int shaderProgram);
+// unsigned int ProcessShader(const char * vert, const char * frag);
 
 int main()
 {
@@ -62,8 +64,9 @@ int main()
 
 	glfwSetFramebufferSizeCallback(window, frame_buffer_viewport);
 
-	unsigned int shaderProgram = ProcessShader("VertexShader.glsl", "FragmentShader.glsl");
-	unsigned int shaderProgram1 = ProcessShader("VertexShader.glsl", "FragmentShader1.glsl");
+	Shader shaderProgram = Shader("VertexShader.glsl", "FragmentShader.glsl");
+	// unsigned int shaderProgram = ProcessShader("VertexShader.glsl", "FragmentShader.glsl");
+	// unsigned int shaderProgram1 = ProcessShader("VertexShader.glsl", "FragmentShader1.glsl");
 
 	unsigned int VAO1;
 	glGenVertexArrays(1, &VAO1);
@@ -92,13 +95,22 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
 
+	unsigned int VAO3;
+	glGenVertexArrays(1, &VAO3);
+	glBindVertexArray(VAO3);
+	glBindBuffer(GL_ARRAY_BUFFER, VAO3);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesIBO), verticesIBO, GL_STATIC_DRAW);
 
-	// unsigned int EBO;
-	// glGenBuffers(1, &EBO);
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
 
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	// glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -107,17 +119,25 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO1);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glUseProgram(shaderProgram1);
-		glBindVertexArray(VAO2);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		// glUseProgram(shaderProgram);
+		shaderProgram.use();
+		//glBindVertexArray(VAO2);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glBindVertexArray(0);
+
+		// 这里按时间设置shader中uniform变量 改变颜色值
+		// float time = glfwGetTime();
+		// float greenValue = (sin(time) / 2.0f) + 0.5f;
+		// int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+		// glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+		glBindVertexArray(VAO3);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
-		// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//glBindVertexArray(VAO1);
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -138,74 +158,47 @@ void processInput(GLFWwindow * window)
 		glfwSetWindowShouldClose(window, true);
 }
 
-void ShaderCode(const char *fileName, std::string &shaderCode)
-{
-	std::ifstream shaderFile(fileName);
-    if(!shaderFile.is_open())
-    {
-        throw std::runtime_error(std::string("Failed to open file: ") + fileName);
-    }
-	std::string str((std::istreambuf_iterator<char>(shaderFile)), std::istreambuf_iterator<char>());
-	shaderFile.close();
-	shaderCode.clear();
-    // std::cout << "content : " << str << std::endl;
-	shaderCode.append(str);
-	// std::cout<< shaderCode << std::endl;
-}
+// void ShaderCode(const char *fileName, std::string &shaderCode)
+// {
+// 	std::ifstream shaderFile(fileName);
+//     if(!shaderFile.is_open())
+//     {
+//         throw std::runtime_error(std::string("Failed to open file: ") + fileName);
+//     }
+// 	std::string str((std::istreambuf_iterator<char>(shaderFile)), std::istreambuf_iterator<char>());
+// 	shaderFile.close();
+// 	shaderCode.clear();
+//     // std::cout << "content : " << str << std::endl;
+// 	shaderCode.append(str);
+// 	// std::cout<< shaderCode << std::endl;
+// }
 
-void CheckCompileShader(unsigned int vertexShader)
-{
-	int success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "SHADER COMPILE ERROR :\n " << infoLog << std::endl;
-	}
-}
+// void CheckCompileShader(unsigned int vertexShader)
+// {
+// 	int success;
+// 	char infoLog[512];
+// 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+// 	if (!success)
+// 	{
+// 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+// 		std::cout << "SHADER COMPILE ERROR :\n " << infoLog << std::endl;
+// 	}
+// }
 
 
-void CheckLinkProgram(unsigned int shaderProgram)
-{
-	int success;
-	char infoLog[512];
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "PROGRAM LINK ERROR :\n " << infoLog << std::endl;
-	}
-}
+// void CheckLinkProgram(unsigned int shaderProgram)
+// {
+// 	int success;
+// 	char infoLog[512];
+// 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+// 	if (!success)
+// 	{
+// 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+// 		std::cout << "PROGRAM LINK ERROR :\n " << infoLog << std::endl;
+// 	}
+// }
 
-unsigned int ProcessShader(const char * vert, const char * frag)
-{
-	std::string shaderCode;
-
-	ShaderCode(vert, shaderCode);
-	const char* shaderCodePtr = shaderCode.c_str();
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &shaderCodePtr, NULL);
-	glCompileShader(vertexShader);
-	CheckCompileShader(vertexShader);
-
-	ShaderCode(frag, shaderCode);
-	shaderCodePtr = shaderCode.c_str();
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &shaderCodePtr, NULL);
-	glCompileShader(fragmentShader);
-	CheckCompileShader(fragmentShader);
-
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	CheckLinkProgram(shaderProgram);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-	return shaderProgram;
-}
+// unsigned int ProcessShader(const char * vert, const char * frag)
+// {
+	
+// }
