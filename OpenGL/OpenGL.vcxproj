@@ -121,11 +121,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\glad.c" />
-    <ClCompile Include="src\shader.cpp" />
-    <ClCompile Include="src\stb_image.cpp" />
-    <ClCompile Include="src\template.cpp" />
+    <ClCompile Include="shader.cpp" />
+    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="template.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FragmentShader.glsl" />

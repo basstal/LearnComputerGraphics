@@ -9,9 +9,17 @@ out vec2 textureCoord;
 // uniform float offset;
 uniform mat4 transform;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+uniform mat4 rotateByTime;
+
+uniform mat4 newModel;
+
 void main()
 {
-	gl_Position = transform * vec4(aPos, 1.0f);
+	gl_Position = projection * view * newModel * vec4(aPos, 1.0f);
 	vertexColor = vec4(aColor, 1.0f);
 	textureCoord = aTexCoord;
 }
