@@ -25,10 +25,10 @@ float vertices2[] = {
 
 float verticesIBO[] = {
 	// 位置					颜色				纹理坐标
-	0.8f, 0.8f, 0.0f,		1.0f, 0.0f, 0.0f, 	1.f, 1.f,
-	0.8f, -0.8f, 0.0f,		0.0f, 1.0f, 0.0f,	1.f, .0f,
-	-0.8f, -0.8f, 0.0f,		0.0f, 0.0f, 1.0f,	.0f, .0f,
-	-0.8f, 0.8f, 0.0f,		1.0f, 1.0f, 0.0f,  	.0f, 1.f,
+	0.5f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f, 	1.f, 1.f,
+	0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.f, .0f,
+	-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,	.0f, .0f,
+	-0.5f, 0.5f, 0.0f,		1.0f, 1.0f, 0.0f,  	.0f, 1.f,
 	// 0.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f
 };
 
@@ -138,6 +138,11 @@ int main()
 	shaderProgram.setInt("texture1", 0);
 	shaderProgram.setInt("texture2", 1);
 	shaderProgram.setFloat("transparent", transparent);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -149,6 +154,14 @@ int main()
 		// glUseProgram(shaderProgram);
 		shaderProgram.use();
 		shaderProgram.setFloat("transparent", transparent);
+
+		glm::mat4 trans;
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
 		//glBindVertexArray(VAO2);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glBindVertexArray(0);
@@ -163,15 +176,22 @@ int main()
 		// glBindVertexArray(0);
 
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
+		
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
+
+		glm::mat4 newTrans;
+		newTrans = glm::translate(newTrans, glm::vec3(-0.5f, 0.5f, 0.0f));
+		newTrans = glm::scale(newTrans, glm::vec3(std::abs(std::sin((float)glfwGetTime())), std::abs(std::sin((float)glfwGetTime())), 0.0f));
+
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(newTrans));
+
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window);

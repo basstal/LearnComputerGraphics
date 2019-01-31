@@ -9,7 +9,8 @@
 			"iosfwd": "cpp",
 			"xstring": "cpp",
 			"cmath": "cpp",
-			"ostream": "cpp"
+			"ostream": "cpp",
+			"iostream": "cpp"
 		}
 	}
 }
