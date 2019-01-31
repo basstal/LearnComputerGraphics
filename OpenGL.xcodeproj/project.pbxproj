@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8ECF85D4220018F4004AA1F5 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = B350F75D21F5581100138980 /* glad.c */; };
-		8ECF85D5220018FC004AA1F5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B350F75621F557A100138980 /* main.cpp */; };
+		8ECF85D822016473004AA1F5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B350F75621F557A100138980 /* main.cpp */; };
+		8ECF85DC22016616004AA1F5 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DA22016616004AA1F5 /* shader.cpp */; };
+		8ECF85DD22016616004AA1F5 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DB22016616004AA1F5 /* glad.c */; };
 		B350F76321F558B600138980 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B350F76221F558B600138980 /* libglfw.3.2.dylib */; };
 		B350F76521F55AFE00138980 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B350F76421F55AFE00138980 /* OpenGL.framework */; };
 /* End PBXBuildFile section */
@@ -27,13 +28,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8ECF85DA22016616004AA1F5 /* shader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = shader.cpp; path = OpenGL/src/shader.cpp; sourceTree = "<group>"; };
+		8ECF85DB22016616004AA1F5 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = glad.c; path = OpenGL/src/glad.c; sourceTree = "<group>"; };
 		B350F75321F557A100138980 /* OpenGL */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenGL; sourceTree = BUILT_PRODUCTS_DIR; };
 		B350F75621F557A100138980 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		B350F75D21F5581100138980 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = glad.c; path = OpenGL/src/glad.c; sourceTree = "<group>"; };
 		B350F76221F558B600138980 /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
 		B350F76421F55AFE00138980 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		B350F76721F560AB00138980 /* FragmentShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = FragmentShader.glsl; sourceTree = "<group>"; };
-		B350F76821F560AB00138980 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
 		B350F76921F560AB00138980 /* VertexShader.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = VertexShader.glsl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,7 +54,8 @@
 		B350F74A21F557A100138980 = {
 			isa = PBXGroup;
 			children = (
-				B350F75D21F5581100138980 /* glad.c */,
+				8ECF85DB22016616004AA1F5 /* glad.c */,
+				8ECF85DA22016616004AA1F5 /* shader.cpp */,
 				B350F75521F557A100138980 /* OpenGL */,
 				B350F75421F557A100138980 /* Products */,
 				B350F75F21F5587E00138980 /* Frameworks */,
@@ -73,7 +75,6 @@
 			children = (
 				B350F76921F560AB00138980 /* VertexShader.glsl */,
 				B350F76721F560AB00138980 /* FragmentShader.glsl */,
-				B350F76821F560AB00138980 /* resource.h */,
 				B350F75621F557A100138980 /* main.cpp */,
 			);
 			path = OpenGL;
@@ -145,8 +146,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8ECF85D5220018FC004AA1F5 /* main.cpp in Sources */,
-				8ECF85D4220018F4004AA1F5 /* glad.c in Sources */,
+				8ECF85DC22016616004AA1F5 /* shader.cpp in Sources */,
+				8ECF85DD22016616004AA1F5 /* glad.c in Sources */,
+				8ECF85D822016473004AA1F5 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,6 +266,7 @@
 					"$(inherited)",
 					/usr/local/include,
 					/usr/local/Cellar/glfw/3.2.1/include,
+					./OpenGL/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -281,6 +284,7 @@
 					"$(inherited)",
 					/usr/local/include,
 					/usr/local/Cellar/glfw/3.2.1/include,
+					./OpenGL/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

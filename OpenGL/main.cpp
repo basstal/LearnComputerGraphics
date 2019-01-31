@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-//#include <unistd.h>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,7 +9,7 @@
 
 float vertices1[] = {
 	-0.5f, -0.5f, 0.0f,
-	-0.5f, 0.5f, 0.0f,
+	0.0f, 0.5f, 0.0f,
 	0.5f, -0.5f, 0.0f,
 };
 
@@ -82,18 +82,18 @@ int main()
 	glEnableVertexAttribArray(0);
 
 
-	unsigned int VAO2;
-	glGenVertexArrays(1, &VAO2);
+	// unsigned int VAO2;
+	// glGenVertexArrays(1, &VAO2);
 
-	glBindVertexArray(VAO2);
+	// glBindVertexArray(VAO2);
 
-	unsigned int VBO2;
-	glGenBuffers(1, &VBO2);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+	// unsigned int VBO2;
+	// glGenBuffers(1, &VBO2);
+	// glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-	glEnableVertexAttribArray(0);
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	// glEnableVertexAttribArray(0);
 
 	unsigned int VAO3;
 	glGenVertexArrays(1, &VAO3);
@@ -121,6 +121,7 @@ int main()
 
 		// glUseProgram(shaderProgram);
 		shaderProgram.use();
+		// shaderProgram.setFloat("offset", 0.2);
 		//glBindVertexArray(VAO2);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glBindVertexArray(0);
@@ -128,16 +129,20 @@ int main()
 		// 这里按时间设置shader中uniform变量 改变颜色值
 		// float time = glfwGetTime();
 		// float greenValue = (sin(time) / 2.0f) + 0.5f;
-		// int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+		// int vertexColorLocation = glGetUniformLocation(shaderProgram.ID, "ourColor");
 		// glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+		// glBindVertexArray(VAO1);
+		// glDrawArrays(GL_TRIANGLES, 0, 3);
+		// glBindVertexArray(0);
+
 
 		glBindVertexArray(VAO3);
 		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//glBindVertexArray(VAO1);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
