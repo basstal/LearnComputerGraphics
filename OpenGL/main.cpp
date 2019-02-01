@@ -108,6 +108,13 @@ float viewY = .0f;
 float viewZ = -3.0f;
 char currentSelection = '\0';
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f;
+float lastTime = 0.0f;
+
 void viewChange(GLFWwindow * window, float step);
 void frame_buffer_viewport(GLFWwindow *, int, int);
 void processInput(GLFWwindow *);
@@ -307,16 +314,21 @@ int main()
 			i = i > 0? i - 1: 4;
 			std::cout<< "aspect_ratio => " << aspect_ratio[i] << " index => " << i << std::endl;
 		}
-		std::cout << "fov => " << fov  << " view x y z => (" << viewX << ", " << viewY << ", " << viewZ << ")"<< std::endl;
+		// std::cout << "fov => " << fov  << " view x y z => (" << viewX << ", " << viewY << ", " << viewZ << ")"<< std::endl;
+
+		// float radians = 10.0f;
+		// float camX = sin(glfwGetTime()) * radians;
+		// float camZ = cos(glfwGetTime()) * radians;
 
 		glm::mat4 view;
-		view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
+		// view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 		location = glGetUniformLocation(shaderProgram.ID, "view");
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(fov), aspect_ratio[i], 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), aspect_ratio[i], 0.1f, 100.0f);
 		
 		location = glGetUniformLocation(shaderProgram.ID, "projection");
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(projection));
@@ -363,6 +375,12 @@ void frame_buffer_viewport(GLFWwindow *window, int width, int height)
 
 void processInput(GLFWwindow * window)
 {
+	float currentTime = (float)glfwGetTime();
+	deltaTime = currentTime - lastTime;
+	lastTime = currentTime;
+
+	float cameraSpeed = 0.5f * deltaTime;
+
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -377,11 +395,21 @@ void processInput(GLFWwindow * window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		viewChange(window, 0.1f);
+		// viewChange(window, 0.1f);
+		cameraPos += cameraSpeed * cameraFront;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		viewChange(window, -0.1f);
+		// viewChange(window, -0.1f);
+		cameraPos -= cameraSpeed * cameraFront;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 	{
