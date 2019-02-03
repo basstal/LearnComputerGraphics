@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <camera.h>
 
 float vertices1[] = {
 	-0.5f, -0.5f, 0.0f,
@@ -107,6 +108,7 @@ float viewX = .0f;
 float viewY = .0f;
 float viewZ = -3.0f;
 char currentSelection = '\0';
+Camera camera = Camera();
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -119,6 +121,8 @@ void viewChange(GLFWwindow * window, float step);
 void frame_buffer_viewport(GLFWwindow *, int, int);
 void processInput(GLFWwindow *);
 unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
+void mouseCallback(GLFWwindow * window, double, double);
+void scrollCallback(GLFWwindow * window, double, double);
 // void ShaderCode(const char *fileName, std::string &shaderCode);
 // void CheckCompileShader(unsigned int vertexShader);
 // void CheckLinkProgram(unsigned int shaderProgram);
@@ -150,6 +154,12 @@ int main()
 	glfwSetFramebufferSizeCallback(window, frame_buffer_viewport);
 
 	Shader shaderProgram = Shader("VertexShader.glsl", "FragmentShader.glsl");
+
+	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetScrollCallback(window, scrollCallback);
+
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
 	// unsigned int shaderProgram = ProcessShader("VertexShader.glsl", "FragmentShader.glsl");
 	// unsigned int shaderProgram1 = ProcessShader("VertexShader.glsl", "FragmentShader1.glsl");
 
@@ -320,9 +330,9 @@ int main()
 		// float camX = sin(glfwGetTime()) * radians;
 		// float camZ = cos(glfwGetTime()) * radians;
 
-		glm::mat4 view;
+		glm::mat4 view = camera.GetViewMatrix();
 		// view = glm::translate(view, glm::vec3(viewX, viewY, viewZ));
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		// view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 		location = glGetUniformLocation(shaderProgram.ID, "view");
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
@@ -379,7 +389,7 @@ void processInput(GLFWwindow * window)
 	deltaTime = currentTime - lastTime;
 	lastTime = currentTime;
 
-	float cameraSpeed = 0.5f * deltaTime;
+	// float cameraSpeed = 0.5f * deltaTime;
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -396,20 +406,25 @@ void processInput(GLFWwindow * window)
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		// viewChange(window, 0.1f);
-		cameraPos += cameraSpeed * cameraFront;
+		// cameraPos += cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(FORWARD, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		// viewChange(window, -0.1f);
-		cameraPos -= cameraSpeed * cameraFront;
+		// cameraPos -= cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(LEFT, deltaTime);
+		// cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(RIGHT, deltaTime);
+		// cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 	{
@@ -463,4 +478,14 @@ unsigned int loadImage(const char * fileName, GLint format, bool verticalFlip, G
 	}
 	stbi_image_free(data);
 	return texture;
+}
+
+void mouseCallback(GLFWwindow * window, double offsetX, double offsetY)
+{
+	camera.ProcessMouseMovement(offsetX, offsetY);
+}
+
+void scrollCallback(GLFWwindow * window, double offsetX, double offsetY)
+{
+	camera.ProcessMouseScroll(offsetY);
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E6478012207A3E300D402E3 /* template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E6478002207A3E300D402E3 /* template.cpp */; };
 		8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DB22016616004AA1F5 /* glad.c */; };
 		8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DA22016616004AA1F5 /* shader.cpp */; };
 		8ECF85E02202B56D004AA1F5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B350F75621F557A100138980 /* main.cpp */; };
@@ -29,6 +30,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E6478002207A3E300D402E3 /* template.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = template.cpp; path = OpenGL/template.cpp; sourceTree = "<group>"; };
 		8ECF85DA22016616004AA1F5 /* shader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = shader.cpp; sourceTree = "<group>"; };
 		8ECF85DB22016616004AA1F5 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		8ECF85E12202B580004AA1F5 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stb_image.cpp; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 		B350F74A21F557A100138980 = {
 			isa = PBXGroup;
 			children = (
+				8E6478002207A3E300D402E3 /* template.cpp */,
 				B350F75521F557A100138980 /* OpenGL */,
 				B350F75421F557A100138980 /* Products */,
 				B350F75F21F5587E00138980 /* Frameworks */,
@@ -151,6 +154,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E6478012207A3E300D402E3 /* template.cpp in Sources */,
 				8ECF85E22202B580004AA1F5 /* stb_image.cpp in Sources */,
 				8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */,
 				8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */,
