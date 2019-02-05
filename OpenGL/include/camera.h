@@ -120,8 +120,8 @@ private:
         // Calculate the new Front vector
         glm::vec3 front;
         front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        // front.y = sin(glm::radians(Pitch));
-        front.y = 0;
+        front.y = sin(glm::radians(Pitch));
+        // front.y = 0;
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         Front = glm::normalize(front);
         // Also re-calculate the Right and Up vector

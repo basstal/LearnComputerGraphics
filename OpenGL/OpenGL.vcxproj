@@ -73,6 +73,10 @@
     <IncludePath>F:\Documents\OpenGL\OpenGL\OpenGL\include;F:\Documents\OpenGL\OpenGlInclude;$(IncludePath)</IncludePath>
     <LibraryPath>F:\Documents\OpenGL\OpenGLLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Users\王建新\Documents\OpenGL\OpenGL\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\王建新\Downloads\glfw-3.2.1\glfw-3.2.1\build\src\Debug;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -91,6 +95,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -121,16 +128,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="chapter1.cpp" />
+    <ClCompile Include="chapter2.cpp" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="template.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="FragmentShader.glsl" />
     <None Include="FragmentShader1.glsl" />
-    <None Include="VertexShader.glsl" />
+    <None Include="FragmentShader2.glsl" />
+    <None Include="VertexShader1.glsl" />
+    <None Include="VertexShader2.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="awesomeface.png" />
