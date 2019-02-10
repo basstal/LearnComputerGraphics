@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\shader">
+      <UniqueIdentifier>{5ed6058f-1c32-4d5e-bb57-0a4d70379b62}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -36,16 +39,19 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FragmentShader1.glsl">
-      <Filter>资源文件</Filter>
+      <Filter>源文件\shader</Filter>
     </None>
     <None Include="FragmentShader2.glsl">
-      <Filter>资源文件</Filter>
+      <Filter>源文件\shader</Filter>
+    </None>
+    <None Include="LightFragmentShader.glsl">
+      <Filter>源文件\shader</Filter>
     </None>
     <None Include="VertexShader1.glsl">
-      <Filter>资源文件</Filter>
+      <Filter>源文件\shader</Filter>
     </None>
     <None Include="VertexShader2.glsl">
-      <Filter>资源文件</Filter>
+      <Filter>源文件\shader</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +59,18 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="awesomeface.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="lighting_maps_specular_color.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="container2_specular.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="container2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="matrix.jpg">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

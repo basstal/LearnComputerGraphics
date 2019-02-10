@@ -10,7 +10,8 @@
 			"xstring": "cpp",
 			"cmath": "cpp",
 			"ostream": "cpp",
-			"iostream": "cpp"
+			"iostream": "cpp",
+			"cstdio": "cpp"
 		}
 	}
 }

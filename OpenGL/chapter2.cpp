@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <string>
 #include <iostream>
 
 #include <shader.h>
@@ -58,16 +59,30 @@ float vertices[] = {
 };
 
 glm::vec3 cubePositions[] = {
-  glm::vec3( 0.0f,  0.0f,  0.0f), 
-  glm::vec3( 2.0f,  5.0f, -15.0f), 
-  glm::vec3(-1.5f, -2.2f, -2.5f),  
-  glm::vec3(-3.8f, -2.0f, -12.3f),  
-  glm::vec3( 2.4f, -0.4f, -3.5f),  
-  glm::vec3(-1.7f,  3.0f, -7.5f),  
-  glm::vec3( 1.3f, -2.0f, -2.5f),  
-  glm::vec3( 1.5f,  2.0f, -2.5f), 
-  glm::vec3( 1.5f,  0.2f, -1.5f), 
-  glm::vec3(-1.3f,  1.0f, -1.5f)  
+    glm::vec3( 0.0f,  0.0f,  0.0f), 
+    glm::vec3( 2.0f,  5.0f, -15.0f), 
+    glm::vec3(-1.5f, -2.2f, -2.5f),  
+    glm::vec3(-3.8f, -2.0f, -12.3f),  
+    glm::vec3( 2.4f, -0.4f, -3.5f),  
+    glm::vec3(-1.7f,  3.0f, -7.5f),  
+    glm::vec3( 1.3f, -2.0f, -2.5f),  
+    glm::vec3( 1.5f,  2.0f, -2.5f), 
+    glm::vec3( 1.5f,  0.2f, -1.5f), 
+    glm::vec3(-1.3f,  1.0f, -1.5f)  
+};
+
+glm::vec3 pointLightPositions[] = {
+    glm::vec3( 0.7f,  2.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+};
+
+glm::vec3 pointLightRepresentColor[] = {
+    glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 0.2f, 1.0f),
+    glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
 const int WIDTH = 800;
@@ -174,12 +189,7 @@ int main()
         // 注意perspective的第二个参数要转成float
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
     
-        glm::mat4 lightModel;
-        lightModel = glm::rotate(lightModel, glm::radians(40.0f) * sin((float)glfwGetTime()), glm::vec3(0.f, 1.0f, 0.f));
-        lightModel = glm::translate(lightModel, lightPos);
-        lightModel = glm::scale(lightModel, glm::vec3(0.2f));
         lampShader.use();
-        lampShader.setMat4("model", lightModel);
         lampShader.setMat4("view", view);
         lampShader.setMat4("projection", projection);
 
@@ -199,28 +209,37 @@ int main()
         shader.setInt("material.specular", 1);
         shader.setInt("material.colorSpecular", 2);
         shader.setInt("material.emission", 3);
-        shader.setFloat("material.shiniess", 32.0f);
+        shader.setFloat("material.shininess", 32.0f);
 
-        glm::vec3 lightColor(1.0f);
-        glm::vec3 lightAmbient(0.2f);
+        shader.setVec3("viewPos", camera.Position);
 
-        // shader.setVec3("light.position", view * lightModel * glm::vec4(lightPos, 1.0f));
-        shader.setVec3("light.position", camera.Position);
-        shader.setVec3("light.direction", camera.Front);
-        shader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-        shader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
-        
-        shader.setFloat("light.constant", 1.0f);
-        shader.setFloat("light.linear", 0.07f);
-        shader.setFloat("light.quadratic", 0.017f);
+        shader.setVec3("dirLight.direction", glm::vec3(0.0f, 1.0f, 0.2f));
+        shader.setVec3("dirLight.ambient", glm::vec3(0.00f));
+        shader.setVec3("dirLight.diffuse", glm::vec3(0.2f));
+        shader.setVec3("dirLight.specular", glm::vec3(1.0f));
 
-        shader.setVec3("light.ambient", lightAmbient);
-        shader.setVec3("light.diffuse", lightColor);
-        shader.setVec3("light.specular", lightColor);
-        
+        for ( int i = 0; i < 4; ++ i)
+        {
+            std::string prefix = "pointLights[" + std::to_string(i) + "]";
+            shader.setVec3(prefix + ".position", pointLightPositions[i]);
+            shader.setFloat(prefix + ".constant", 1.0f);
+            shader.setFloat(prefix + ".linear", 0.07f);
+            shader.setFloat(prefix + ".quadratic", 0.017f);
+
+            shader.setVec3(prefix + ".ambient", glm::vec3(0.00f));
+            shader.setVec3(prefix + ".diffuse", glm::vec3(0.2f));
+            shader.setVec3(prefix + ".specular", glm::vec3(0.2f));
+        }
+        shader.setVec3("spotLight.direction", camera.Front);
+        shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+        shader.setVec3("spotLight.ambient", glm::vec3(0.0f));
+        shader.setVec3("spotLight.diffuse", glm::vec3(0.5f));
+        shader.setVec3("spotLight.specular", glm::vec3(0.5f));
+
+
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
-        shader.setVec3("cameraPos", view * glm::vec4(camera.Position, 1.f));
 
         shader.use();
 
@@ -239,8 +258,18 @@ int main()
             
         }
 
-        // lampShader.use();
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        lampShader.use();
+        for (int i = 0; i < 4; ++ i)
+        {
+            glm::mat4 model;
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            
+
+            lampShader.setVec3("color", pointLightRepresentColor[i]);
+            lampShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         glfwSwapBuffers(window);
         // glfwPollEvents函数检查有没有触发什么事件（比如键盘输入、鼠标移动等）、更新窗口状态，并调用对应的回调函数（可以通过回调方法手动设置）。
