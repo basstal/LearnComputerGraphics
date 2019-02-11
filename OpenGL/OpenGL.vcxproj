@@ -138,12 +138,17 @@
   <ItemGroup>
     <None Include="FragmentShader1.glsl" />
     <None Include="FragmentShader2.glsl" />
+    <None Include="LightFragmentShader.glsl" />
     <None Include="VertexShader1.glsl" />
     <None Include="VertexShader2.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="awesomeface.png" />
     <Image Include="container.jpg" />
+    <Image Include="container2.png" />
+    <Image Include="container2_specular.png" />
+    <Image Include="lighting_maps_specular_color.png" />
+    <Image Include="matrix.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
