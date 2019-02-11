@@ -1,3 +1,8 @@
+#ifndef _MESH_H_
+#define _MESH_H_
+
+#include <assimp/types.h>
+
 #include <string>
 #include <vector>
 
@@ -21,6 +26,7 @@ struct Texture
 {
     unsigned int ID;
     string Type;
+    aiString Path;
 };
 
 class Mesh
@@ -83,10 +89,10 @@ void Mesh::Draw(Shader shader)
         glActiveTexture(GL_TEXTURE0 + i);
 
         string number;
-        string name = textures[i].type;
+        string name = textures[i].Type;
         if( name == "texture_diffuse" )
             number = to_string(diffuseNr ++) ;
-        else if( name = "texture_specular" )
+        else if( name == "texture_specular" )
             number = to_string(specularNr ++) ; 
         
         shader.setInt(("material." + name + number), i);
@@ -99,3 +105,5 @@ void Mesh::Draw(Shader shader)
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+#endif

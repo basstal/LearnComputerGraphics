@@ -11,7 +11,15 @@
 			"cmath": "cpp",
 			"ostream": "cpp",
 			"iostream": "cpp",
-			"cstdio": "cpp"
+			"cstdio": "cpp",
+			"vector": "cpp",
+			"list": "cpp",
+			"map": "cpp",
+			"unordered_map": "cpp",
+			"xhash": "cpp",
+			"xtree": "cpp",
+			"xmemory0": "cpp",
+			"xlocale": "cpp"
 		}
 	}
 }
