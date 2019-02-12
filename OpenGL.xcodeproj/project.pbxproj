@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E0EAEBB22128CFB0078CB60 /* chapter3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E0EAEBA22128CFB0078CB60 /* chapter3.cpp */; };
+		8E0EAEBD221291500078CB60 /* libassimp.4.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E0EAEBC221291500078CB60 /* libassimp.4.1.0.dylib */; };
 		8E637C7B220D27430013A70C /* chapter2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C78220D27430013A70C /* chapter2.cpp */; };
 		8E637C7C220D27430013A70C /* template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C79220D27430013A70C /* template.cpp */; };
 		8E637C7D220D27430013A70C /* chapter1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C7A220D27430013A70C /* chapter1.cpp */; };
@@ -31,6 +33,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E0EAEBA22128CFB0078CB60 /* chapter3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = chapter3.cpp; sourceTree = "<group>"; };
+		8E0EAEBC221291500078CB60 /* libassimp.4.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libassimp.4.1.0.dylib; path = ../../../../usr/local/Cellar/assimp/4.1.0/lib/libassimp.4.1.0.dylib; sourceTree = "<group>"; };
 		8E637C78220D27430013A70C /* chapter2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chapter2.cpp; sourceTree = "<group>"; };
 		8E637C79220D27430013A70C /* template.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = template.cpp; sourceTree = "<group>"; };
 		8E637C7A220D27430013A70C /* chapter1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chapter1.cpp; sourceTree = "<group>"; };
@@ -48,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E0EAEBD221291500078CB60 /* libassimp.4.1.0.dylib in Frameworks */,
 				B350F76321F558B600138980 /* libglfw.3.2.dylib in Frameworks */,
 				B350F76521F55AFE00138980 /* OpenGL.framework in Frameworks */,
 			);
@@ -76,6 +81,7 @@
 		B350F75521F557A100138980 /* OpenGL */ = {
 			isa = PBXGroup;
 			children = (
+				8E0EAEBA22128CFB0078CB60 /* chapter3.cpp */,
 				8ECF85E12202B580004AA1F5 /* stb_image.cpp */,
 				8ECF85DB22016616004AA1F5 /* glad.c */,
 				8ECF85DA22016616004AA1F5 /* shader.cpp */,
@@ -89,6 +95,7 @@
 		B350F75F21F5587E00138980 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8E0EAEBC221291500078CB60 /* libassimp.4.1.0.dylib */,
 				8ECF85E32202BB87004AA1F5 /* libm.tbd */,
 				B350F76421F55AFE00138980 /* OpenGL.framework */,
 				B350F76221F558B600138980 /* libglfw.3.2.dylib */,
@@ -156,6 +163,7 @@
 				8ECF85E22202B580004AA1F5 /* stb_image.cpp in Sources */,
 				8E637C7C220D27430013A70C /* template.cpp in Sources */,
 				8E637C7B220D27430013A70C /* chapter2.cpp in Sources */,
+				8E0EAEBB22128CFB0078CB60 /* chapter3.cpp in Sources */,
 				8E637C7D220D27430013A70C /* chapter1.cpp in Sources */,
 				8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */,
 				8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */,
@@ -281,6 +289,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/glfw/3.2.1/lib,
+					/usr/local/Cellar/assimp/4.1.0/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -299,6 +308,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/glfw/3.2.1/lib,
+					/usr/local/Cellar/assimp/4.1.0/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

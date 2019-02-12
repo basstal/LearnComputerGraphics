@@ -7,8 +7,9 @@
 
 #include <stb_image.h>
 
-#include <vector>
+#include <mesh.h>
 #include <shader.h>
+#include <vector>
 #include <string>
 
 using namespace std;
@@ -31,7 +32,7 @@ private:
     void loadModel(string path);
     void processNode(aiNode * node, const aiScene * scene);
     Mesh processMesh(aiMesh * mesh, const aiScene * scene);
-    vector<Texture> loadMaterialTexture(aiMaterial * mat, atTextureType type, string typeName);
+    vector<Texture> loadMaterialTexture(aiMaterial * mat, aiTextureType type, string typeName);
 };
 
 void Model::Draw(Shader shader)
@@ -43,9 +44,9 @@ void Model::Draw(Shader shader)
 void Model::loadModel(string path)
 {
     Assimp::Importer importer;
-    aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate);
+    const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate);
     // 这里需要判断scene是不是成功加载了
-    if ( !scene || scene->flags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         cout << "ERROR::ASSIMP::" << importer.GetErrorString() << endl;
         return;
@@ -125,7 +126,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
 }
 
 
-vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, atTextureType type, string typeName)
+vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType type, string typeName)
 {
     vector<Texture> textures;
     for (unsigned int i = 0 ; i < mat->GetTextureCount(type); ++i)
@@ -135,7 +136,7 @@ vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, atTextureType type,
         bool skip = false;
         for (unsigned int j = 0; j < textures_loaded.size(); ++j)
         {
-            if(strcmp(textures_loaded[j].Path.data(), str.C_Str()) == 0)
+            if(strcmp(textures_loaded[j].Path.C_Str(), str.C_Str()) == 0)
             {
                 textures.push_back(textures_loaded[j]);
                 skip = true;
@@ -147,7 +148,7 @@ vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, atTextureType type,
             Texture texture;
             texture.ID = loadImage(str.C_Str(), directory);
             texture.Type = typeName;
-            texture.Path = str.C_Str();
+            texture.Path = str;
             textures.push_back(texture);
             textures_loaded.push_back(texture);
         }
@@ -168,7 +169,7 @@ unsigned int loadImage(const char * path, const string &directory)
     unsigned char * data = stbi_load(fileName.c_str(), &width, &height, &nrchannel, 0);
     if ( data != NULL )
     {
-        GLint format;
+        GLint format = GL_RGB;
         if (nrchannel == 1)
             format = GL_RED;
         else if (nrchannel == 3)

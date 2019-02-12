@@ -19,7 +19,12 @@
 			"xhash": "cpp",
 			"xtree": "cpp",
 			"xmemory0": "cpp",
-			"xlocale": "cpp"
+			"xlocale": "cpp",
+			"stdexcept": "cpp",
+			"string": "cpp",
+			"sstream": "cpp",
+			"iterator": "cpp",
+			"string_view": "cpp"
 		}
 	}
 }
