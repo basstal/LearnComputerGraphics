@@ -10,6 +10,7 @@ struct Material
     sampler2D texture_specular1;
     sampler2D texture_specular2;
     sampler2D texture_specular3;
+    sampler2D my_diffuse;
     float shininess;
 };
 

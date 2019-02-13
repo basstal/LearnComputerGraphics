@@ -36,6 +36,12 @@
     <ClCompile Include="chapter2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="chapter3.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="chapter4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="FragmentShader1.glsl">
@@ -53,24 +59,24 @@
     <None Include="VertexShader2.glsl">
       <Filter>源文件\shader</Filter>
     </None>
+    <None Include="VertexShader3.glsl">
+      <Filter>源文件\shader</Filter>
+    </None>
+    <None Include="FragmentShader3.glsl">
+      <Filter>源文件\shader</Filter>
+    </None>
+    <None Include="VertexShader4.glsl">
+      <Filter>源文件\shader</Filter>
+    </None>
+    <None Include="FragmentShader4.glsl">
+      <Filter>源文件\shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="container.jpg">
+    <Image Include="resources\textures\marble.jpg">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="awesomeface.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="lighting_maps_specular_color.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="container2_specular.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="container2.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="matrix.jpg">
+    <Image Include="resources\textures\metal.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

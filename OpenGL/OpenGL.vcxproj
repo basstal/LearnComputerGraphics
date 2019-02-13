@@ -70,12 +70,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>F:\Documents\OpenGL\OpenGL\OpenGL\include;F:\Documents\OpenGL\OpenGlInclude;$(IncludePath)</IncludePath>
+    <IncludePath>F:\Documents\OpenGL\OpenGL\OpenGL\include;$(IncludePath)</IncludePath>
     <LibraryPath>F:\Documents\OpenGL\OpenGLLib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\王建新\Documents\OpenGL\OpenGL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\王建新\Downloads\glfw-3.2.1\glfw-3.2.1\build\src\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\王建新\Documents\OpenGL\OpenGL\include;F:\Documents\OpenGL\OpenGL\OpenGL\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\Documents\OpenGL\OpenGLLib;C:\Users\王建新\Downloads\glfw-3.2.1\glfw-3.2.1\build\src\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -85,7 +85,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -130,6 +130,8 @@
   <ItemGroup>
     <ClCompile Include="chapter1.cpp" />
     <ClCompile Include="chapter2.cpp" />
+    <ClCompile Include="chapter3.cpp" />
+    <ClCompile Include="chapter4.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
@@ -138,17 +140,17 @@
   <ItemGroup>
     <None Include="FragmentShader1.glsl" />
     <None Include="FragmentShader2.glsl" />
+    <None Include="FragmentShader3.glsl" />
+    <None Include="FragmentShader4.glsl" />
     <None Include="LightFragmentShader.glsl" />
     <None Include="VertexShader1.glsl" />
     <None Include="VertexShader2.glsl" />
+    <None Include="VertexShader3.glsl" />
+    <None Include="VertexShader4.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="awesomeface.png" />
-    <Image Include="container.jpg" />
-    <Image Include="container2.png" />
-    <Image Include="container2_specular.png" />
-    <Image Include="lighting_maps_specular_color.png" />
-    <Image Include="matrix.jpg" />
+    <Image Include="resources\textures\marble.jpg" />
+    <Image Include="resources\textures\metal.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

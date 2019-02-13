@@ -17,10 +17,7 @@ unsigned int loadImage(const char * path, const std::string &);
 class Model
 {
 public:
-    Model(char * path)
-    {
-        loadModel(path);
-    }
+    Model(const char * path);
     void Draw(Shader shader);
 private:
     std::vector<Texture> textures_loaded;
@@ -33,9 +30,15 @@ private:
     std::vector<Texture> loadMaterialTexture(aiMaterial * mat, aiTextureType type, std::string typeName);
 };
 
+Model::Model(const char * path)
+{
+    loadModel(path);
+}
+
 void Model::Draw(Shader shader)
 {
-    for (int i = 0; i < meshes.size(); ++i)
+    // std::cout << "meshes.size() = "  << meshes.size() << std::endl;
+    for (unsigned int i = 0; i < meshes.size(); ++i)
         meshes[i].Draw(shader);
 }
 
@@ -114,9 +117,35 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
     {
         aiMaterial * material = scene->mMaterials[mesh->mMaterialIndex];
         std::vector<Texture> diffuseTextures = loadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        // std::cout << "load material count = " << diffuseTextures.size() << std::endl;
         textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
         std::vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
+        // std::cout << "load material count = " << specularTextures.size() << std::endl;
         textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
+    }
+    else
+    {
+        bool skip = false;
+        for (unsigned int i = 0 ; i < textures_loaded.size(); ++i)
+        {
+            if (textures_loaded[i].Type == "my_diffuse")
+            {
+                textures.push_back(textures_loaded[i]);
+                skip = true;
+                break;
+            }
+        }
+        if (!skip)
+        {
+            std::cout << "my orange loaded" << std::endl;
+
+            // 自己张图贴上去
+            Texture texture;
+            texture.ID = loadImage("Orange.jpg", "");
+            texture.Type = "my_diffuse";
+            textures.push_back(texture);
+            textures_loaded.push_back(texture);
+        }
     }
 
     return Mesh(vertices, indices, textures);
@@ -157,7 +186,8 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
 unsigned int loadImage(const char * path, const std::string &directory)
 {
     std::string fileName = std::string(path);
-    fileName = directory + '/' + fileName;
+    if (!directory.empty())
+        fileName = directory + '/' + fileName;
 
     unsigned int texture;
     glGenTextures(1, &texture);
