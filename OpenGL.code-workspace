@@ -24,7 +24,9 @@
 			"string": "cpp",
 			"sstream": "cpp",
 			"iterator": "cpp",
-			"string_view": "cpp"
+			"string_view": "cpp",
+			"bitset": "cpp",
+			"__split_buffer": "cpp"
 		}
 	}
 }

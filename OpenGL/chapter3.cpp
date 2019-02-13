@@ -31,7 +31,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     GLFWwindow * window = glfwCreateWindow(800, 600, "chapter3", NULL, NULL);
     if (window == NULL)
@@ -54,21 +54,29 @@ int main()
     glfwSetCursorPosCallback(window, window_pos_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+    glEnable(GL_DEPTH_TEST);
+
+    Model nanosuit = Model("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj");
+    Shader shader = Shader("VertexShader3.glsl", "FragmentShader3.glsl");
+
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
 
+        glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Model model = Model("/Users/wangjunke/Documents/OpenGL/OpenGL/nanosuit/nanosuit.mtl");
-        Shader shader = Shader("VertexShader3.glsl", "FragmentShader3.glsl");
 
-        glm::mat4 model1;
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
+        
         glm::mat4 view = mainCamera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)800/600, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(mainCamera.Zoom), (float)800/600, 0.1f, 100.0f);
         glm::vec3 viewPos = mainCamera.Position;
+        shader.use();
 
-        shader.setMat4("model", model1);
+        shader.setMat4("model", model);
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
         shader.setVec3("viewPos", viewPos);
@@ -81,13 +89,17 @@ int main()
 
         for ( int i = 0 ; i < 2; ++ i)
         {
-            // shader.setVec3("pointLights[" + i + "].position", glm::vec3(0.2f, 1.0f, 0.0f));
-            // shader.setVec3("pointLights[" + i + "].ambient", glm::vec3(0.5f));
-            // shader.setVec3("pointLights[" + i + "].diffuse", glm::vec3(0.3f));
-            // shader.setVec3("pointLights[" + i + "].specular", glm::vec3(0.3f));
+            string pointLight = "pointLights[" + to_string(i) + "]";
+            shader.setVec3(pointLight + ".position", glm::vec3(1.2f, 1.0f, 1.0f));
+            shader.setVec3(pointLight + ".ambient", glm::vec3(0.2f));
+            shader.setVec3(pointLight + ".diffuse", glm::vec3(0.5f));
+            shader.setVec3(pointLight + ".specular", glm::vec3(0.5f));
+            shader.setFloat(pointLight + ".constant", 1.0f);
+            shader.setFloat(pointLight + ".linear", 0.2f);
+            shader.setFloat(pointLight + ".quadratic", 0.07f);
         }
 
-        model.Draw(shader);
+        nanosuit.Draw(shader);
 
         // 交换当前渲染帧和缓冲帧
         glfwSwapBuffers(window);

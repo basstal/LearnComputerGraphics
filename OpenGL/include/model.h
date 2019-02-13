@@ -12,9 +12,7 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
-unsigned int loadImage(const char * path, const string &);
+unsigned int loadImage(const char * path, const std::string &);
 
 class Model
 {
@@ -25,14 +23,14 @@ public:
     }
     void Draw(Shader shader);
 private:
-    vector<Texture> textures_loaded;
-    vector<Mesh> meshes;
-    string directory;
+    std::vector<Texture> textures_loaded;
+    std::vector<Mesh> meshes;
+    std::string directory;
 
-    void loadModel(string path);
+    void loadModel(std::string path);
     void processNode(aiNode * node, const aiScene * scene);
     Mesh processMesh(aiMesh * mesh, const aiScene * scene);
-    vector<Texture> loadMaterialTexture(aiMaterial * mat, aiTextureType type, string typeName);
+    std::vector<Texture> loadMaterialTexture(aiMaterial * mat, aiTextureType type, std::string typeName);
 };
 
 void Model::Draw(Shader shader)
@@ -41,18 +39,17 @@ void Model::Draw(Shader shader)
         meshes[i].Draw(shader);
 }
 
-void Model::loadModel(string path)
+void Model::loadModel(std::string path)
 {
     Assimp::Importer importer;
     const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate);
     // 这里需要判断scene是不是成功加载了
     if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        cout << "ERROR::ASSIMP::" << importer.GetErrorString() << endl;
+        std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
         return;
     }
     directory = path.substr(0, path.find_last_of('/'));
-
     processNode( scene->mRootNode, scene );
 }
 
@@ -72,9 +69,9 @@ void Model::processNode(aiNode * node, const aiScene * scene)
 
 Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
 {
-    vector<Vertex> vertices;
-    vector<unsigned int> indices;
-    vector<Texture> textures;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture> textures;
 
     // 顶点坐标、法线和纹理坐标
     for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
@@ -94,7 +91,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         vertex.Normal = normal;
 
         glm::vec2 texCoord(0.0f);
-        if (mesh->mTextureCoords[0] != NULL)
+        if (mesh->mTextureCoords[0])
         {
             // 允许一个顶点包含最多8组纹理坐标，这里只用第一组
             texCoord.x = mesh->mTextureCoords[0][i].x;
@@ -116,9 +113,9 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
     if (mesh->mMaterialIndex > 0)
     {
         aiMaterial * material = scene->mMaterials[mesh->mMaterialIndex];
-        vector<Texture> diffuseTextures = loadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        std::vector<Texture> diffuseTextures = loadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
-        vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
+        std::vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
     }
 
@@ -126,9 +123,9 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
 }
 
 
-vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType type, string typeName)
+std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType type, std::string typeName)
 {
-    vector<Texture> textures;
+    std::vector<Texture> textures;
     for (unsigned int i = 0 ; i < mat->GetTextureCount(type); ++i)
     {
         aiString str;
@@ -157,9 +154,9 @@ vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType type,
 }
 
 
-unsigned int loadImage(const char * path, const string &directory)
+unsigned int loadImage(const char * path, const std::string &directory)
 {
-    string fileName = string(path);
+    std::string fileName = std::string(path);
     fileName = directory + '/' + fileName;
 
     unsigned int texture;
@@ -169,7 +166,7 @@ unsigned int loadImage(const char * path, const string &directory)
     unsigned char * data = stbi_load(fileName.c_str(), &width, &height, &nrchannel, 0);
     if ( data != NULL )
     {
-        GLint format = GL_RGB;
+        GLint format;
         if (nrchannel == 1)
             format = GL_RED;
         else if (nrchannel == 3)

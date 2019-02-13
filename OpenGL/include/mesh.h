@@ -13,8 +13,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-using namespace std;
-
 struct Vertex
 {
     glm::vec3 Position;
@@ -25,24 +23,24 @@ struct Vertex
 struct Texture
 {
     unsigned int ID;
-    string Type;
+    std::string Type;
     aiString Path;
 };
 
 class Mesh
 {
 public:
-    vector<Vertex> vertices;
-    vector<unsigned int> indices;
-    vector<Texture> textures;
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures);
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture> textures;
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
     void Draw(Shader shader);
 private:
     unsigned int VAO, VBO, EBO;
     void setupMesh();
 };
 
-Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
 {
     this->vertices = vertices;
     this->indices = indices;
@@ -88,12 +86,12 @@ void Mesh::Draw(Shader shader)
     {
         glActiveTexture(GL_TEXTURE0 + i);
 
-        string number;
-        string name = textures[i].Type;
+        std::string number;
+        std::string name = textures[i].Type;
         if( name == "texture_diffuse" )
-            number = to_string(diffuseNr ++) ;
+            number = std::to_string(diffuseNr ++) ;
         else if( name == "texture_specular" )
-            number = to_string(specularNr ++) ; 
+            number = std::to_string(specularNr ++) ; 
         
         shader.setInt(("material." + name + number), i);
         glBindTexture(GL_TEXTURE_2D, textures[i].ID);
