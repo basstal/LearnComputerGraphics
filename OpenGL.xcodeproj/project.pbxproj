@@ -12,6 +12,7 @@
 		8E637C7B220D27430013A70C /* chapter2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C78220D27430013A70C /* chapter2.cpp */; };
 		8E637C7C220D27430013A70C /* template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C79220D27430013A70C /* template.cpp */; };
 		8E637C7D220D27430013A70C /* chapter1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E637C7A220D27430013A70C /* chapter1.cpp */; };
+		8E9056FB2215311500E4336B /* chapter4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8E9056FA2215311500E4336B /* chapter4.cpp */; };
 		8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DB22016616004AA1F5 /* glad.c */; };
 		8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DA22016616004AA1F5 /* shader.cpp */; };
 		8ECF85E22202B580004AA1F5 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85E12202B580004AA1F5 /* stb_image.cpp */; };
@@ -38,6 +39,7 @@
 		8E637C78220D27430013A70C /* chapter2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chapter2.cpp; sourceTree = "<group>"; };
 		8E637C79220D27430013A70C /* template.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = template.cpp; sourceTree = "<group>"; };
 		8E637C7A220D27430013A70C /* chapter1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chapter1.cpp; sourceTree = "<group>"; };
+		8E9056FA2215311500E4336B /* chapter4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chapter4.cpp; sourceTree = "<group>"; };
 		8ECF85DA22016616004AA1F5 /* shader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = shader.cpp; sourceTree = "<group>"; };
 		8ECF85DB22016616004AA1F5 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		8ECF85E12202B580004AA1F5 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stb_image.cpp; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 		B350F75521F557A100138980 /* OpenGL */ = {
 			isa = PBXGroup;
 			children = (
+				8E9056FA2215311500E4336B /* chapter4.cpp */,
 				8E0EAEBA22128CFB0078CB60 /* chapter3.cpp */,
 				8ECF85E12202B580004AA1F5 /* stb_image.cpp */,
 				8ECF85DB22016616004AA1F5 /* glad.c */,
@@ -160,6 +163,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E9056FB2215311500E4336B /* chapter4.cpp in Sources */,
 				8ECF85E22202B580004AA1F5 /* stb_image.cpp in Sources */,
 				8E637C7C220D27430013A70C /* template.cpp in Sources */,
 				8E637C7B220D27430013A70C /* chapter2.cpp in Sources */,
