@@ -14,7 +14,7 @@
 #include <vector>
 #include <map>
 
-bool wireframe = true;
+bool wireframe = false;
 
 float cubeVertices[] = {
     // Back face
@@ -288,14 +288,15 @@ int main()
     // --------------------
     shader.use();
     shader.setInt("texture1", 0);
+
+    quadShader.use();
+    quadShader.setInt("texture0", 0);
+    
     if (!wireframe)
-	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
 	else
-	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
+
     // render loop
     // -----------
     while(!glfwWindowShouldClose(window))
@@ -313,20 +314,18 @@ int main()
         // render
         // ------
         
-        glEnable(GL_DEPTH_TEST | GL_STENCIL_TEST);
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
+        glEnable(GL_DEPTH_TEST);
         DrawScene(shader);
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        // glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
         // use frameBuffer as texture for quad
         quadShader.use();
-        quadShader.setInt("texture0", 0);
         glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-
-        glDisable(GL_DEPTH_TEST);
         glBindVertexArray(quadVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
@@ -444,6 +443,7 @@ unsigned int loadTexture(char const *path, GLint wrapMode )
 void DrawScene(Shader shader)
 {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     shader.use();
 
@@ -459,7 +459,7 @@ void DrawScene(Shader shader)
     glm::mat4 model = glm::mat4(1.0f);
 
     glDisable(GL_CULL_FACE);
-    shader.use();
+    // shader.use();
     // glStencilMask(0x00);
     // floor
     glBindVertexArray(planeVAO);
@@ -470,6 +470,7 @@ void DrawScene(Shader shader)
     
 
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
     // glStencilFunc(GL_ALWAYS, 1, 0xff);
     // glStencilMask(0xff);
     // cubes
@@ -484,7 +485,7 @@ void DrawScene(Shader shader)
     shader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
-
+    glDisable(GL_CULL_FACE);
 
     // glStencilFunc(GL_NOTEQUAL, 1, 0xff);
     // glStencilMask(0x00);
