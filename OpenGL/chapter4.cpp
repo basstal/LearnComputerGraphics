@@ -147,6 +147,17 @@ int main()
         0.5f,   0.5f,   0.0f,   0.0f,   0.0f,
     };
 
+    float quadVertices[] = {  
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f, 1.0f
+    };	
+    
     std::vector<glm::vec3> vegetation;
     vegetation.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
     vegetation.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
