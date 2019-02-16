@@ -81,7 +81,9 @@ void Mesh::Draw(Shader shader)
 {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
+    unsigned int ambientNr = 1;
 
+    // std::cout << "mesh textures size = " << textures.size() << std::endl;
     for (unsigned int i = 0 ; i < textures.size(); ++ i)
     {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -92,7 +94,9 @@ void Mesh::Draw(Shader shader)
             number = std::to_string(diffuseNr ++) ;
         else if( name == "texture_specular" )
             number = std::to_string(specularNr ++) ; 
-        
+        else if (name == "texture_reflection")
+            number = std::to_string(ambientNr ++ );
+
         shader.setInt(("material." + name + number), i);
         glBindTexture(GL_TEXTURE_2D, textures[i].ID);
     }

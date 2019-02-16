@@ -117,11 +117,11 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
     {
         aiMaterial * material = scene->mMaterials[mesh->mMaterialIndex];
         std::vector<Texture> diffuseTextures = loadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
-        // std::cout << "load material count = " << diffuseTextures.size() << std::endl;
         textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
         std::vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
-        // std::cout << "load material count = " << specularTextures.size() << std::endl;
         textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
+        std::vector<Texture> ambientTextures = loadMaterialTexture(material, aiTextureType_AMBIENT, "texture_reflection");
+        textures.insert(textures.end(), ambientTextures.begin(), ambientTextures.end());
     }
     else
     {
