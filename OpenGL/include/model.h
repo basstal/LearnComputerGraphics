@@ -120,8 +120,8 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
         std::vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
-        std::vector<Texture> ambientTextures = loadMaterialTexture(material, aiTextureType_AMBIENT, "texture_reflection");
-        textures.insert(textures.end(), ambientTextures.begin(), ambientTextures.end());
+        std::vector<Texture> reflectionTexture = loadMaterialTexture(material, aiTextureType_AMBIENT, "texture_reflection");
+        textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
     }
     else
     {
