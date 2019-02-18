@@ -14,7 +14,7 @@
 #include <vector>
 #include <map>
 
-bool wireframe = true;
+bool wireframe = false;
 
 float skyboxVertices[] = {
     // positions          
@@ -60,6 +60,13 @@ float skyboxVertices[] = {
     -1.0f, -1.0f,  1.0f,
      1.0f, -1.0f,  1.0f
 };
+
+float housePoints[] = {
+    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+};  
 
 
 float cubeVertices[] = {
@@ -168,6 +175,7 @@ unsigned int frameBuffer;
 unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
 unsigned int skyboxVAO, skyboxVBO;
 unsigned int skyboxTextures;
+unsigned int houseVAO, houseVBO;
 
 int main()
 {
@@ -224,11 +232,15 @@ int main()
     // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     // build and compile shaders
     // -------------------------
-    Shader shader("VertexShader4.glsl", "FragmentShader4.glsl");
-    Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl");
-    Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl");
-    Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl");
-    Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl");
+    Shader shader("VertexShader4.glsl", "FragmentShader4.glsl", "");
+    Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl", "");
+    Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl", "");
+    Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl", "");
+    Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl", "");
+    Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "");
+    Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
+    Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
+    Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
 
     /*
         Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
@@ -344,7 +356,45 @@ int main()
 
     glBindVertexArray(0);
 
+    // uniform buffer object
+    unsigned int uboMatrices;
+    glGenBuffers(1, &uboMatrices);
 
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+
+    // 这里得到的index 是glUniformBlockBinding的第二个参数，第三个参数决定binding的具体下标值，通过这个方法同样下标值的binding可以通用一份数据
+    unsigned int ubi1 = glGetUniformBlockIndex(ubo1Shader.ID, "Matrices");
+    unsigned int ubi2 = glGetUniformBlockIndex(ubo2Shader.ID, "Matrices");
+    unsigned int ubi3 = glGetUniformBlockIndex(ubo3Shader.ID, "Matrices");
+    unsigned int ubi4 = glGetUniformBlockIndex(ubo4Shader.ID, "Matrices");
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi1, 0);
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi2, 0);
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi3, 0);
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi4, 0);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // 记得要glBindBufferRange或者glBindBufferBase，将某一个下标值和具体的buffer绑定
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+
+    // house use Geometry Shader
+    glGenVertexArrays(1, &houseVAO);
+    glGenBuffers(1, &houseVBO);
+
+    glBindVertexArray(houseVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, houseVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(housePoints), housePoints, GL_STATIC_DRAW);
+    
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
+
+    glBindVertexArray(0);
 
     // load textures
     // -------------
@@ -391,16 +441,44 @@ int main()
         // input
         // -----
         processInput(window);
-
+        
         // render
         // ------
-        // glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-        // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        DrawScene(shader);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+        glm::mat4 view = camera.GetViewMatrix();
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+
+        glBindVertexArray(houseVAO);
+        // ubo1Shader.use();
+        // glm::mat4 model = glm::mat4(1.0f);
+        // ubo1Shader.setMat4("model", model);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // ubo2Shader.use();
+        // model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+        // ubo2Shader.setMat4("model", model);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // ubo3Shader.use();
+        // model = glm::translate(model, glm::vec3(0.0f, -2.0f, 0.0f));
+        // ubo3Shader.setMat4("model", model);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        
+        ubo4Shader.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        // glm::mat4 model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        ubo4Shader.setMat4("model", model);
+        glDrawArrays(GL_POINTS, 0, 4);
+
+        // glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+        // glEnable(GL_DEPTH_TEST);
+        // glDepthFunc(GL_LEQUAL);
+        // DrawScene(shader);
         // DrawModel(modelShader, nanosuit);
 
         // DrawSkybox(skyboxShader);
