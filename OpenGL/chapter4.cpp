@@ -14,7 +14,7 @@
 #include <vector>
 #include <map>
 
-bool wireframe = false;
+bool wireframe = true;
 
 float skyboxVertices[] = {
     // positions          
@@ -141,7 +141,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path, GLint);
-void DrawScene(Shader, Model);
+void DrawScene(Shader);
+void DrawModel(Shader, Model);
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs);
 void DrawSkybox(Shader);
 
@@ -227,6 +228,7 @@ int main()
     Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl");
     Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl");
     Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl");
+    Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl");
 
     /*
         Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
@@ -350,7 +352,7 @@ int main()
     floorTexture = loadTexture("resources/metal.png", GL_REPEAT);
     grassTexture = loadTexture("resources/grass.png", GL_CLAMP_TO_EDGE);
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
-    Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
+    // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
     
     std::vector<std::string> skyboxTexs = {
         "resources/skybox/right.jpg",
@@ -375,6 +377,7 @@ int main()
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
     while(!glfwWindowShouldClose(window))
@@ -391,26 +394,28 @@ int main()
 
         // render
         // ------
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+        // glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
         // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
-        DrawScene(shader, nanosuit);
-        DrawSkybox(skyboxShader);
+        DrawScene(shader);
+        // DrawModel(modelShader, nanosuit);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        // DrawSkybox(skyboxShader);
+
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glDisable(GL_DEPTH_TEST);
+        // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT);
         
-        // use frameBuffer as texture for quad
-        quadShader.use();
-        glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        // // use frameBuffer as texture for quad
+        // quadShader.use();
+        // glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+        // glBindVertexArray(quadVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 6);
+        // glBindVertexArray(0);
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -522,7 +527,64 @@ unsigned int loadTexture(char const *path, GLint wrapMode )
     return textureID;
 }
 
-void DrawScene(Shader shader, Model nanosuit)
+void DrawScene(Shader shader)
+{
+    
+    shader.use();
+
+    
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    glDisable(GL_CULL_FACE);
+    glBindVertexArray(planeVAO);
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    
+
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
+    // glBindVertexArray(cubeVAO);
+    // glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
+    // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    // shader.setMat4("model", model);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    // model = glm::mat4(1.0f);
+    // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    // shader.setMat4("model", model);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    // glBindVertexArray(0);
+    // glDisable(GL_CULL_FACE);
+    
+    float scale = 1.1f;
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+    shader.setMat4("model", model);
+
+    glDrawArrays(GL_POINTS, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+    shader.setMat4("model", model);
+
+    glDrawArrays(GL_POINTS, 0, 36);
+    glBindVertexArray(0);
+    // glStencilMask(0xff);
+    // glEnable(GL_DEPTH_TEST);
+}
+
+
+void DrawModel(Shader shader, Model nanosuit)
 {
     
     shader.use();
@@ -539,86 +601,12 @@ void DrawScene(Shader shader, Model nanosuit)
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
 
 
-    // simpleColorShader.use();
-    // simpleColorShader.setMat4("view", view);
-    // simpleColorShader.setMat4("projection", projection);
-
-    // glm::mat4 model = glm::mat4(1.0f);
-
-    // glDisable(GL_CULL_FACE);
-    // // shader.use();
-    // // glStencilMask(0x00);
-    // // floor
-    // glBindVertexArray(planeVAO);
-    // glBindTexture(GL_TEXTURE_2D, floorTexture);
-    // shader.setMat4("model", glm::mat4(1.0f));
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
-    // glBindVertexArray(0);
-    
-
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_FRONT);
-    // // glStencilFunc(GL_ALWAYS, 1, 0xff);
-    // // glStencilMask(0xff);
-    // // cubes
-    // glBindVertexArray(cubeVAO);
-    // // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
-    // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    // shader.setMat4("model", model);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    // shader.setMat4("model", model);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
-    // glBindVertexArray(0);
-    // glDisable(GL_CULL_FACE);
-
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
     model = glm::scale(model, glm::vec3(0.2f));
     shader.setMat4("model", model);
 
     nanosuit.Draw(shader);
-
-    // glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-    // glStencilMask(0x00);
-    // glDisable(GL_DEPTH_TEST);
-    // simpleColorShader.use();
-    
-    // float scale = 1.1f;
-    // glBindVertexArray(cubeVAO);
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    // model = glm::scale(model, glm::vec3(scale, scale, scale));
-    // simpleColorShader.setMat4("model", model);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    // model = glm::scale(model, glm::vec3(scale, scale, scale));
-    // simpleColorShader.setMat4("model", model);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
-    // glBindVertexArray(0);
-    // glStencilMask(0xff);
-    // glEnable(GL_DEPTH_TEST);
-    
-    // glDisable(GL_CULL_FACE);
-    // // ** Blend
-    // shader.use();
-    // glBindVertexArray(grassVAO);
-    // // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, windowTexture);
-    // for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-    // {
-    //     model = glm::mat4(1.0f);
-    //     model = glm::translate(model, it->second);
-    //     shader.setMat4("model", model);
-    //     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    // }
-    // glBindVertexArray(0);
-
 }
 
 
