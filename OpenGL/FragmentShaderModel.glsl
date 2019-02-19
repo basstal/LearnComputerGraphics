@@ -5,8 +5,8 @@ struct Material
 {
     sampler2D texture_specular1;
     sampler2D texture_diffuse1;
-    sampler2D texture_reflection1;
-    samplerCube texture1;
+    // sampler2D texture_reflection1;
+    // samplerCube texture1;
     float shininess;
 };
 
@@ -24,9 +24,16 @@ struct Material
 
 uniform Material material;
 
+// in VS_OUT
+// {
+    // vec3 Position;
+    // vec3 Normal;
+    // vec2 TexCoord;
+// } fs_in;
+
 in vec2 TexCoord;
-in vec3 Position;
-in vec3 Normal;
+in vec3 fragPos;
+in vec3 normal;
 
 // uniform sampler2D texture1;
 // uniform samplerCube texture0;
@@ -78,28 +85,28 @@ void main()
     // float depth = LinearizeDepth(gl_FragCoord.z) / far;
     // FragColor = vec4(vec3(depth), 1.0f);
 
-    vec3 viewDir = normalize(cameraPos - Position);
-    vec3 normal = normalize(Normal);
-    // float ratio = 1.0f / 1.52f;
-    vec3 R = reflect(- viewDir, normal);
-    vec3 reflectMap = vec3(texture(material.texture_reflection1, TexCoord));
-    vec3 reflection = vec3(texture(material.texture1, R).rgb) * reflectMap;
+    vec3 viewDir = normalize(cameraPos - fragPos);
+    vec3 NM = normalize(normal);
+    // // float ratio = 1.0f / 1.52f;
+    vec3 R = reflect(- viewDir, NM);
+    // // vec3 reflectMap = vec3(texture(material.texture_reflection1, fs_in.TexCoord));
+    // // vec3 reflection = vec3(texture(material.texture1, R).rgb) * reflectMap;
     
 
-    // vec3 originReflec = vec3(texture(material.texture1, R).rgb);
-    // vec4 reflection = vec4(originReflec, 1.0f);
+    // // vec3 originReflec = vec3(texture(material.texture1, R).rgb);
+    // // vec4 reflection = vec4(originReflec, 1.0f);
 
-    float diff = max(normalize(dot(normal,  viewDir)), 0.0f);
+    float diff = max(normalize(dot(NM,  viewDir)), 0.0f);
     vec3 diffuse = diff * vec3(texture(material.texture_diffuse1, TexCoord));
 
-    float spec = pow(max(normalize(dot(normal, R)), 0.0f), material.shininess);
+    float spec = pow(max(normalize(dot(NM, R)), 0.0f), material.shininess);
     vec3 specular = spec * vec3(texture(material.texture_specular1, TexCoord));
 
 
     // vec3 light = vec3(0.0f);
     // light += CalcDirLight(dirLight, normal, viewDir);
     // FragColor = vec4(reflection + specular  + diffuse , 1.0f);
-    FragColor = vec4(diffuse + reflection + specular * vec3(0.2f), 1.0f);
+    FragColor = vec4(diffuse + specular, 1.0f);
 
     // FragColor = reflection;
 }

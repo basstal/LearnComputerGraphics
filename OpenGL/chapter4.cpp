@@ -236,11 +236,11 @@ int main()
     Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl", "");
     Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl", "");
     Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl", "");
-    Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl", "");
+    Shader modelShader("VertexShader3.glsl", "FragmentShaderModel.glsl", "");
     Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "");
     Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
     Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
-    Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
+    // Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
 
     /*
         Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle
@@ -363,18 +363,18 @@ int main()
     glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
     glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-
     // 这里得到的index 是glUniformBlockBinding的第二个参数，第三个参数决定binding的具体下标值，通过这个方法同样下标值的binding可以通用一份数据
     unsigned int ubi1 = glGetUniformBlockIndex(ubo1Shader.ID, "Matrices");
     unsigned int ubi2 = glGetUniformBlockIndex(ubo2Shader.ID, "Matrices");
     unsigned int ubi3 = glGetUniformBlockIndex(ubo3Shader.ID, "Matrices");
-    unsigned int ubi4 = glGetUniformBlockIndex(ubo4Shader.ID, "Matrices");
+    // unsigned int ubi4 = glGetUniformBlockIndex(ubo4Shader.ID, "Matrices");
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi1, 0);
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi2, 0);
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi3, 0);
-    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi4, 0);
+    // glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi4, 0);
+
+    // unsigned int ubiModel = glGetUniformBlockIndex(modelShader.ID, "Matrices");
+    // glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiModel, 0);
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -403,7 +403,9 @@ int main()
     grassTexture = loadTexture("resources/grass.png", GL_CLAMP_TO_EDGE);
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
     // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
-    
+    Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+
+
     std::vector<std::string> skyboxTexs = {
         "resources/skybox/right.jpg",
         "resources/skybox/left.jpg",
@@ -427,7 +429,7 @@ int main()
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    // glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
     while(!glfwWindowShouldClose(window))
@@ -445,13 +447,33 @@ int main()
         // render
         // ------
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glm::mat4 view = camera.GetViewMatrix();
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        // glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // glm::mat4 view = camera.GetViewMatrix();
+        // glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
 
-        glBindVertexArray(houseVAO);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+
+        modelShader.use();
+
+        modelShader.setFloat("material.shininess", 0.5f);
+    
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+        modelShader.setVec3("cameraPos", camera.Position);
+        // modelShader.setFloat("time", currentFrame);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
+        modelShader.setMat4("model", model);
+
+        nanosuit.Draw(modelShader);
+        // glBindVertexArray(houseVAO);
         // ubo1Shader.use();
         // glm::mat4 model = glm::mat4(1.0f);
         // ubo1Shader.setMat4("model", model);
@@ -468,11 +490,8 @@ int main()
         // glDrawArrays(GL_TRIANGLES, 0, 36);
 
         
-        ubo4Shader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        // glm::mat4 model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        ubo4Shader.setMat4("model", model);
-        glDrawArrays(GL_POINTS, 0, 4);
+        
+        // glDrawArrays(GL_POINTS, 0, 4);
 
         // glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
