@@ -217,8 +217,8 @@ int main()
 
     // configure global opengl state
     // -----------------------------
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_FRONT);
@@ -236,10 +236,11 @@ int main()
     Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl", "");
     Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl", "");
     Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl", "");
-    Shader modelShader("VertexShader3.glsl", "FragmentShaderModel.glsl", "");
+    Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl", "");
     Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "");
     Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
     Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
+    Shader normalModelShader("VertexShaderModel.glsl", "FragmentShaderModelNoraml.glsl", "GeometryShader.glsl");
     // Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
 
     /*
@@ -373,8 +374,8 @@ int main()
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi3, 0);
     // glUniformBlockBinding(GL_UNIFORM_BUFFER, ubi4, 0);
 
-    // unsigned int ubiModel = glGetUniformBlockIndex(modelShader.ID, "Matrices");
-    // glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiModel, 0);
+    unsigned int ubiModel = glGetUniformBlockIndex(modelShader.ID, "Matrices");
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiModel, 0);
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -402,8 +403,8 @@ int main()
     floorTexture = loadTexture("resources/metal.png", GL_REPEAT);
     grassTexture = loadTexture("resources/grass.png", GL_CLAMP_TO_EDGE);
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
-    // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
-    Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+    Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
+    // Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
 
 
     std::vector<std::string> skyboxTexs = {
@@ -449,30 +450,37 @@ int main()
 
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        // glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // glm::mat4 view = camera.GetViewMatrix();
-        // glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-        // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+
+        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // glm::mat4 view = camera.GetViewMatrix();
 
         modelShader.use();
 
         modelShader.setFloat("material.shininess", 0.5f);
     
-        modelShader.setMat4("view", view);
-        modelShader.setMat4("projection", projection);
-        modelShader.setVec3("cameraPos", camera.Position);
+        // modelShader.setMat4("view", view);
+        // modelShader.setMat4("projection", projection);
+        // modelShader.setVec3("cameraPos", camera.Position);
         // modelShader.setFloat("time", currentFrame);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::translate(model, glm::vec3(0.0f, -1.75f, -10.0f));
+        // model = glm::scale(model, glm::vec3(0.5f));
         modelShader.setMat4("model", model);
 
         nanosuit.Draw(modelShader);
+
+        normalModelShader.use();
+        normalModelShader.setMat4("model", model);
+        nanosuit.Draw(normalModelShader);
+
+
+
         // glBindVertexArray(houseVAO);
         // ubo1Shader.use();
         // glm::mat4 model = glm::mat4(1.0f);

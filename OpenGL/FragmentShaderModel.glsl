@@ -5,8 +5,9 @@ struct Material
 {
     sampler2D texture_specular1;
     sampler2D texture_diffuse1;
-    // sampler2D texture_reflection1;
-    // samplerCube texture1;
+    // 明天再到mac上试试这个？
+    sampler2D texture_reflection1;
+    samplerCube texture1;
     float shininess;
 };
 
@@ -24,21 +25,22 @@ struct Material
 
 uniform Material material;
 
-// in VS_OUT
-// {
-    // vec3 Position;
-    // vec3 Normal;
-    // vec2 TexCoord;
-// } fs_in;
+in VS_OUT
+{
+    // vec3 fragPos;
+    vec3 normal;
+    vec2 TexCoord;
+} fs_in;
 
-in vec2 TexCoord;
-in vec3 fragPos;
-in vec3 normal;
+
+// in vec2 TexCoord;
+// in vec3 fragPos;
+// in vec3 normal;
 
 // uniform sampler2D texture1;
 // uniform samplerCube texture0;
 
-uniform vec3 cameraPos;
+// uniform vec3 cameraPos;
 
 float near = 0.1f;
 float far = 100.0f;
@@ -85,10 +87,10 @@ void main()
     // float depth = LinearizeDepth(gl_FragCoord.z) / far;
     // FragColor = vec4(vec3(depth), 1.0f);
 
-    vec3 viewDir = normalize(cameraPos - fragPos);
-    vec3 NM = normalize(normal);
+    // vec3 viewDir = normalize(cameraPos - fs_in.fragPos);
+    // vec3 NM = normalize(fs_in.normal);
     // // float ratio = 1.0f / 1.52f;
-    vec3 R = reflect(- viewDir, NM);
+    // vec3 R = reflect(- viewDir, NM);
     // // vec3 reflectMap = vec3(texture(material.texture_reflection1, fs_in.TexCoord));
     // // vec3 reflection = vec3(texture(material.texture1, R).rgb) * reflectMap;
     
@@ -96,17 +98,19 @@ void main()
     // // vec3 originReflec = vec3(texture(material.texture1, R).rgb);
     // // vec4 reflection = vec4(originReflec, 1.0f);
 
-    float diff = max(normalize(dot(NM,  viewDir)), 0.0f);
-    vec3 diffuse = diff * vec3(texture(material.texture_diffuse1, TexCoord));
+    // float diff = max(normalize(dot(NM,  viewDir)), 0.0f);
+    // vec3 diffuse = diff * vec3(texture(material.texture_diffuse1, fs_in.TexCoord));
 
-    float spec = pow(max(normalize(dot(NM, R)), 0.0f), material.shininess);
-    vec3 specular = spec * vec3(texture(material.texture_specular1, TexCoord));
+    // float spec = pow(max(normalize(dot(NM, R)), 0.0f), material.shininess);
+    // vec3 specular = spec * vec3(texture(material.texture_specular1, fs_in.TexCoord));
 
 
     // vec3 light = vec3(0.0f);
     // light += CalcDirLight(dirLight, normal, viewDir);
     // FragColor = vec4(reflection + specular  + diffuse , 1.0f);
-    FragColor = vec4(diffuse + specular, 1.0f);
+    // FragColor = vec4(vec3(texture(material.texture_diffuse1, fs_in.TexCoord)) + vec3(texture(material.texture_specular1, fs_in.TexCoord)), 1.0f);
+    // FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 
+    FragColor = texture(material.texture_diffuse1, fs_in.TexCoord);
     // FragColor = reflection;
 }
