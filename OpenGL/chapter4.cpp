@@ -68,6 +68,16 @@ float housePoints[] = {
     -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
 };  
 
+float instancedQuadVertices[] = {
+    // positions     // colors
+    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+    -0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,   
+     0.05f,  0.05f,  0.0f, 1.0f, 1.0f		    		
+}; 
 
 float cubeVertices[] = {
     // Back face
@@ -176,6 +186,7 @@ unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
 unsigned int skyboxVAO, skyboxVBO;
 unsigned int skyboxTextures;
 unsigned int houseVAO, houseVBO;
+unsigned int instanceVAO, instanceVBO;
 
 int main()
 {
@@ -241,6 +252,7 @@ int main()
     Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
     Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
     Shader normalModelShader("VertexShaderModel.glsl", "FragmentShaderModelNoraml.glsl", "GeometryShader.glsl");
+    Shader instanceShader("VertexShaderInstance.glsl", "FragmentShaderInstance.glsl", "");
     // Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
 
     /*
@@ -377,6 +389,9 @@ int main()
     unsigned int ubiModel = glGetUniformBlockIndex(modelShader.ID, "Matrices");
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiModel, 0);
 
+    unsigned int ubiInstance = glGetUniformBlockIndex(instanceShader.ID, "Matrices");
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiInstance, 0);
+
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // 记得要glBindBufferRange或者glBindBufferBase，将某一个下标值和具体的buffer绑定
@@ -397,14 +412,29 @@ int main()
 
     glBindVertexArray(0);
 
+    // instance vertices
+    glGenVertexArrays(1, &instanceVAO);
+    glGenBuffers(1, &instanceVBO);
+
+    glBindVertexArray(instanceVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(instancedQuadVertices), instancedQuadVertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
+
+    glBindVertexArray(0);
+
     // load textures
     // -------------
     cubeTexture  = loadTexture("resources/container.jpg", GL_REPEAT);
     floorTexture = loadTexture("resources/metal.png", GL_REPEAT);
     grassTexture = loadTexture("resources/grass.png", GL_CLAMP_TO_EDGE);
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
-    Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
-    // Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+    // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
+    Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
 
 
     std::vector<std::string> skyboxTexs = {
@@ -430,6 +460,19 @@ int main()
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+
+    std::vector<glm::vec2> offsets;
+    float offsetFix = 0.4f;
+    for (int row = -10; row < 10; row += 2)
+    {
+        for (int col = -10 ; col < 10; col += 2)
+        {
+            float x = (row / 10.0f) + offsetFix;
+            float y = (col / 10.0f) + offsetFix;
+            glm::vec2 elem = glm::vec2(x, y);
+            offsets.push_back(elem);
+        }
+    }
     // glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
@@ -447,37 +490,52 @@ int main()
         
         // render
         // ------
-
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 
-        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // glm::mat4 view = camera.GetViewMatrix();
+        instanceShader.use();
+        glBindVertexArray(instanceVAO);
+        
+        for (unsigned int index = 0; index < 100; ++ index)
+        {
+            std::stringstream ss;
+            ss << index;
+            instanceShader.setVec2(("offset[" + ss.str() + "]"), offsets[index]);
+        }
 
-        modelShader.use();
-
-        modelShader.setFloat("material.shininess", 0.5f);
-    
-        // modelShader.setMat4("view", view);
-        // modelShader.setMat4("projection", projection);
-        // modelShader.setVec3("cameraPos", camera.Position);
-        // modelShader.setFloat("time", currentFrame);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.75f, -10.0f));
-        // model = glm::scale(model, glm::vec3(0.5f));
-        modelShader.setMat4("model", model);
+        instanceShader.setMat4("model", model);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 
-        nanosuit.Draw(modelShader);
 
-        normalModelShader.use();
-        normalModelShader.setMat4("model", model);
-        nanosuit.Draw(normalModelShader);
+        // // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        // // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // // glm::mat4 view = camera.GetViewMatrix();
+
+        // modelShader.use();
+
+        // modelShader.setFloat("material.shininess", 0.5f);
+    
+        // // modelShader.setMat4("view", view);
+        // // modelShader.setMat4("projection", projection);
+        // // modelShader.setVec3("cameraPos", camera.Position);
+        // // modelShader.setFloat("time", currentFrame);
+        // glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, -1.75f, -10.0f));
+        // // model = glm::scale(model, glm::vec3(0.5f));
+        // modelShader.setMat4("model", model);
+
+        // nanosuit.Draw(modelShader);
+
+        // normalModelShader.use();
+        // normalModelShader.setMat4("model", model);
+        // nanosuit.Draw(normalModelShader);
 
 
 

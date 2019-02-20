@@ -6,8 +6,8 @@ struct Material
     sampler2D texture_specular1;
     sampler2D texture_diffuse1;
     // 明天再到mac上试试这个？
-    sampler2D texture_reflection1;
-    samplerCube texture1;
+    // sampler2D texture_reflection1;
+    // samplerCube texture1;
     float shininess;
 };
 
