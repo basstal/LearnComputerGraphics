@@ -186,7 +186,7 @@ unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
 unsigned int skyboxVAO, skyboxVBO;
 unsigned int skyboxTextures;
 unsigned int houseVAO, houseVBO;
-unsigned int instanceVAO, instanceVBO;
+unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
 
 int main()
 {
@@ -247,11 +247,12 @@ int main()
     Shader simpleColorShader("VertexShader4.glsl", "SimpleColorFragmentShader.glsl", "");
     Shader quadShader("QuadVertexShader.glsl", "QuadFragmentShader.glsl", "");
     Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl", "");
+    Shader instanceModelShader("VertexShaderInstanceModel.glsl", "FragmentShaderModel.glsl", "");
     Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl", "");
     Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "");
     Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
     Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
-    Shader normalModelShader("VertexShaderModel.glsl", "FragmentShaderModelNoraml.glsl", "GeometryShader.glsl");
+    Shader normalModelShader("VertexShaderModel.glsl", "FragmentShaderModelNormal.glsl", "GeometryShader.glsl");
     Shader instanceShader("VertexShaderInstance.glsl", "FragmentShaderInstance.glsl", "");
     // Shader ubo4Shader("VertexShaderUBO.glsl", "FragmentShaderUBO4.glsl", "GeometryShader.glsl");
 
@@ -389,6 +390,9 @@ int main()
     unsigned int ubiModel = glGetUniformBlockIndex(modelShader.ID, "Matrices");
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiModel, 0);
 
+    unsigned int ubiInstanceModel = glGetUniformBlockIndex(instanceModelShader.ID, "Matrices");
+    glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiInstanceModel, 0);
+
     unsigned int ubiInstance = glGetUniformBlockIndex(instanceShader.ID, "Matrices");
     glUniformBlockBinding(GL_UNIFORM_BUFFER, ubiInstance, 0);
 
@@ -424,6 +428,26 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
+    
+    glm::vec2 offsets[100];
+    float offsetFix = 0.4f;
+    int index = 0;
+    for (int col = -10; col < 10; col += 2)
+    {
+        for (int row = -10 ; row < 10; row += 2)
+        {
+            float x = (row / 10.0f) + offsetFix;
+            float y = (col / 10.0f) + offsetFix;
+            offsets[index++] = glm::vec2(x, y);
+        }
+    }
+    glGenBuffers(1, &instanceVBO1);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &offsets[0], GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+    glVertexAttribDivisor(2, 1);
 
     glBindVertexArray(0);
 
@@ -434,8 +458,66 @@ int main()
     grassTexture = loadTexture("resources/grass.png", GL_CLAMP_TO_EDGE);
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
     // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
-    Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+    // Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+    Model planet(std::string("F:/Documents/OpenGL/Models/planet/planet.obj").c_str());
+    Model rock(std::string("F:/Documents/OpenGL/Models/rock/rock.obj").c_str());
 
+
+    // create 1000 amounts of rock transform matrices
+    int amount = 100000;
+    srand(glfwGetTime());
+    glm::mat4 *modelMatrices = new glm::mat4[amount];
+    float radius = 100.0f;
+    float offset = 25.0f;
+
+    for (int i = 0; i < amount ; ++i)
+    {
+        glm::mat4 trans;
+
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100.0f)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100.0f)) / 100.0f - offset;
+        float y = displacement * 0.4f;
+        displacement = (rand() % (int)(2 * offset * 100.0f)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        trans = glm::translate(trans, glm::vec3(x, y, z));
+
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        trans = glm::scale(trans, glm::vec3(scale));
+
+        float rotAngle = rand() % 360;
+        trans = glm::rotate(trans, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        modelMatrices[i] = trans;
+    }
+
+    glGenBuffers(1, &instanceRockVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceRockVBO);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+    for (int meshIdx = 0; meshIdx < rock.meshes.size(); ++meshIdx)
+    {
+        unsigned int VAO = rock.meshes[meshIdx].VAO;
+        GLsizei vec4Size = sizeof(glm::vec4);
+        glBindVertexArray(VAO);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(2 * vec4Size));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(3 * vec4Size));
+
+        // 记得要切换instancing 的 location attribDivisor
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+
+        glBindVertexArray(0);
+    }
 
     std::vector<std::string> skyboxTexs = {
         "resources/skybox/right.jpg",
@@ -461,18 +543,6 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-    std::vector<glm::vec2> offsets;
-    float offsetFix = 0.4f;
-    for (int row = -10; row < 10; row += 2)
-    {
-        for (int col = -10 ; col < 10; col += 2)
-        {
-            float x = (row / 10.0f) + offsetFix;
-            float y = (col / 10.0f) + offsetFix;
-            glm::vec2 elem = glm::vec2(x, y);
-            offsets.push_back(elem);
-        }
-    }
     // glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
@@ -492,26 +562,49 @@ int main()
         // ------
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
+        
+        
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 
-        instanceShader.use();
-        glBindVertexArray(instanceVAO);
-        
-        for (unsigned int index = 0; index < 100; ++ index)
+        // modelShader.use();
+        // glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        // model = glm::scale(model, glm::vec3(4.0f));
+        // modelShader.setMat4("model", model);
+        // planet.Draw(modelShader);
+
+        // modelShader.use();
+        // for (int i = 0; i < amount; ++i)
+        // {
+        //     modelShader.setMat4("model", modelMatrices[i]);
+        //     rock.Draw(modelShader);
+        // }
+
+        instanceModelShader.use();
+        for (int i = 0; i < rock.meshes.size(); ++i)
         {
-            std::stringstream ss;
-            ss << index;
-            instanceShader.setVec2(("offset[" + ss.str() + "]"), offsets[index]);
+            GLsizei count = rock.meshes[i].indices.size();
+            glBindVertexArray(rock.meshes[i].VAO);
+            glDrawElementsInstanced(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0, amount);
         }
 
-        glm::mat4 model = glm::mat4(1.0f);
-        instanceShader.setMat4("model", model);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+        // instanceShader.use();
+        // glBindVertexArray(instanceVAO);
+        
+        // for (unsigned int index = 0; index < 100; ++ index)
+        // {
+        //     std::stringstream ss;
+        //     ss << index;
+        //     instanceShader.setVec2(("offset[" + ss.str() + "]"), offsets[index]);
+        // }
+
+        // glm::mat4 model = glm::mat4(1.0f);
+        // instanceShader.setMat4("model", model);
+        // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 
 
         // // glBindBuffer(GL_UNIFORM_BUFFER, 0);
