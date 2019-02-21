@@ -177,11 +177,13 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+int samples = 4;
+
 unsigned int cubeVAO, cubeVBO;
 unsigned int grassVAO, grassVBO;
 unsigned int planeVAO, planeVBO;
 unsigned int quadVAO, quadVBO;
-unsigned int frameBuffer;
+unsigned int frameBuffer, multiSampleFBO;
 unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
 unsigned int skyboxVAO, skyboxVBO;
 unsigned int skyboxTextures;
@@ -195,6 +197,7 @@ int main()
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // glfwWindowHint(GLFW_SAMPLES, 16);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -230,6 +233,7 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    // glEnable(GL_MULTISAMPLE);
 
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_FRONT);
@@ -249,7 +253,7 @@ int main()
     Shader skyboxShader("VertexShaderSkybox.glsl", "FragmentShaderSkybox.glsl", "");
     Shader instanceModelShader("VertexShaderInstanceModel.glsl", "FragmentShaderModel.glsl", "");
     Shader modelShader("VertexShaderModel.glsl", "FragmentShaderModel.glsl", "");
-    Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "");
+    Shader ubo1Shader("VertexShaderUBO.glsl", "FragmentShaderUBO1.glsl", "GeometryShaderFrame.glsl");
     Shader ubo2Shader("VertexShaderUBO.glsl", "FragmentShaderUBO2.glsl", "");
     Shader ubo3Shader("VertexShaderUBO.glsl", "FragmentShaderUBO3.glsl", "");
     Shader normalModelShader("VertexShaderModel.glsl", "FragmentShaderModelNormal.glsl", "GeometryShader.glsl");
@@ -348,14 +352,33 @@ int main()
     glGenRenderbuffers(1, &renderBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "ERROR::FRAME BUFFER:: Framebuffer is not complete! " << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    glGenFramebuffers(1, &multiSampleFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
+
+    unsigned int multiSampleTex;
+    glGenTextures(1, &multiSampleTex);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multiSampleTex);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, multiSampleTex, 0);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+    unsigned int multiSampleRB;
+    glGenBuffers(1, &multiSampleRB);
+    glBindBuffer(GL_RENDERBUFFER, multiSampleRB);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glBindBuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, multiSampleRB);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAME BUFFER:: multiSample Framebuffer is not complete! " << std::endl;
+    glBindBuffer(GL_FRAMEBUFFER, 0);
 
     // Skybox vao
     glGenVertexArrays(1, &skyboxVAO);
@@ -459,8 +482,8 @@ int main()
     windowTexture = loadTexture("resources/window.png", GL_REPEAT);
     // Model nanosuit(std::string("F:/Documents/OpenGL/Models/nanosuit_reflection/nanosuit.obj").c_str());
     // Model nanosuit(std::string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
-    Model planet(std::string("F:/Documents/OpenGL/Models/planet/planet.obj").c_str());
-    Model rock(std::string("F:/Documents/OpenGL/Models/rock/rock.obj").c_str());
+    // Model planet(std::string("F:/Documents/OpenGL/Models/planet/planet.obj").c_str());
+    // Model rock(std::string("F:/Documents/OpenGL/Models/rock/rock.obj").c_str());
 
 
     // create 1000 amounts of rock transform matrices
@@ -496,28 +519,28 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, instanceRockVBO);
     glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
 
-    for (int meshIdx = 0; meshIdx < rock.meshes.size(); ++meshIdx)
-    {
-        unsigned int VAO = rock.meshes[meshIdx].VAO;
-        GLsizei vec4Size = sizeof(glm::vec4);
-        glBindVertexArray(VAO);
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(2 * vec4Size));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(3 * vec4Size));
+    // for (int meshIdx = 0; meshIdx < rock.meshes.size(); ++meshIdx)
+    // {
+    //     unsigned int VAO = rock.meshes[meshIdx].VAO;
+    //     GLsizei vec4Size = sizeof(glm::vec4);
+    //     glBindVertexArray(VAO);
+    //     glEnableVertexAttribArray(3);
+    //     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)0);
+    //     glEnableVertexAttribArray(4);
+    //     glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size));
+    //     glEnableVertexAttribArray(5);
+    //     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(2 * vec4Size));
+    //     glEnableVertexAttribArray(6);
+    //     glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(3 * vec4Size));
 
-        // 记得要切换instancing 的 location attribDivisor
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
+    //     // 记得要切换instancing 的 location attribDivisor
+    //     glVertexAttribDivisor(3, 1);
+    //     glVertexAttribDivisor(4, 1);
+    //     glVertexAttribDivisor(5, 1);
+    //     glVertexAttribDivisor(6, 1);
 
-        glBindVertexArray(0);
-    }
+    //     glBindVertexArray(0);
+    // }
 
     std::vector<std::string> skyboxTexs = {
         "resources/skybox/right.jpg",
@@ -543,7 +566,7 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-    // glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
     while(!glfwWindowShouldClose(window))
@@ -570,6 +593,13 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
 
+        ubo1Shader.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        ubo1Shader.setMat4("model", model);
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
         // modelShader.use();
         // glm::mat4 model = glm::mat4(1.0f);
         // model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
@@ -584,13 +614,13 @@ int main()
         //     rock.Draw(modelShader);
         // }
 
-        instanceModelShader.use();
-        for (int i = 0; i < rock.meshes.size(); ++i)
-        {
-            GLsizei count = rock.meshes[i].indices.size();
-            glBindVertexArray(rock.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0, amount);
-        }
+        // instanceModelShader.use();
+        // for (int i = 0; i < rock.meshes.size(); ++i)
+        // {
+        //     GLsizei count = rock.meshes[i].indices.size();
+        //     glBindVertexArray(rock.meshes[i].VAO);
+        //     glDrawElementsInstanced(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0, amount);
+        // }
 
         // instanceShader.use();
         // glBindVertexArray(instanceVAO);
