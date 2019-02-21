@@ -342,6 +342,9 @@ int main()
     glGenTextures(1, &textureColorBuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -378,7 +381,7 @@ int main()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, multiSampleRB);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "ERROR::FRAME BUFFER:: multiSample Framebuffer is not complete! " << std::endl;
-    glBindBuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Skybox vao
     glGenVertexArrays(1, &skyboxVAO);
@@ -566,7 +569,7 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    // glEnable(GL_PROGRAM_POINT_SIZE);
     // render loop
     // -----------
     while(!glfwWindowShouldClose(window))
@@ -583,21 +586,47 @@ int main()
         
         // render
         // ------
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        
-        
+        glEnable(GL_DEPTH_TEST);
+
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+        ubo1Shader.use();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        
+        // glEnable(GL_DEPTH_TEST);
+        // glDepthFunc(GL_LEQUAL);
 
-        ubo1Shader.use();
+        // ubo1Shader.setMat4("view", view);
+        // ubo1Shader.setMat4("projection", projection);
         glm::mat4 model = glm::mat4(1.0f);
         ubo1Shader.setMat4("model", model);
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        // 注意bindBuffer 和bindFrameBuffer ！！！！ FRAMEBUFFER的枚举全都要用bindFrameBuffer；  
+        // GL_TEXTURE_2D_MULTISAMPLE 的texture不能够直接bind成texture2D， 必须要通过blitFrameBuffer到一个普通的GL_TEXTURE_2D的frameBuffer上才能够渲染
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, multiSampleFBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer);
+        glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+
+        quadShader.use();
+        glBindVertexArray(quadVAO);
+        // glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
         // modelShader.use();
