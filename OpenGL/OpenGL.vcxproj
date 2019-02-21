@@ -132,21 +132,11 @@
     <ClCompile Include="chapter2.cpp" />
     <ClCompile Include="chapter3.cpp" />
     <ClCompile Include="chapter4.cpp" />
+    <ClCompile Include="chapter5.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="template.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FragmentShader1.glsl" />
-    <None Include="FragmentShader2.glsl" />
-    <None Include="FragmentShader3.glsl" />
-    <None Include="FragmentShader4.glsl" />
-    <None Include="LightFragmentShader.glsl" />
-    <None Include="VertexShader1.glsl" />
-    <None Include="VertexShader2.glsl" />
-    <None Include="VertexShader3.glsl" />
-    <None Include="VertexShader4.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\marble.jpg" />
