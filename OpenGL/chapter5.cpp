@@ -36,6 +36,10 @@ bool glBlinnPressed = false;
 bool openGammaCorrection = false;
 bool glGammaCorrection = false;
 
+// 4 parallax mapping
+bool enableNormalMap = false;
+bool normalMappingSwitch = false;
+
 float blinnPhong[] = {
     // positions            // normals         // texcoords
     10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
@@ -117,11 +121,12 @@ int main()
     // unsigned int textureGammaCorrection = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
     // unsigned int textureGammaIncorrect = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", false);
     // // 3 normal mapping
-    // unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall.jpg", false);
-    // unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
+    unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2.jpg", false);
+    unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_normal.jpg", false);
+    unsigned int wallParallaxMapping = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_disp.jpg", false);
 
-    unsigned int wall = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall.jpg", false);
-    unsigned int wallNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
+    // unsigned int wall = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall.jpg", false);
+    // unsigned int wallNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
     
     // 1-blinn phong
     Shader shaderPlane = Shader("VertexShaderPlane.glsl", "FragmentShaderPlane.glsl", "");
@@ -135,6 +140,8 @@ int main()
 
     // 3 normal mapping
     Shader normalMappingShader = Shader("VertexShaderNormalMapping.glsl", "FragmentShaderNormalMapping.glsl", "");
+    // 4 parallax mapping
+    Shader parallaxMappingShader = Shader("VertexShaderParallaxMapping.glsl", "FragmentShaderParallaxMapping.glsl", "");
     // unsigned int planeVAO, planeVBO;
     // glGenVertexArrays(1, &planeVAO);
     // glGenBuffers(1, &planeVBO);
@@ -237,6 +244,12 @@ int main()
     normalMappingShader.setInt("diffuseTexture", 0);
     normalMappingShader.setInt("normalMapping", 1);
     lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
+
+    parallaxMappingShader.use();
+    parallaxMappingShader.setInt("diffuseTexture", 0);
+    parallaxMappingShader.setInt("normalMapping", 1);
+    parallaxMappingShader.setInt("parallaxMapping", 2);
+    parallaxMappingShader.setVec3("lightPos", lightPos);
     while(!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -349,26 +362,49 @@ int main()
 
         // 3 normal mapping
 
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+
+        // glm::mat4 view = camera.GetViewMatrix();
+
+        // normalMappingShader.use();
+
+        // normalMappingShader.setMat4("projection", projection);
+        // normalMappingShader.setMat4("view", view);
+        // normalMappingShader.setVec3("lightPos", lightPos);
+        // normalMappingShader.setVec3("viewPos", camera.Position);
+        // glm::mat4 model = glm::mat4(1.0f);
+        // // model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0, 0.0, 1.0));
+        // model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        // normalMappingShader.setMat4("model", model);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, wall);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, wallNormal);
+
+        // renderQuad();
+
+
+        // 4 parallax mapping
+        parallaxMappingShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-
-        glm::mat4 view = camera.GetViewMatrix();
-
-        normalMappingShader.use();
-
-        normalMappingShader.setMat4("projection", projection);
-        normalMappingShader.setMat4("view", view);
-        normalMappingShader.setVec3("lightPos", lightPos);
-        normalMappingShader.setVec3("viewPos", camera.Position);
         glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0, 0.0, 1.0));
-        model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-        normalMappingShader.setMat4("model", model);
+        model = glm::rotate(model, glm::radians((float)glfwGetTime() * -0.2f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        glm::mat4 view = camera.GetViewMatrix();
+        parallaxMappingShader.setMat4("view", view);
+        parallaxMappingShader.setMat4("projection", projection);
+        parallaxMappingShader.setMat4("model", model);
+        parallaxMappingShader.setVec3("viewDir", camera.Position);
+        parallaxMappingShader.setBool("enableNormalMap", enableNormalMap);
+        parallaxMappingShader.setFloat("heightScale", 0.01f);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wall);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, wallNormal);
-
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, wallParallaxMapping);
         renderQuad();
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -419,6 +455,17 @@ void processInput(GLFWwindow * window)
     if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
     {
         glGammaCorrection = false;
+    }
+
+    // 4 parallax mapping
+    if(glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !normalMappingSwitch)
+    {
+        enableNormalMap = !enableNormalMap;
+        normalMappingSwitch = true;
+    }
+    if(glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
+    {
+        normalMappingSwitch = false;
     }
 }
 
