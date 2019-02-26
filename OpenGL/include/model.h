@@ -45,7 +45,7 @@ void Model::Draw(Shader shader)
 void Model::loadModel(std::string path)
 {
     Assimp::Importer importer;
-    const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate);
+    const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_CalcTangentSpace);
     // 这里需要判断scene是不是成功加载了
     if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -92,6 +92,12 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         normal.y = mesh->mNormals[i].y;
         normal.z = mesh->mNormals[i].z;
         vertex.Normal = normal;
+        
+        glm::vec3 tangent;
+        tangent.x = mesh->mTangents[i].x;
+        tangent.y = mesh->mTangents[i].y;
+        tangent.z = mesh->mTangents[i].z;
+        vertex.Tangent = tangent;
 
         glm::vec2 texCoord(0.0f);
         if (mesh->mTextureCoords[0])
@@ -121,6 +127,8 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         std::vector<Texture> specularTextures = loadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
         std::vector<Texture> reflectionTexture = loadMaterialTexture(material, aiTextureType_AMBIENT, "texture_reflection");
+        textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
+        std::vector<Texture> tangentTexture = loadMaterialTexture(material, aiTextureType_HEIGHT, "texture_tangent");
         textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
     }
     else

@@ -29,8 +29,12 @@ void main()
     mat3 NormalMatrix = mat3(transpose(inverse(model)));
 
     vec3 T = normalize(NormalMatrix * aTangent);
-    vec3 B = normalize(NormalMatrix * aBitangent);
     vec3 N = normalize(NormalMatrix * aNormal);
+    // vec3 B = normalize(NormalMatrix * aBitangent);
+
+    // Gram-Schmidt process
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
     mat3 TBN = transpose(mat3(T, B, N));
 
     vec3 FragPos = vec3(model * vec4(aPos, 1.0f));

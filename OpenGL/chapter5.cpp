@@ -106,6 +106,7 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_LEQUAL);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
@@ -359,6 +360,7 @@ int main()
         normalMappingShader.setVec3("lightPos", lightPos);
         normalMappingShader.setVec3("viewPos", camera.Position);
         glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0, 0.0, 1.0));
         model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         normalMappingShader.setMat4("model", model);
         glActiveTexture(GL_TEXTURE0);
