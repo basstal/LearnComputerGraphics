@@ -9,6 +9,9 @@
 #include <camera.h>
 #include <shader.h>
 
+bool wireframe = false;
+
+
 const int HEIGHT = 780;
 const int WIDTH = 1280;
 
@@ -76,6 +79,10 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
     if (window == NULL)
     {
@@ -93,6 +100,11 @@ int main()
         return -1;
     }
 
+    if (!wireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
@@ -101,11 +113,14 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    unsigned int textureGammaCorrection = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
-    unsigned int textureGammaIncorrect = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", false);
-    // 3 normal mapping
-    unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall.jpg", false);
-    unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
+    // unsigned int textureGammaCorrection = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
+    // unsigned int textureGammaIncorrect = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", false);
+    // // 3 normal mapping
+    // unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall.jpg", false);
+    // unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
+
+    unsigned int wall = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall.jpg", false);
+    unsigned int wallNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
     
     // 1-blinn phong
     Shader shaderPlane = Shader("VertexShaderPlane.glsl", "FragmentShaderPlane.glsl", "");
@@ -231,7 +246,7 @@ int main()
         
         // render
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
         // 1 - blinn phong
@@ -344,7 +359,7 @@ int main()
         normalMappingShader.setVec3("lightPos", lightPos);
         normalMappingShader.setVec3("viewPos", camera.Position);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * -10.0f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         normalMappingShader.setMat4("model", model);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wall);
