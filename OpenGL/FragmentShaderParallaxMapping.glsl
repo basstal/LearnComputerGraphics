@@ -19,12 +19,33 @@ uniform bool enableNormalMap;
 
 uniform float heightScale;
 
+const float minLayers = 6.0;
+const float maxLayers = 32.0;
+
 vec2 CalcParallaxMapping(vec2 TexCoord, vec3 viewDir)
 {
-    float height = texture(parallaxMapping, TexCoord).r;
-    vec2 p = viewDir.xy * (height * heightScale);
-    return TexCoord - p;
-    // return TexCoord;
+    // steep parallax mapping
+    float numberOfLayers = mix(minLayers, maxLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec2 p = viewDir.xy * heightScale;
+    vec2 depthPerLayer = p / numberOfLayers;
+    vec2 currentTexCoord = TexCoord;
+    float currentDepthMapVal = texture(parallaxMapping, currentTexCoord).r;
+    float layerDepth = 1.0 / numberOfLayers;
+    float currentLayerDepth = 0.0;
+
+
+    while( currentLayerDepth < currentDepthMapVal )
+    {
+        currentTexCoord -= depthPerLayer;
+        currentDepthMapVal = texture(parallaxMapping, currentTexCoord).r;
+        currentLayerDepth += layerDepth;
+    }
+    return currentTexCoord;
+
+    // parallax mapping
+    // float height = texture(parallaxMapping, TexCoord).r;
+    // vec2 p = viewDir.xy * (height * heightScale);
+    // return TexCoord - p;
 }
 
 void main()
@@ -43,13 +64,13 @@ void main()
     }
 
     vec3 color = texture(diffuseTexture, texCoord).rgb;
-    vec3 ambient = 0.5f * color;
+    vec3 ambient = 0.1f * color;
 
     vec3 light = vec3(0.2f);
 
     vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
     float diff = max( dot(lightDir, normal), 0.0);
-    vec3 diffuse = light * diff;
+    vec3 diffuse = color * diff;
 
     vec3 halfWay = normalize(lightDir + viewDir);
     float spec = pow( max( dot(halfWay, normal), 0.0 ), 32.0f);

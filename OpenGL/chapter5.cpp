@@ -37,8 +37,10 @@ bool openGammaCorrection = false;
 bool glGammaCorrection = false;
 
 // 4 parallax mapping
-bool enableNormalMap = false;
+bool enableNormalMap = true;
 bool normalMappingSwitch = false;
+
+float heightScale = 0.1f;
 
 float blinnPhong[] = {
     // positions            // normals         // texcoords
@@ -121,12 +123,20 @@ int main()
     // unsigned int textureGammaCorrection = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
     // unsigned int textureGammaIncorrect = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", false);
     // // 3 normal mapping
-    unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2.jpg", false);
-    unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_normal.jpg", false);
-    unsigned int wallParallaxMapping = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_disp.jpg", false);
+    // unsigned int wall = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2.jpg", false);
+    // unsigned int wallNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_normal.jpg", false);
+    // unsigned int wallParallaxMapping = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/bricks2_disp.jpg", false);
 
     // unsigned int wall = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall.jpg", false);
     // unsigned int wallNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/brickwall_normal.jpg", false);
+
+    unsigned int toy = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/toy_box_diffuse.png", false);
+    // unsigned int toy = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/wood.png", false);
+    // unsigned int toy = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/window.png", false);
+    
+    unsigned int toyNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/toy_box_normal.png", false);
+    unsigned int toyHeight = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/toy_box_disp.png", false);
+    
     
     // 1-blinn phong
     Shader shaderPlane = Shader("VertexShaderPlane.glsl", "FragmentShaderPlane.glsl", "");
@@ -388,21 +398,21 @@ int main()
         parallaxMappingShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians((float)glfwGetTime() * -0.2f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         glm::mat4 view = camera.GetViewMatrix();
         parallaxMappingShader.setMat4("view", view);
         parallaxMappingShader.setMat4("projection", projection);
         parallaxMappingShader.setMat4("model", model);
         parallaxMappingShader.setVec3("viewDir", camera.Position);
         parallaxMappingShader.setBool("enableNormalMap", enableNormalMap);
-        parallaxMappingShader.setFloat("heightScale", 0.01f);
+        parallaxMappingShader.setFloat("heightScale", heightScale);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, wall);
+        glBindTexture(GL_TEXTURE_2D, toy);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, wallNormal);
+        glBindTexture(GL_TEXTURE_2D, toyNormal);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, wallParallaxMapping);
+        glBindTexture(GL_TEXTURE_2D, toyHeight);
         renderQuad();
 
 
@@ -466,6 +476,21 @@ void processInput(GLFWwindow * window)
     if(glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
     {
         normalMappingSwitch = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (heightScale > 0.0f)
+            heightScale -= 0.0005f;
+        else
+            heightScale = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        if (heightScale < 1.0f)
+            heightScale += 0.0005f;
+        else
+            heightScale = 1.0f;
     }
 }
 
