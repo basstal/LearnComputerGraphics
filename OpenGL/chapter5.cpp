@@ -8,6 +8,7 @@
 
 #include <camera.h>
 #include <shader.h>
+#include <model.h>
 
 bool wireframe = false;
 
@@ -112,7 +113,6 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LEQUAL);
     
@@ -144,6 +144,9 @@ int main()
     unsigned int toyHeight = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_disp.png", false);
 
     unsigned int woodTexture = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
+    unsigned int container = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/container2.png", true);
+
+    Model nanosuit = Model("F:/Documents/OpenGL/Models/nanosuit/nanosuit.obj");
     
     // 1-blinn phong
     Shader shaderPlane = Shader("VertexShaderPlane.glsl", "FragmentShaderPlane.glsl", "");
@@ -168,6 +171,13 @@ int main()
     Shader bloomShader = Shader("VertexShaderBloom.glsl", "FragmentShaderBloom.glsl", "");
     Shader gaussianBlurShader = Shader("VertexShaderGaussianBlur.glsl", "FragmentShaderGaussianBlur.glsl", "");
     Shader bloomQuadShader = Shader("VertexShaderBloomQuad.glsl", "FragmentShaderBloomQuad.glsl", "");
+    Shader shaderLight = Shader("VertexShaderLight1.glsl", "FragmentShaderLight1.glsl", "");
+
+    // 7 Deferred Shading
+    Shader deferredShader = Shader("VertexShaderDeferred.glsl", "FragmentShaderDeferred.glsl", "");
+    Shader quadShader = Shader("VertexShaderQuad1.glsl", "FragmentShaderQuad1.glsl", "");
+    Shader shaderLight2 = Shader("VertexShaderLight2.glsl", "FragmentShaderLight2.glsl", "");
+
     // unsigned int planeVAO, planeVBO;
     // glGenVertexArrays(1, &planeVAO);
     // glGenBuffers(1, &planeVBO);
@@ -267,55 +277,109 @@ int main()
     //     cout <<"ERROR:: FRAME BUFFER INIT FAILED!" << endl;
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    unsigned int bloomFBO;
-    unsigned int colorBuffers[2];
-    glGenFramebuffers(1, &bloomFBO);
-    glGenTextures(2, colorBuffers);
+    // // 6 Bloom
+    // unsigned int bloomFBO;
+    // unsigned int colorBuffers[2];
+    // glGenFramebuffers(1, &bloomFBO);
+    // glGenTextures(2, colorBuffers);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
-    for (unsigned int i = 0 ; i < 2; ++i)
-    {
-        unsigned int currentTexBuffer = colorBuffers[i];
-        glBindTexture(GL_TEXTURE_2D, currentTexBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, currentTexBuffer);
-    }
+    // glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+    // for (unsigned int i = 0 ; i < 2; ++i)
+    // {
+    //     glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+    // }
 
-    unsigned int bloomDepthRenderBuffer;
-    glGenRenderbuffers(1, bloomDepthRenderBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, bloomDepthRenderBuffer);
+    // unsigned int renderBuffer;
+    // glGenRenderbuffers(1, &renderBuffer);
+    // glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
+    // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    // unsigned int attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    // glDrawBuffers(2, attachments);
+
+    // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    //     cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // unsigned int pingpongFBO[2];
+    // glGenFramebuffers(2, pingpongFBO);
+    // unsigned int pingpongBuffer[2];
+    // glGenTextures(2, pingpongBuffer);
+    // for (unsigned int i = 0; i < 2; ++i)
+    // {
+    //     glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+    //     glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
+    //     glBindTexture(GL_TEXTURE_2D, 0);
+    //     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    //         cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // }
+
+    // 7 Deferred shading
+    unsigned int gBufferFBO;
+    glGenFramebuffers(1, &gBufferFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+
+    // unsigned int textures[3];
+    // glGenTextures(3, textures);
+    // for (unsigned int i = 0; i < 3 ; ++i)
+    // {
+    //     glBindTexture(GL_TEXTURE_2D, textures[i]);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, (i > 1 ? GL_RGBA: GL_RGB16F), WIDTH, HEIGHT, 0, i> 1? GL_RGBA : GL_RGB, i> 1? GL_UNSIGNED_BYTE : GL_FLOAT, NULL);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, textures[i], 0);
+    // }
+
+    unsigned int gPosition, gNormal, gAlbedoSpec;
+    // position color buffer
+    glGenTextures(1, &gPosition);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+    // normal color buffer
+    glGenTextures(1, &gNormal);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+    // color + specular color buffer
+    glGenTextures(1, &gAlbedoSpec);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
+    glDrawBuffers(3, attachments);
+
+    unsigned int depthRB;
+    glGenRenderbuffers(1, &depthRB);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, bloomDepthRenderBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_RENDERBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
 
-    unsigned int * attachments = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, attachments);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    unsigned int pingpongFBO[2];
-    glGenFramebuffers(2, pingpongFBO);
-    unsigned int pingpongBuffer[2];
-    glGenTextures(2, pingpongBuffer);
-    for (unsigned int i = 0; i < 2; ++i)
-    {
-        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        // todo
-        // create 2 framebuffer for hdr -> gl_color_attachment0
-        // bind frame buffer
-        // if firstIteration bind texture -> colorBuffer[1]
-        // else bind texture -> pingpongBuffer[!horizontal]
-        //amount = 10 -> loop times
-        // blend final color
-    }
-
 
     glm::vec3 lightPos = glm::vec3(0.0f);
     float near_plane = 1.0f, far_plane = 25.0f;
@@ -359,18 +423,77 @@ int main()
 
     hdrQuadShader.use();
     hdrQuadShader.setInt("hdrTexture", 0);
-    // positions
+    // // positions
+    // std::vector<glm::vec3> lightPositions;
+    // lightPositions.push_back(glm::vec3( 0.0f,  0.0f, 49.5f)); // back light
+    // lightPositions.push_back(glm::vec3(-1.4f, -1.9f, 9.0f));
+    // lightPositions.push_back(glm::vec3( 0.0f, -1.8f, 4.0f));
+    // lightPositions.push_back(glm::vec3( 0.8f, -1.7f, 6.0f));
+    // // colors
+    // std::vector<glm::vec3> lightColors;
+    // lightColors.push_back(glm::vec3(200.0f, 200.0f, 200.0f));
+    // lightColors.push_back(glm::vec3(0.1f, 0.0f, 0.0f));
+    // lightColors.push_back(glm::vec3(0.0f, 0.0f, 0.2f));
+    // lightColors.push_back(glm::vec3(0.0f, 0.1f, 0.0f));
+    
+
+    // 6 bloom
+    bloomQuadShader.use();
+    bloomQuadShader.setInt("texture0", 0);
+    bloomQuadShader.setInt("brightness0", 1);
+    gaussianBlurShader.use();
+    gaussianBlurShader.setInt("image", 0);
+    bloomShader.use();
+    bloomShader.setInt("texture0", 0);
+
+    // std::vector<glm::vec3> lightPositions;
+    // lightPositions.push_back(glm::vec3( 0.0f, 0.5f,  1.5f));
+    // lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
+    // lightPositions.push_back(glm::vec3( 3.0f, 0.5f,  1.0f));
+    // lightPositions.push_back(glm::vec3(-.8f,  2.4f, -1.0f));
+    // // colors
+    // std::vector<glm::vec3> lightColors;
+    // lightColors.push_back(glm::vec3(5.0f,   5.0f,  5.0f));
+    // lightColors.push_back(glm::vec3(10.0f,  0.0f,  0.0f));
+    // lightColors.push_back(glm::vec3(0.0f,   0.0f,  15.0f));
+    // lightColors.push_back(glm::vec3(0.0f,   5.0f,  0.0f));
+
+    // 7 Deferred Shading
+    std::vector<glm::vec3> objectPositions;
+    objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
+    objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
+    objectPositions.push_back(glm::vec3( 3.0,  -3.0, -3.0));
+    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  0.0));
+    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  0.0));
+    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  0.0));
+    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  3.0));
+    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  3.0));
+    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
+
+    quadShader.use();
+    quadShader.setInt("position", 0);
+    quadShader.setInt("normal", 1);
+    quadShader.setInt("albedoSpec", 2);
+
+    // lighting info
+    // -------------
+    const unsigned int NR_LIGHTS = 32;
     std::vector<glm::vec3> lightPositions;
-    lightPositions.push_back(glm::vec3( 0.0f,  0.0f, 49.5f)); // back light
-    lightPositions.push_back(glm::vec3(-1.4f, -1.9f, 9.0f));
-    lightPositions.push_back(glm::vec3( 0.0f, -1.8f, 4.0f));
-    lightPositions.push_back(glm::vec3( 0.8f, -1.7f, 6.0f));
-    // colors
     std::vector<glm::vec3> lightColors;
-    lightColors.push_back(glm::vec3(200.0f, 200.0f, 200.0f));
-    lightColors.push_back(glm::vec3(0.1f, 0.0f, 0.0f));
-    lightColors.push_back(glm::vec3(0.0f, 0.0f, 0.2f));
-    lightColors.push_back(glm::vec3(0.0f, 0.1f, 0.0f));
+    srand(13);
+    for (unsigned int i = 0; i < NR_LIGHTS; i++)
+    {
+        // calculate slightly random offsets
+        float xPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+        float yPos = ((rand() % 100) / 100.0) * 6.0 - 4.0;
+        float zPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+        lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+        // also calculate random color
+        float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+        float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+        float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+        lightColors.push_back(glm::vec3(rColor, gColor, bColor));
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -381,7 +504,7 @@ int main()
         processInput(window);
         
         // render
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -528,36 +651,205 @@ int main()
         // renderQuad();
 
         // 5 HDR
-        hdrObjShader.use();
-        glBindFramebuffer(GL_FRAMEBUFFER, HDRFBO);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        hdrObjShader.setMat4("projection", projection);
-        hdrObjShader.setMat4("view", view);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, woodTexture);
-        for( unsigned int i = 0; i < lightPositions.size(); ++i)
-        {
-            hdrObjShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
-            hdrObjShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
-        }
-        hdrObjShader.setVec3("viewPos", camera.Position);
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0));
-        model = glm::scale(model, glm::vec3(2.5f, 2.5f, 27.5f));
-        hdrObjShader.setMat4("model", model);
-        hdrObjShader.setBool("inverseNormals", true);
-        renderCubeSimple();
+        // hdrObjShader.use();
+        // glBindFramebuffer(GL_FRAMEBUFFER, HDRFBO);
+        // glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+        // glm::mat4 view = camera.GetViewMatrix();
+        // hdrObjShader.setMat4("projection", projection);
+        // hdrObjShader.setMat4("view", view);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, woodTexture);
+        // for( unsigned int i = 0; i < lightPositions.size(); ++i)
+        // {
+        //     hdrObjShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
+        //     hdrObjShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
+        // }
+        // hdrObjShader.setVec3("viewPos", camera.Position);
+        // glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0));
+        // model = glm::scale(model, glm::vec3(2.5f, 2.5f, 27.5f));
+        // hdrObjShader.setMat4("model", model);
+        // hdrObjShader.setBool("inverseNormals", true);
+        // renderCubeSimple();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // hdrQuadShader.use();
+        // hdrQuadShader.setFloat("exposure", exposure);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, HDRTexture);
+        // renderQuadSimple();
+
+        // // 6 Bloom
+        // glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+        // glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+        // glm::mat4 view = camera.GetViewMatrix();
+        // glm::mat4 model = glm::mat4(1.0f);
+        // bloomShader.use();
+        // bloomShader.setMat4("projection", projection);
+        // bloomShader.setMat4("view", view);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, woodTexture);
+        // // set lighting uniforms
+        // for (unsigned int i = 0; i < lightPositions.size(); i++)
+        // {
+        //     bloomShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
+        //     bloomShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
+        // }
+        // bloomShader.setVec3("viewPos", camera.Position);
+        // // create one large cube that acts as the floor
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0));
+        // model = glm::scale(model, glm::vec3(12.5f, 0.5f, 12.5f));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+        // // then create multiple cubes as the scenery
+        // glBindTexture(GL_TEXTURE_2D, container);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+        // model = glm::scale(model, glm::vec3(0.5f));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+        // model = glm::scale(model, glm::vec3(0.5f));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(-1.0f, -1.0f, 2.0));
+        // model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, 2.7f, 4.0));
+        // model = glm::rotate(model, glm::radians(23.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        // model = glm::scale(model, glm::vec3(1.25));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -3.0));
+        // model = glm::rotate(model, glm::radians(124.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0));
+        // model = glm::scale(model, glm::vec3(0.5f));
+        // bloomShader.setMat4("model", model);
+        // renderCubeSimple();
+
+        // // finally show all the light sources as bright cubes
+        // shaderLight.use();
+        // shaderLight.setMat4("projection", projection);
+        // shaderLight.setMat4("view", view);
+
+        // for (unsigned int i = 0; i < lightPositions.size(); i++)
+        // {
+        //     model = glm::mat4(1.0f);
+        //     model = glm::translate(model, glm::vec3(lightPositions[i]));
+        //     model = glm::scale(model, glm::vec3(0.25f));
+        //     shaderLight.setMat4("model", model);
+        //     shaderLight.setVec3("lightColor", lightColors[i]);
+        //     renderCubeSimple();
+        // }
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // bool firstIteration = true, horizontal = true;
+        // unsigned int amount = 10;
+        // gaussianBlurShader.use();
+        // for (unsigned int i = 0; i < amount; ++i)
+        // {
+        //     glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+        //     gaussianBlurShader.setBool("horizontal", horizontal);
+        //     glBindTexture(GL_TEXTURE_2D, firstIteration ? colorBuffers[1] : pingpongBuffer[!horizontal]);
+        //     renderQuadSimple();
+        //     horizontal = !horizontal;
+        //     if( firstIteration )
+        //         firstIteration = false;
+        // }
+
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // bloomQuadShader.use();
+        // bloomQuadShader.setFloat("exposure", exposure);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+        // renderQuadSimple();
+
+        // 7 Deferred Shading
+        glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        hdrQuadShader.use();
-        hdrQuadShader.setFloat("exposure", exposure);
+        deferredShader.use();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.f);
+        glm::mat4 view = camera.GetViewMatrix();
+        deferredShader.setMat4("projection", projection);
+        deferredShader.setMat4("view", view);
+        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
+        {
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(0.25f));
+            deferredShader.setMat4("model", model);
+            nanosuit.Draw(deferredShader);
+        }
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
+        quadShader.use();
+        // for (unsigned int i = 0; i < 3 ; ++ i)
+        // {
+        //     glActiveTexture(GL_TEXTURE0 + i);
+        //     glBindTexture(GL_TEXTURE_2D, textures[i]);
+        // }
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, HDRTexture);
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        quadShader.setVec3("viewPos", camera.Position);
+        for (unsigned int i = 0 ; i < lightPositions.size(); ++i)
+        {
+            quadShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
+            quadShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
+            // update attenuation parameters and calculate radius
+            const float constant = 1.0; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+            const float linear = 0.7;
+            const float quadratic = 1.8;
+            quadShader.setFloat("lights[" + to_string(i) + "].Linear", linear);
+            quadShader.setFloat("lights[" + to_string(i) + "].Quadratic", quadratic);
+        }
         renderQuadSimple();
+
+
+        // glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
+        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        // glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // shaderLight2.use();
+        // shaderLight2.setMat4("projection", projection);
+        // shaderLight2.setMat4("view", view);
+
+        // for (unsigned int i = 0; i < lightPositions.size(); i++)
+        // {
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, glm::vec3(lightPositions[i]));
+        //     model = glm::scale(model, glm::vec3(0.25f));
+        //     shaderLight2.setMat4("model", model);
+        //     shaderLight2.setVec3("lightColor", lightColors[i]);
+        //     renderCubeSimple();
+        // }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

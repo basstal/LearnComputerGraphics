@@ -1,6 +1,6 @@
 #version 330 core
-layout (location = 0) out FragColor;
-layout (location = 1) out BrightColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 uniform sampler2D texture0;
 
@@ -18,7 +18,7 @@ struct Light
     vec3 position;
 };
 
-uniform Light lights[16];
+uniform Light lights[4];
 
 
 void main()
@@ -30,7 +30,7 @@ void main()
     vec3 ambient = 0.0 * color;
     // lighting
     vec3 lighting = vec3(0.0);
-    for(int i = 0; i < 16; i++)
+    for(int i = 0; i < 4; i++)
     {
         // diffuse
         vec3 lightDir = normalize(lights[i].position - fs_in.FragPos);
@@ -46,7 +46,7 @@ void main()
 
     float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
     if (brightness > 1.0)
-        BrightColor = FragColor;
+        BrightColor = vec4(FragColor.rgb, 1.0f);
     else
         BrightColor = vec4(0.0, 0.0, 0.0, 0.0);
 }
