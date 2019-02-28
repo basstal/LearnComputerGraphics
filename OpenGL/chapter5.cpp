@@ -163,6 +163,11 @@ int main()
     // 5 HDR
     Shader hdrObjShader = Shader("VertexShaderHDROBJ.glsl", "FragmentShaderHDROBJ.glsl", "");
     Shader hdrQuadShader = Shader("VertexShaderHDR.glsl", "FragmentShaderHDR.glsl", "");
+
+    // 6 Bloom
+    Shader bloomShader = Shader("VertexShaderBloom.glsl", "FragmentShaderBloom.glsl", "");
+    Shader gaussianBlurShader = Shader("VertexShaderGaussianBlur.glsl", "FragmentShaderGaussianBlur.glsl", "");
+    Shader bloomQuadShader = Shader("VertexShaderBloomQuad.glsl", "FragmentShaderBloomQuad.glsl", "");
     // unsigned int planeVAO, planeVBO;
     // glGenVertexArrays(1, &planeVAO);
     // glGenBuffers(1, &planeVBO);
@@ -236,31 +241,81 @@ int main()
 
     // glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    unsigned int HDRFBO;
-    glGenFramebuffers(1, &HDRFBO);
+    // unsigned int HDRFBO;
+    // glGenFramebuffers(1, &HDRFBO);
 
-    unsigned int HDRTexture, depthTexture;
-    glGenTextures(1, &HDRTexture);
-    glBindTexture(GL_TEXTURE_2D, HDRTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // unsigned int HDRTexture, depthTexture;
+    // glGenTextures(1, &HDRTexture);
+    // glBindTexture(GL_TEXTURE_2D, HDRTexture);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    // unsigned int rboDepth;
+    // glGenRenderbuffers(1, &rboDepth);
+    // glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+
+    // glBindFramebuffer(GL_FRAMEBUFFER, HDRFBO);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, HDRTexture, 0);
+    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+    // if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    //     cout <<"ERROR:: FRAME BUFFER INIT FAILED!" << endl;
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    unsigned int bloomFBO;
+    unsigned int colorBuffers[2];
+    glGenFramebuffers(1, &bloomFBO);
+    glGenTextures(2, colorBuffers);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+    for (unsigned int i = 0 ; i < 2; ++i)
+    {
+        unsigned int currentTexBuffer = colorBuffers[i];
+        glBindTexture(GL_TEXTURE_2D, currentTexBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glPointParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, currentTexBuffer);
+    }
+
+    unsigned int bloomDepthRenderBuffer;
+    glGenRenderbuffers(1, bloomDepthRenderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, bloomDepthRenderBuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, bloomDepthRenderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, HDRFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, HDRTexture, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    unsigned int * attachments = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, attachments);
 
-    if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout <<"ERROR:: FRAME BUFFER INIT FAILED!" << endl;
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    unsigned int pingpongFBO[2];
+    glGenFramebuffers(2, pingpongFBO);
+    unsigned int pingpongBuffer[2];
+    glGenTextures(2, pingpongBuffer);
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        // todo
+        // create 2 framebuffer for hdr -> gl_color_attachment0
+        // bind frame buffer
+        // if firstIteration bind texture -> colorBuffer[1]
+        // else bind texture -> pingpongBuffer[!horizontal]
+        //amount = 10 -> loop times
+        // blend final color
+    }
+
 
     glm::vec3 lightPos = glm::vec3(0.0f);
     float near_plane = 1.0f, far_plane = 25.0f;
