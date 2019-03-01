@@ -139,14 +139,15 @@ int main()
     // unsigned int toyNormal = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/toy_box_normal.png", false);
     // unsigned int toyHeight = loadImage("/Users/wangjunke/Documents/OpenGL/OpenGL/resources/toy_box_disp.png", false);
     
-    unsigned int toy = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_diffuse.png", false);
-    unsigned int toyNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_normal.png", false);
-    unsigned int toyHeight = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_disp.png", false);
+    // unsigned int toy = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_diffuse.png", false);
+    // unsigned int toyNormal = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_normal.png", false);
+    // unsigned int toyHeight = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/toy_box_disp.png", false);
 
-    unsigned int woodTexture = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
-    unsigned int container = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/container2.png", true);
+    // unsigned int woodTexture = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/wood.png", true);
+    // unsigned int container = loadImage("F:/Documents/OpenGL/OpenGL/OpenGL/resources/container2.png", true);
 
-    Model nanosuit = Model("F:/Documents/OpenGL/Models/nanosuit/nanosuit.obj");
+    // 7 Deferred Shading
+    Model nanosuit = Model("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj");
     
     // 1-blinn phong
     Shader shaderPlane = Shader("VertexShaderPlane.glsl", "FragmentShaderPlane.glsl", "");
@@ -330,43 +331,61 @@ int main()
     // }
 
     // 7 Deferred shading
+    unsigned int cacheDepthFBO;
+    glGenFramebuffers(1, &cacheDepthFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, cacheDepthFBO);
+    unsigned int depthTex;
+    glGenTextures(1, &depthTex);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // glDrawBuffer(GL_NONE);
+    // glReadBuffer(GL_NONE);
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAME BUFFER INIT FAILED! CACHE DEPTH FBO" <<endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
     unsigned int gBufferFBO;
     glGenFramebuffers(1, &gBufferFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
 
-    // unsigned int textures[3];
-    // glGenTextures(3, textures);
-    // for (unsigned int i = 0; i < 3 ; ++i)
-    // {
-    //     glBindTexture(GL_TEXTURE_2D, textures[i]);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, (i > 1 ? GL_RGBA: GL_RGB16F), WIDTH, HEIGHT, 0, i> 1? GL_RGBA : GL_RGB, i> 1? GL_UNSIGNED_BYTE : GL_FLOAT, NULL);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, textures[i], 0);
-    // }
+    unsigned int textures[3];
+    glGenTextures(3, textures);
+    for (unsigned int i = 0; i < 3 ; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, textures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, (i > 1 ? GL_RGBA: GL_RGB16F), WIDTH, HEIGHT, 0, i> 1? GL_RGBA : GL_RGB, i> 1? GL_UNSIGNED_BYTE : GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, textures[i], 0);
+    }
 
-    unsigned int gPosition, gNormal, gAlbedoSpec;
-    // position color buffer
-    glGenTextures(1, &gPosition);
-    glBindTexture(GL_TEXTURE_2D, gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-    // normal color buffer
-    glGenTextures(1, &gNormal);
-    glBindTexture(GL_TEXTURE_2D, gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-    // color + specular color buffer
-    glGenTextures(1, &gAlbedoSpec);
-    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+    // unsigned int gPosition, gNormal, gAlbedoSpec;
+    // // position color buffer
+    // glGenTextures(1, &gPosition);
+    // glBindTexture(GL_TEXTURE_2D, gPosition);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+    // // normal color buffer
+    // glGenTextures(1, &gNormal);
+    // glBindTexture(GL_TEXTURE_2D, gNormal);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+    // // color + specular color buffer
+    // glGenTextures(1, &gAlbedoSpec);
+    // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
 
     unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
     glDrawBuffers(3, attachments);
@@ -375,54 +394,54 @@ int main()
     glGenRenderbuffers(1, &depthRB);
     glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    glFramebufferRenderbuffer(GL_RENDERBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glm::vec3 lightPos = glm::vec3(0.0f);
-    float near_plane = 1.0f, far_plane = 25.0f;
-    glm::mat4 shadowProjection = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH/ (float)SHADOW_HEIGHT, near_plane, far_plane);
-    vector<glm::mat4> shadowTransforms;
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
-    shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    // glm::vec3 lightPos = glm::vec3(0.0f);
+    // float near_plane = 1.0f, far_plane = 25.0f;
+    // glm::mat4 shadowProjection = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH/ (float)SHADOW_HEIGHT, near_plane, far_plane);
+    // vector<glm::mat4> shadowTransforms;
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+    // shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
 
-    pointShadowShader.use();
-    for (unsigned int i = 0; i < 6; ++i)
-        pointShadowShader.setMat4("cubeMapMatrices[" + to_string(i) + "]", shadowTransforms[i]);
+    // pointShadowShader.use();
+    // for (unsigned int i = 0; i < 6; ++i)
+    //     pointShadowShader.setMat4("cubeMapMatrices[" + to_string(i) + "]", shadowTransforms[i]);
 
-    pointShadowShader.setFloat("far_plane", far_plane);
-    pointShadowShader.setVec3("lightPos", lightPos);
+    // pointShadowShader.setFloat("far_plane", far_plane);
+    // pointShadowShader.setVec3("lightPos", lightPos);
 
-    pointShadowDrawShader.use();
-    pointShadowDrawShader.setVec3("lightPos", lightPos);
-    pointShadowDrawShader.setFloat("far_plane", far_plane);
-    pointShadowDrawShader.setInt("diffuseTexture", 1);
-    pointShadowDrawShader.setInt("shadowCubeMap", 0);
+    // pointShadowDrawShader.use();
+    // pointShadowDrawShader.setVec3("lightPos", lightPos);
+    // pointShadowDrawShader.setFloat("far_plane", far_plane);
+    // pointShadowDrawShader.setInt("diffuseTexture", 1);
+    // pointShadowDrawShader.setInt("shadowCubeMap", 0);
 
-    // 3 normal mapping
-    normalMappingShader.use();
-    normalMappingShader.setInt("diffuseTexture", 0);
-    normalMappingShader.setInt("normalMapping", 1);
-    lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
+    // // 3 normal mapping
+    // normalMappingShader.use();
+    // normalMappingShader.setInt("diffuseTexture", 0);
+    // normalMappingShader.setInt("normalMapping", 1);
+    // lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
 
-    parallaxMappingShader.use();
-    parallaxMappingShader.setInt("diffuseTexture", 0);
-    parallaxMappingShader.setInt("normalMapping", 1);
-    parallaxMappingShader.setInt("parallaxMapping", 2);
-    parallaxMappingShader.setVec3("lightPos", lightPos);
+    // parallaxMappingShader.use();
+    // parallaxMappingShader.setInt("diffuseTexture", 0);
+    // parallaxMappingShader.setInt("normalMapping", 1);
+    // parallaxMappingShader.setInt("parallaxMapping", 2);
+    // parallaxMappingShader.setVec3("lightPos", lightPos);
 
-    // 5 HDR
-    hdrObjShader.use();
-    hdrObjShader.setInt("texture0", 0);
+    // // 5 HDR
+    // hdrObjShader.use();
+    // hdrObjShader.setInt("texture0", 0);
 
-    hdrQuadShader.use();
-    hdrQuadShader.setInt("hdrTexture", 0);
+    // hdrQuadShader.use();
+    // hdrQuadShader.setInt("hdrTexture", 0);
     // // positions
     // std::vector<glm::vec3> lightPositions;
     // lightPositions.push_back(glm::vec3( 0.0f,  0.0f, 49.5f)); // back light
@@ -437,14 +456,14 @@ int main()
     // lightColors.push_back(glm::vec3(0.0f, 0.1f, 0.0f));
     
 
-    // 6 bloom
-    bloomQuadShader.use();
-    bloomQuadShader.setInt("texture0", 0);
-    bloomQuadShader.setInt("brightness0", 1);
-    gaussianBlurShader.use();
-    gaussianBlurShader.setInt("image", 0);
-    bloomShader.use();
-    bloomShader.setInt("texture0", 0);
+    // // 6 bloom
+    // bloomQuadShader.use();
+    // bloomQuadShader.setInt("texture0", 0);
+    // bloomQuadShader.setInt("brightness0", 1);
+    // gaussianBlurShader.use();
+    // gaussianBlurShader.setInt("image", 0);
+    // bloomShader.use();
+    // bloomShader.setInt("texture0", 0);
 
     // std::vector<glm::vec3> lightPositions;
     // lightPositions.push_back(glm::vec3( 0.0f, 0.5f,  1.5f));
@@ -471,9 +490,9 @@ int main()
     objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
 
     quadShader.use();
-    quadShader.setInt("position", 0);
-    quadShader.setInt("normal", 1);
-    quadShader.setInt("albedoSpec", 2);
+    quadShader.setInt("gPosition", 0);
+    quadShader.setInt("gNormal", 1);
+    quadShader.setInt("gAlbedoSpec", 2);
 
     // lighting info
     // -------------
@@ -803,25 +822,28 @@ int main()
             nanosuit.Draw(deferredShader);
         }
         
+
+        
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
         quadShader.use();
-        // for (unsigned int i = 0; i < 3 ; ++ i)
-        // {
-        //     glActiveTexture(GL_TEXTURE0 + i);
-        //     glBindTexture(GL_TEXTURE_2D, textures[i]);
-        // }
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        for (unsigned int i = 0; i < 3 ; ++ i)
+        {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, textures[i]);
+        }
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, gPosition);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, gNormal);
+        // glActiveTexture(GL_TEXTURE2);
+        // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
         quadShader.setVec3("viewPos", camera.Position);
         for (unsigned int i = 0 ; i < lightPositions.size(); ++i)
         {
-            quadShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
-            quadShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
+            quadShader.setVec3("lights[" + to_string(i) + "].Position", lightPositions[i]);
+            quadShader.setVec3("lights[" + to_string(i) + "].Color", lightColors[i]);
             // update attenuation parameters and calculate radius
             const float constant = 1.0; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
             const float linear = 0.7;
@@ -831,25 +853,22 @@ int main()
         }
         renderQuadSimple();
 
-
-        // glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
-        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        // glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // shaderLight2.use();
-        // shaderLight2.setMat4("projection", projection);
-        // shaderLight2.setMat4("view", view);
-
-        // for (unsigned int i = 0; i < lightPositions.size(); i++)
-        // {
-        //     glm::mat4 model = glm::mat4(1.0f);
-        //     model = glm::translate(model, glm::vec3(lightPositions[i]));
-        //     model = glm::scale(model, glm::vec3(0.25f));
-        //     shaderLight2.setMat4("model", model);
-        //     shaderLight2.setVec3("lightColor", lightColors[i]);
-        //     renderCubeSimple();
-        // }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        shaderLight2.use();
+        shaderLight2.setMat4("projection", projection);
+        shaderLight2.setMat4("view", view);
+        for (unsigned int i = 0; i < lightPositions.size(); i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(lightPositions[i]));
+            model = glm::scale(model, glm::vec3(0.25f));
+            shaderLight2.setMat4("model", model);
+            shaderLight2.setVec3("lightColor", lightColors[i]);
+            renderCubeSimple();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
