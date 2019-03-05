@@ -17,6 +17,8 @@
 		8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DB22016616004AA1F5 /* glad.c */; };
 		8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85DA22016616004AA1F5 /* shader.cpp */; };
 		8ECF85E22202B580004AA1F5 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8ECF85E12202B580004AA1F5 /* stb_image.cpp */; };
+		8EFA3A51222E9D5300D4BB1F /* PBR.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8EFA3A50222E9D5200D4BB1F /* PBR.cpp */; };
+		8EFA3A53222EA05100D4BB1F /* PBR1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8EFA3A52222EA05100D4BB1F /* PBR1.cpp */; };
 		B350F76321F558B600138980 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B350F76221F558B600138980 /* libglfw.3.2.dylib */; };
 		B350F76521F55AFE00138980 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B350F76421F55AFE00138980 /* OpenGL.framework */; };
 /* End PBXBuildFile section */
@@ -46,6 +48,8 @@
 		8ECF85DB22016616004AA1F5 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
 		8ECF85E12202B580004AA1F5 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stb_image.cpp; sourceTree = "<group>"; };
 		8ECF85E32202BB87004AA1F5 /* libm.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libm.tbd; path = usr/lib/libm.tbd; sourceTree = SDKROOT; };
+		8EFA3A50222E9D5200D4BB1F /* PBR.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PBR.cpp; sourceTree = "<group>"; };
+		8EFA3A52222EA05100D4BB1F /* PBR1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PBR1.cpp; sourceTree = "<group>"; };
 		B350F75321F557A100138980 /* OpenGL */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenGL; sourceTree = BUILT_PRODUCTS_DIR; };
 		B350F76221F558B600138980 /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
 		B350F76421F55AFE00138980 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -85,6 +89,8 @@
 		B350F75521F557A100138980 /* OpenGL */ = {
 			isa = PBXGroup;
 			children = (
+				8EFA3A52222EA05100D4BB1F /* PBR1.cpp */,
+				8EFA3A50222E9D5200D4BB1F /* PBR.cpp */,
 				8ECE33252224CE010008B60E /* chapter5.cpp */,
 				8E9056FA2215311500E4336B /* chapter4.cpp */,
 				8E0EAEBA22128CFB0078CB60 /* chapter3.cpp */,
@@ -172,7 +178,9 @@
 				8E637C7B220D27430013A70C /* chapter2.cpp in Sources */,
 				8ECE33262224CE010008B60E /* chapter5.cpp in Sources */,
 				8E0EAEBB22128CFB0078CB60 /* chapter3.cpp in Sources */,
+				8EFA3A51222E9D5300D4BB1F /* PBR.cpp in Sources */,
 				8E637C7D220D27430013A70C /* chapter1.cpp in Sources */,
+				8EFA3A53222EA05100D4BB1F /* PBR1.cpp in Sources */,
 				8ECF85DE2202B56D004AA1F5 /* glad.c in Sources */,
 				8ECF85DF2202B56D004AA1F5 /* shader.cpp in Sources */,
 			);
