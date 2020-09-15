@@ -98,7 +98,7 @@
 // void scroll_callback(GLFWwindow *, double , double);
 // void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 // void processInput(GLFWwindow *);
-// unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
+// // unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
 
 
 // int main()
@@ -139,10 +139,10 @@
 //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
 //     unsigned int diffuseTexture, specularTexture, colorSpecularTex, emissionTexture;
-//     diffuseTexture = loadImage("container2.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-//     specularTexture = loadImage("container2_specular.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-//     colorSpecularTex = loadImage("lighting_maps_specular_color.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-//     emissionTexture = loadImage("matrix.jpg", GL_RGB, GL_FALSE, GL_REPEAT);
+//     // diffuseTexture = loadImage("container2.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+//     // specularTexture = loadImage("container2_specular.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+//     // colorSpecularTex = loadImage("lighting_maps_specular_color.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+//     // emissionTexture = loadImage("matrix.jpg", GL_RGB, GL_FALSE, GL_REPEAT);
 
 //     unsigned int VAO, VBO;
 //     glGenVertexArrays(1, &VAO);
@@ -170,111 +170,111 @@
 //     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 //     glEnableVertexAttribArray(0);
 
-//     Shader shader = Shader("VertexShader2.glsl", "FragmentShader2.glsl");
-//     Shader lampShader = Shader("VertexShader2.glsl", "LightFragmentShader.glsl");
+//     // Shader shader = Shader("VertexShader2.glsl", "FragmentShader2.glsl");
+//     // Shader lampShader = Shader("VertexShader2.glsl", "LightFragmentShader.glsl");
 
-//     glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+//     // glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
 
-//     // 允许深度测试
-//     glEnable(GL_DEPTH_TEST);
+//     // // 允许深度测试
+//     // glEnable(GL_DEPTH_TEST);
 
-//     while(!glfwWindowShouldClose(window))
-//     {
-//         processInput(window);
+//     // while(!glfwWindowShouldClose(window))
+//     // {
+//     //     processInput(window);
         
-//         // clear color 将所有像素的颜色都设置为参数的颜色
-//         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//     //     // clear color 将所有像素的颜色都设置为参数的颜色
+//     //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//         glm::mat4 view = camera.GetViewMatrix();
-//         // 注意perspective的第二个参数要转成float
-//         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
+//     //     glm::mat4 view = camera.GetViewMatrix();
+//     //     // 注意perspective的第二个参数要转成float
+//     //     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
     
-//         lampShader.use();
-//         lampShader.setMat4("view", view);
-//         lampShader.setMat4("projection", projection);
+//     //     lampShader.use();
+//     //     lampShader.setMat4("view", view);
+//     //     lampShader.setMat4("projection", projection);
 
         
-//         shader.use();
+//     //     shader.use();
 
-//         glActiveTexture(GL_TEXTURE0);
-//         glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-//         glActiveTexture(GL_TEXTURE1);
-//         glBindTexture(GL_TEXTURE_2D, specularTexture);
-//         glActiveTexture(GL_TEXTURE2);
-//         glBindTexture(GL_TEXTURE_2D, colorSpecularTex);
-//         glActiveTexture(GL_TEXTURE3);
-//         glBindTexture(GL_TEXTURE_2D, emissionTexture);
+//     //     glActiveTexture(GL_TEXTURE0);
+//     //     glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+//     //     glActiveTexture(GL_TEXTURE1);
+//     //     glBindTexture(GL_TEXTURE_2D, specularTexture);
+//     //     glActiveTexture(GL_TEXTURE2);
+//     //     glBindTexture(GL_TEXTURE_2D, colorSpecularTex);
+//     //     glActiveTexture(GL_TEXTURE3);
+//     //     glBindTexture(GL_TEXTURE_2D, emissionTexture);
 
-//         shader.setInt("material.diffuse", 0);
-//         shader.setInt("material.specular", 1);
-//         shader.setInt("material.colorSpecular", 2);
-//         shader.setInt("material.emission", 3);
-//         shader.setFloat("material.shininess", 32.0f);
+//     //     shader.setInt("material.diffuse", 0);
+//     //     shader.setInt("material.specular", 1);
+//     //     shader.setInt("material.colorSpecular", 2);
+//     //     shader.setInt("material.emission", 3);
+//     //     shader.setFloat("material.shininess", 32.0f);
 
-//         shader.setVec3("viewPos", camera.Position);
+//     //     shader.setVec3("viewPos", camera.Position);
 
-//         shader.setVec3("dirLight.direction", glm::vec3(0.0f, 1.0f, 0.2f));
-//         shader.setVec3("dirLight.ambient", glm::vec3(0.00f));
-//         shader.setVec3("dirLight.diffuse", glm::vec3(0.2f));
-//         shader.setVec3("dirLight.specular", glm::vec3(1.0f));
+//     //     shader.setVec3("dirLight.direction", glm::vec3(0.0f, 1.0f, 0.2f));
+//     //     shader.setVec3("dirLight.ambient", glm::vec3(0.00f));
+//     //     shader.setVec3("dirLight.diffuse", glm::vec3(0.2f));
+//     //     shader.setVec3("dirLight.specular", glm::vec3(1.0f));
 
-//         for ( int i = 0; i < 4; ++ i)
-//         {
-//             std::string prefix = "pointLights[" + std::to_string(i) + "]";
-//             shader.setVec3(prefix + ".position", pointLightPositions[i]);
-//             shader.setFloat(prefix + ".constant", 1.0f);
-//             shader.setFloat(prefix + ".linear", 0.07f);
-//             shader.setFloat(prefix + ".quadratic", 0.017f);
+//     //     for ( int i = 0; i < 4; ++ i)
+//     //     {
+//     //         std::string prefix = "pointLights[" + std::to_string(i) + "]";
+//     //         shader.setVec3(prefix + ".position", pointLightPositions[i]);
+//     //         shader.setFloat(prefix + ".constant", 1.0f);
+//     //         shader.setFloat(prefix + ".linear", 0.07f);
+//     //         shader.setFloat(prefix + ".quadratic", 0.017f);
 
-//             shader.setVec3(prefix + ".ambient", glm::vec3(0.00f));
-//             shader.setVec3(prefix + ".diffuse", glm::vec3(0.2f));
-//             shader.setVec3(prefix + ".specular", glm::vec3(0.2f));
-//         }
-//         shader.setVec3("spotLight.direction", camera.Front);
-//         shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-//         shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-//         shader.setVec3("spotLight.ambient", glm::vec3(0.0f));
-//         shader.setVec3("spotLight.diffuse", glm::vec3(0.5f));
-//         shader.setVec3("spotLight.specular", glm::vec3(0.5f));
+//     //         shader.setVec3(prefix + ".ambient", glm::vec3(0.00f));
+//     //         shader.setVec3(prefix + ".diffuse", glm::vec3(0.2f));
+//     //         shader.setVec3(prefix + ".specular", glm::vec3(0.2f));
+//     //     }
+//     //     shader.setVec3("spotLight.direction", camera.Front);
+//     //     shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+//     //     shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+//     //     shader.setVec3("spotLight.ambient", glm::vec3(0.0f));
+//     //     shader.setVec3("spotLight.diffuse", glm::vec3(0.5f));
+//     //     shader.setVec3("spotLight.specular", glm::vec3(0.5f));
 
 
-//         shader.setMat4("view", view);
-//         shader.setMat4("projection", projection);
+//     //     shader.setMat4("view", view);
+//     //     shader.setMat4("projection", projection);
 
-//         shader.use();
+//     //     shader.use();
 
-//         glBindVertexArray(VAO);
+//     //     glBindVertexArray(VAO);
 
-//         for ( int i = 0; i < 10 ; ++ i)
-//         {
+//     //     for ( int i = 0; i < 10 ; ++ i)
+//     //     {
 
-//             glm::mat4 model;
-//             model = glm::rotate(model, glm::radians(30.0f) * i, glm::vec3(0.3f, 0.7f, 0.0f));
-//             model = glm::translate(model, cubePositions[i]);
+//     //         glm::mat4 model;
+//     //         model = glm::rotate(model, glm::radians(30.0f) * i, glm::vec3(0.3f, 0.7f, 0.0f));
+//     //         model = glm::translate(model, cubePositions[i]);
 
-//             shader.setMat4("model", model);
-//             // 第一个参数决定画什么图形
-//             glDrawArrays(GL_TRIANGLES, 0, 36);
+//     //         shader.setMat4("model", model);
+//     //         // 第一个参数决定画什么图形
+//     //         glDrawArrays(GL_TRIANGLES, 0, 36);
             
-//         }
+//     //     }
 
-//         lampShader.use();
-//         for (int i = 0; i < 4; ++ i)
-//         {
-//             glm::mat4 model;
-//             model = glm::translate(model, pointLightPositions[i]);
-//             model = glm::scale(model, glm::vec3(0.2f));
+//     //     lampShader.use();
+//     //     for (int i = 0; i < 4; ++ i)
+//     //     {
+//     //         glm::mat4 model;
+//     //         model = glm::translate(model, pointLightPositions[i]);
+//     //         model = glm::scale(model, glm::vec3(0.2f));
             
 
-//             lampShader.setVec3("color", pointLightRepresentColor[i]);
-//             lampShader.setMat4("model", model);
-//             glDrawArrays(GL_TRIANGLES, 0, 36);
-//         }
+//     //         lampShader.setVec3("color", pointLightRepresentColor[i]);
+//     //         lampShader.setMat4("model", model);
+//     //         glDrawArrays(GL_TRIANGLES, 0, 36);
+//     //     }
 
-//         glfwSwapBuffers(window);
-//         // glfwPollEvents函数检查有没有触发什么事件（比如键盘输入、鼠标移动等）、更新窗口状态，并调用对应的回调函数（可以通过回调方法手动设置）。
-//         glfwPollEvents();
-//     }
+//     //     glfwSwapBuffers(window);
+//     //     // glfwPollEvents函数检查有没有触发什么事件（比如键盘输入、鼠标移动等）、更新窗口状态，并调用对应的回调函数（可以通过回调方法手动设置）。
+//     //     glfwPollEvents();
+//     // }
 
 //     // 记得在最后terminate
 //     glfwTerminate();
@@ -330,30 +330,30 @@
 //     camera.ProcessMouseMovement(offsetX, offsetY);
 // }
 
-// unsigned int loadImage(const char * fileName, GLint format, bool verticalFlip, GLint wrapMode)
-// {
-//     unsigned int texture;
-//     glGenTextures(1, &texture);
-//     glBindTexture(GL_TEXTURE_2D, texture);
+// // unsigned int loadImage(const char * fileName, GLint format, bool verticalFlip, GLint wrapMode)
+// // {
+// //     unsigned int texture;
+// //     glGenTextures(1, &texture);
+// //     glBindTexture(GL_TEXTURE_2D, texture);
     
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+// //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
+// //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+// //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+// //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-//     stbi_set_flip_vertically_on_load(verticalFlip);
-//     int width, height, nrchannel;
-//     unsigned char * data = stbi_load(fileName, &width, &height, &nrchannel, 0);
-//     if ( data != NULL )
-//     {
-//         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-//         glGenerateMipmap(GL_TEXTURE_2D);
-//     }
-//     else
-//     {
-//         std::cout << "ERROR::LOAD IMAGE::FAILED!" << std::endl;
-//     }
+// //     stbi_set_flip_vertically_on_load(verticalFlip);
+// //     int width, height, nrchannel;
+// //     unsigned char * data = stbi_load(fileName, &width, &height, &nrchannel, 0);
+// //     if ( data != NULL )
+// //     {
+// //         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+// //         glGenerateMipmap(GL_TEXTURE_2D);
+// //     }
+// //     else
+// //     {
+// //         std::cout << "ERROR::LOAD IMAGE::FAILED!" << std::endl;
+// //     }
     
-//     stbi_image_free(data);
-//     return texture;
-// }
+// //     stbi_image_free(data);
+// //     return texture;
+// // }
