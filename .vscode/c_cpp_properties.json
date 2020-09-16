@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/GLFW/",
+                "${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/",
                 "${workspaceFolder}/Src/include/"
             ],
             "defines": [

@@ -18,7 +18,7 @@
 			"args": [
 				"/MDd",
 				"/I${workspaceFolder}/Src/include/",
-				"/I${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/GLFW/",
+				"/I${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/",
 				"/EHsc",
 				"/Fe:",
 				"${workspaceFolder}/build/output.exe",
