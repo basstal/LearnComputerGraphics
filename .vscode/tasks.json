@@ -2,6 +2,11 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"type": "shell",
+			"label": "run",
+			"command":"./build/output.exe"
+		},
+		{
 			"type":"shell",
 			"label": "mkdir",
 			"command":"rm -r build; mkdir build",
@@ -40,7 +45,8 @@
 			"dependsOrder": "sequence",
 			"dependsOn":[
 				"mkdir",
-				"cl-build"
+				"cl-build",
+				"run"
 			],
 			"group": {
 				"kind": "build",
