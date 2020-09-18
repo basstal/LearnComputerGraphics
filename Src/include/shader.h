@@ -16,6 +16,7 @@ class Shader
 public:
     unsigned int ID;
 
+    Shader(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode, bool isSource);
     Shader(const GLchar * vertexPath, const GLchar * fragmentPath, const GLchar * geometryPath);
 
     void use();

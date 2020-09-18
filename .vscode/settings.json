@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.bytes": "c",
+        "**/Logs/*.bytes": "lua",
+        "**/Lua/**/*.bytes": "lua",
+        "**/FCode/*.bytes": "lua",
+        "**/XLua/**/*.txt": "lua",
+        "cmath": "cpp"
+    }
+}
