@@ -16,28 +16,27 @@ Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath, const GLc
     {
         vShaderFile.open(vertexPath);
         fShaderFile.open(fragmentPath);
-		if (geometryPath != "")
-			gShaderFile.open(geometryPath);
-
-        std::stringstream vShaderStram, fShaderStram, gShaderStram;
+        std::stringstream vShaderStram, fShaderStram;
         vShaderStram << vShaderFile.rdbuf();
         fShaderStram << fShaderFile.rdbuf();
-		if (geometryPath != "")
-			gShaderStram << gShaderFile.rdbuf();
-
         vShaderFile.close();
         fShaderFile.close();
-		if (geometryPath != "")
-			gShaderFile.close();
 
         vertexCode = vShaderStram.str();
         fragmentCode = fShaderStram.str();
-		if (geometryPath != "")
+		if (geometryPath != NULL && strcmp(geometryPath, "") == 1)
+		{
+			std::cout << "use geometry" << geometryPath << std::endl;
+			gShaderFile.open(geometryPath);
+			std::stringstream gShaderStram;
+			gShaderStram << gShaderFile.rdbuf();
+			gShaderFile.close();
 			geometryCode = gShaderStram.str();
+		}
     }
     catch(std::exception e)
     {
-        std::cout<< "ERROR::SHADER::FILE NOT SUCCESSFULLY READ"<<std::endl;
+        std::cout<< "ERROR::SHADER::FILE NOT SUCCESSFULLY READ\n"<< e.what() << std::endl;
     };
 	const char * vShaderCode = vertexCode.c_str();
 	const char * fShaderCode = fragmentCode.c_str();
