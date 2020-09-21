@@ -93,7 +93,7 @@ int main()
     }
     
     
-    Shader shaderProgram = Shader("1_Getting_Started/4_Textures/ExerciseVertexShader.glsl", "1_Getting_Started/4_Textures/ExerciseFragmentShader.glsl", "");
+    Shader shaderProgram = Shader("Shaders/1_4/ExerciseVertexShader.vs", "Shaders/1_4/ExerciseFragmentShader.fs", NULL);
     unsigned int VAO, EBO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);

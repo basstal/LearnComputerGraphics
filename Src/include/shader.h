@@ -29,6 +29,8 @@ public:
     void setVec3(const std::string &varName, float x, float y, float z) const;
     void setVec2(const std::string &varName, glm::vec2 val) const;
 
+private:
+    void compileAndLinkShaders(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode);
 };
 
 #endif
