@@ -151,6 +151,8 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
     Shader shaderProgram = Shader(vertexShaderSource, fragmentShaderSource, NULL, true);
+    
+    // ** for debug use
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     unsigned int VAO, VBO, EBO;

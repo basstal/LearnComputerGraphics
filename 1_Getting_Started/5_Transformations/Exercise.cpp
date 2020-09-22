@@ -52,16 +52,6 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    
-    // glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    // glm::mat4 trans = glm::mat4(1.0f);
-    // trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
-    // vec = trans * vec;
-    // std::cout << vec.x << " , " <<  vec.y << " , " << vec.z << std::endl;
-
-    // glm::mat4 trans = glm::mat4(1.0f);
-    // trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-    // trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5)); 
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -101,7 +91,7 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    Shader shaderProgram = Shader("Shaders/1_5/VertexShader.vs", "Shaders/1_5/FragmentShader.fs", "");
+    Shader shaderProgram = Shader("Shaders/1_5/VertexShader15.vs", "Shaders/1_5/FragmentShader15.fs", "");
 
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -117,8 +107,7 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
 
-    // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    // glEnableVertexAttribArray(2);
+    // ** for debug use
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     shaderProgram.use();

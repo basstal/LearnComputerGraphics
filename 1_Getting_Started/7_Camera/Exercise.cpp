@@ -65,6 +65,20 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+const float width = 1920;
+const float height = 1080;
+float lastX = height/2, lastY = width /2;
+float yaw = -90.0f;
+float pitch = 0.0f;
+bool firstMouse = true;
+
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -74,6 +88,83 @@ void processInput(GLFWwindow *window)
     {
         glfwSetWindowShouldClose(window, true);
     }
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+}
+
+void mouseCallback(GLFWwindow *window, double xPos, double yPos)
+{
+    if (firstMouse)
+    {
+        lastX = xPos;
+        lastY = yPos;
+        firstMouse = false;
+    }
+    float xOffset = xPos - lastX;
+    float yOffset = lastY - yPos;// reversed since y-coordinates range from bottom to top
+    lastX = xPos;
+    lastY = yPos;
+
+    const float sensitivity = 0.1f;
+    xOffset *= sensitivity;
+    yOffset *= sensitivity;
+    // ** for exercise 1, you should comment line 130 ~ 138 and open this comments
+    // ** prevent from small movement from y-axis cause the camera shake
+    // if (abs(xOffset) < abs(yOffset))
+    // {
+    //     return;
+    // }
+
+    yaw += xOffset;
+    pitch += yOffset;
+    if (pitch > 89.0f)
+    {
+        pitch = 89.0f;
+    }
+    if (pitch < -89.0f)
+    {
+        pitch = -89.0f;
+    }
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
+
+glm::mat4 LookAtMat4(glm::vec3 cameraPos, glm::vec3 targetPos, glm::vec3 up)
+{
+    glm::vec3 cameraDirection = glm::normalize(cameraPos - targetPos);
+    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+    // ** for reference use, the code from glm library
+    // glm::tmat4x4<float, glm::packed_highp> Result(1);
+    // Result[0][0] = cameraRight.x;
+    // Result[1][0] = cameraRight.y;
+    // Result[2][0] = cameraRight.z;
+    // Result[0][1] = cameraUp.x;
+    // Result[1][1] = cameraUp.y;
+    // Result[2][1] = cameraUp.z;
+    // Result[0][2] =-cameraDirection.x;
+    // Result[1][2] =-cameraDirection.y;
+    // Result[2][2] =-cameraDirection.z;
+    // Result[3][0] =-dot(cameraRight, cameraPos);
+    // Result[3][1] =-dot(cameraUp, cameraPos);
+    // Result[3][2] = dot(cameraDirection, cameraPos);
+    glm::mat4 cameraMat4A = glm::mat4(cameraRight.x, cameraUp.x, cameraDirection.x, 0, cameraRight.y, cameraUp.y, cameraDirection.y, 0, cameraRight.z, cameraUp.z, cameraDirection.z, 0, 0, 0, 0, 1);
+    glm::mat4 cameraMat4B = glm::mat4(1.0f, 0.0, 0.0, 0, 0.0, 1.0, 0, 0, 0, 0, 1.0, 0, -cameraPos.x, -cameraPos.y, -cameraPos.z, 1);
+    return cameraMat4A * cameraMat4B;
 }
 
 int main()
@@ -83,7 +174,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -98,6 +189,8 @@ int main()
         return -1;
     }
     
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouseCallback);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
     unsigned char *data = stbi_load("Src/resources/container.jpg", &width, &height, &nrChannels, 0);
@@ -157,48 +250,28 @@ int main()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     
-    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
+    shaderProgram.setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
 
+    const float radius = 10.0f;
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+        glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glBindVertexArray(VAO);
-        float time = (float)glfwGetTime();
-        float fov = abs(sin(time)) * 30.0f + 45.0f;
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)4/3, 0.1f, 100.0f);
-        shaderProgram.setMat4("projection", projection);
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            view = glm::translate(view, glm::vec3(0.0f, 0.0, 0.1f));
-        }
-        else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            view = glm::translate(view, glm::vec3(0.0f, 0.0, -0.1f));
-        }
-        else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            view = glm::translate(view, glm::vec3(0.1f, 0.0, 0.0f));
-        }
-        else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            view = glm::translate(view, glm::vec3(-0.1f, 0.0, 0.0));
-        }
+        glm::mat4 view = LookAtMat4(cameraPos, cameraPos + cameraFront, cameraUp);
         shaderProgram.setMat4("view", view);
 
+        glBindVertexArray(VAO);
         for (int i = 0; i < 10; ++i)
         {
 
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-            auto degree = glm::radians(20.0f * i);
-            if (i % 3 == 0)
-            {
-                degree = time * degree;
-            }
-            model = glm::rotate(model, degree, glm::vec3(0.5f, 1.0f, 0.0f));
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
             shaderProgram.setMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);

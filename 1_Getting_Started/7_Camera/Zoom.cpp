@@ -224,7 +224,7 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    Shader shaderProgram = Shader("Shaders/1_6/VertexShader.vs", "Shaders/1_6/FragmentShader.fs", NULL);
+    Shader shaderProgram = Shader("Shaders/1_6/VertexShader16.vs", "Shaders/1_6/FragmentShader16.fs", NULL);
     shaderProgram.use();
 
     shaderProgram.setInt("texture0", 0);

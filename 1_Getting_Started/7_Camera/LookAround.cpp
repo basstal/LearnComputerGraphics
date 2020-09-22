@@ -210,7 +210,7 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    Shader shaderProgram = Shader("Shaders/1_6/VertexShader.vs", "Shaders/1_6/FragmentShader.fs", NULL);
+    Shader shaderProgram = Shader("Shaders/1_6/VertexShader16.vs", "Shaders/1_6/FragmentShader16.fs", NULL);
     shaderProgram.use();
 
     shaderProgram.setInt("texture0", 0);
@@ -220,13 +220,6 @@ int main()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     
-    
-    // model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-    // glm::mat4 view = glm::mat4(1.0f);
-    // view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
     shaderProgram.setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
@@ -238,10 +231,6 @@ int main()
         glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // float time = glfwGetTime();
-        // float camX = sin(time) * radius;
-        // float camZ = cos(time) * radius;
-        // glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         shaderProgram.setMat4("view", view);
 

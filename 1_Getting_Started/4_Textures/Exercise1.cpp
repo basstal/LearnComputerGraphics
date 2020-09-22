@@ -93,7 +93,7 @@ int main()
     }
     
     
-    Shader shaderProgram = Shader("Shaders/1_4/ExerciseVertexShader.vs", "Shaders/1_4/ExerciseFragmentShader.fs", NULL);
+    Shader shaderProgram = Shader("Shaders/1_4/VertexShader14.vs", "Shaders/1_4/FragmentShader14.fs", NULL);
     unsigned int VAO, EBO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -111,7 +111,9 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    // ** for debug use
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
     shaderProgram.use();
     shaderProgram.setInt("texture0", 0);
     shaderProgram.setInt("texture1", 1);
