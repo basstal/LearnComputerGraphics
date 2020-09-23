@@ -127,7 +127,7 @@ int main()
     glBindVertexArray(lightVAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     Shader shaderProgram = Shader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/ColorsFragmentShader.fs", NULL);
@@ -158,13 +158,14 @@ int main()
         shaderProgramForLight.setMat4("view", view);
         shaderProgramForLight.setMat4("projection", projection);
         shaderProgramForLight.setMat4("model", model);
-        glBindVertexArray(VAO);
+        glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         
         shaderProgram.use();
         shaderProgram.setMat4("view", view);
         shaderProgram.setMat4("projection", projection);
         shaderProgram.setMat4("model", glm::mat4(1.0));
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);
