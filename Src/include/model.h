@@ -46,7 +46,7 @@ void Model::loadModel(std::string path)
 {
     Assimp::Importer importer;
     const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_CalcTangentSpace);
-    // 这里需要判断scene是不是成功加载了
+    // check scene is successfully loaded
     if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -76,7 +76,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
 
-    // 顶点坐标、法线和纹理坐标
+    // vertex position, normal position, texture coordinate
     for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
     {
         Vertex vertex;
@@ -102,7 +102,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         glm::vec2 texCoord(0.0f);
         if (mesh->mTextureCoords[0])
         {
-            // 允许一个顶点包含最多8组纹理坐标，这里只用第一组
+            // allow 8 texture coordinates per vertex position, use only 1 here
             texCoord.x = mesh->mTextureCoords[0][i].x;
             texCoord.y = mesh->mTextureCoords[0][i].y;
         }
@@ -110,7 +110,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         vertices.push_back(vertex);
     }
 
-    // 顶点索引属性
+    // vertex index attribute
     for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
     {
         aiFace face = mesh->mFaces[i];
@@ -118,7 +118,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
             indices.push_back(face.mIndices[j]);
     }
 
-    // 材质（漫反射和镜面反射贴图）
+    // materials ( diffuse and reflection texture)
     if (mesh->mMaterialIndex > 0)
     {
         aiMaterial * material = scene->mMaterials[mesh->mMaterialIndex];
@@ -147,7 +147,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         {
             std::cout << "my orange loaded" << std::endl;
 
-            // 自己张图贴上去
+            // map a texture by you self
             Texture texture;
             texture.ID = loadImage("Orange.jpg", "");
             texture.Type = "my_diffuse";
