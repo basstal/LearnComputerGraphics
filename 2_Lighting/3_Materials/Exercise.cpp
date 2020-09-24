@@ -213,6 +213,7 @@ int main()
         // shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
 
         // ** exercise 2
+        // ** reference : [http://devernay.free.fr/cours/opengl/materials.html]
         // light properties
         shaderProgram.setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
         shaderProgram.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
