@@ -4,7 +4,7 @@
 		{
 			"type": "shell",
 			"label": "run",
-			"command":"./build/output.exe"
+			"command":"${workspaceFolder}/build/output.exe"
 		},
 		{
 			"type":"shell",

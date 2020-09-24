@@ -1,5 +1,3 @@
-// ** should not run this file directly
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -100,8 +98,6 @@ void frame_buffer_callback(GLFWwindow * window, int , int );
 void scroll_callback(GLFWwindow *, double , double);
 void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
-// unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
-
 
 int main()
 {
@@ -135,12 +131,6 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
-    unsigned int diffuseTexture, specularTexture, colorSpecularTex, emissionTexture;
-    // diffuseTexture = loadImage("container2.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    // specularTexture = loadImage("container2_specular.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    // colorSpecularTex = loadImage("lighting_maps_specular_color.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    // emissionTexture = loadImage("matrix.jpg", GL_RGB, GL_FALSE, GL_REPEAT);
-
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
 
@@ -167,106 +157,79 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // Shader shader = Shader("VertexShader2.glsl", "FragmentShader2.glsl");
-    // Shader lampShader = Shader("VertexShader2.glsl", "LightFragmentShader.glsl");
+    Shader shaderProgram = Shader("Shaders\\2_3\\MaterialsVS23.vs", "Shaders\\2_3\\MaterialsFS23.fs", NULL);
+    Shader lampShader = Shader("Shaders\\2_2\\VertexShader22.vs", "Shaders\\2_3\\ExerciseLight23.fs", NULL);
 
-    // glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+    glm::mat4 model = glm::mat4(1.0);
+    model = glm::translate(model, lightPos);
+    model = glm::scale(model, glm::vec3(0.2));
 
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
 
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
+    while(!glfwWindowShouldClose(window))
+    {
+        processInput(window);
         
-    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //     glm::mat4 view = camera.GetViewMatrix();
-    //     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
-    
-    //     lampShader.use();
-    //     lampShader.setMat4("view", view);
-    //     lampShader.setMat4("projection", projection);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
 
+        // ** exercise 1
+        // glm::vec3 lightColor;
+        // lightColor.x = sin(glfwGetTime() * 2.0f);
+        // lightColor.y = sin(glfwGetTime() * 0.7f);
+        // lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        // ** exercise 2
+        glm::vec3 lightColor = glm::vec3(1.0);
         
-    //     shader.use();
+        lampShader.use();
+        lampShader.setVec3("lightColor", lightColor);
+        lampShader.setMat4("model", model);
+        lampShader.setMat4("view", view);
+        lampShader.setMat4("projection", projection);
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    //     glActiveTexture(GL_TEXTURE0);
-    //     glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-    //     glActiveTexture(GL_TEXTURE1);
-    //     glBindTexture(GL_TEXTURE_2D, specularTexture);
-    //     glActiveTexture(GL_TEXTURE2);
-    //     glBindTexture(GL_TEXTURE_2D, colorSpecularTex);
-    //     glActiveTexture(GL_TEXTURE3);
-    //     glBindTexture(GL_TEXTURE_2D, emissionTexture);
+        shaderProgram.use();
+        shaderProgram.setMat4("model", glm::mat4(1.0));
+        shaderProgram.setMat4("view", view);
+        shaderProgram.setMat4("projection", projection);
+        shaderProgram.setVec3("lightPos", lightPos);
+        shaderProgram.setVec3("viewPos", camera.Position);
+        
+        // ** exercise 1
+        // shaderProgram.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        // shaderProgram.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        // shaderProgram.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        // shaderProgram.setFloat("material.shininess", 32.0f);
+        // glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
+        // glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
+        
+        // shaderProgram.setVec3("light.ambient", ambientColor);
+        // shaderProgram.setVec3("light.diffuse", diffuseColor);
+        // shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
 
-    //     shader.setInt("material.diffuse", 0);
-    //     shader.setInt("material.specular", 1);
-    //     shader.setInt("material.colorSpecular", 2);
-    //     shader.setInt("material.emission", 3);
-    //     shader.setFloat("material.shininess", 32.0f);
+        // ** exercise 2
+        // light properties
+        shaderProgram.setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
+        shaderProgram.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+        shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-    //     shader.setVec3("viewPos", camera.Position);
-
-    //     shader.setVec3("dirLight.direction", glm::vec3(0.0f, 1.0f, 0.2f));
-    //     shader.setVec3("dirLight.ambient", glm::vec3(0.00f));
-    //     shader.setVec3("dirLight.diffuse", glm::vec3(0.2f));
-    //     shader.setVec3("dirLight.specular", glm::vec3(1.0f));
-
-    //     for ( int i = 0; i < 4; ++ i)
-    //     {
-    //         std::string prefix = "pointLights[" + std::to_string(i) + "]";
-    //         shader.setVec3(prefix + ".position", pointLightPositions[i]);
-    //         shader.setFloat(prefix + ".constant", 1.0f);
-    //         shader.setFloat(prefix + ".linear", 0.07f);
-    //         shader.setFloat(prefix + ".quadratic", 0.017f);
-
-    //         shader.setVec3(prefix + ".ambient", glm::vec3(0.00f));
-    //         shader.setVec3(prefix + ".diffuse", glm::vec3(0.2f));
-    //         shader.setVec3(prefix + ".specular", glm::vec3(0.2f));
-    //     }
-    //     shader.setVec3("spotLight.direction", camera.Front);
-    //     shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-    //     shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-    //     shader.setVec3("spotLight.ambient", glm::vec3(0.0f));
-    //     shader.setVec3("spotLight.diffuse", glm::vec3(0.5f));
-    //     shader.setVec3("spotLight.specular", glm::vec3(0.5f));
+        // material properties
+        shaderProgram.setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
+        shaderProgram.setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+        shaderProgram.setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+        shaderProgram.setFloat("material.shininess", 32.0f);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-    //     shader.setMat4("view", view);
-    //     shader.setMat4("projection", projection);
-
-    //     shader.use();
-
-    //     glBindVertexArray(VAO);
-
-    //     for ( int i = 0; i < 10 ; ++ i)
-    //     {
-
-    //         glm::mat4 model;
-    //         model = glm::rotate(model, glm::radians(30.0f) * i, glm::vec3(0.3f, 0.7f, 0.0f));
-    //         model = glm::translate(model, cubePositions[i]);
-
-    //         shader.setMat4("model", model);
-    //         glDrawArrays(GL_TRIANGLES, 0, 36);
-            
-    //     }
-
-    //     lampShader.use();
-    //     for (int i = 0; i < 4; ++ i)
-    //     {
-    //         glm::mat4 model;
-    //         model = glm::translate(model, pointLightPositions[i]);
-    //         model = glm::scale(model, glm::vec3(0.2f));
-            
-
-    //         lampShader.setVec3("color", pointLightRepresentColor[i]);
-    //         lampShader.setMat4("model", model);
-    //         glDrawArrays(GL_TRIANGLES, 0, 36);
-    //     }
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
     glfwTerminate();
     return 0;
 }
@@ -319,31 +282,3 @@ void mouse_callback(GLFWwindow * window, double xPos, double yPos)
 
     camera.ProcessMouseMovement(offsetX, offsetY);
 }
-
-// unsigned int loadImage(const char * fileName, GLint format, bool verticalFlip, GLint wrapMode)
-// {
-//     unsigned int texture;
-//     glGenTextures(1, &texture);
-//     glBindTexture(GL_TEXTURE_2D, texture);
-    
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-//     stbi_set_flip_vertically_on_load(verticalFlip);
-//     int width, height, nrchannel;
-//     unsigned char * data = stbi_load(fileName, &width, &height, &nrchannel, 0);
-//     if ( data != NULL )
-//     {
-//         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-//         glGenerateMipmap(GL_TEXTURE_2D);
-//     }
-//     else
-//     {
-//         std::cout << "ERROR::LOAD IMAGE::FAILED!" << std::endl;
-//     }
-    
-//     stbi_image_free(data);
-//     return texture;
-// }
