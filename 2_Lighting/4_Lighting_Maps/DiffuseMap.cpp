@@ -11,6 +11,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -86,7 +89,7 @@ glm::vec3 pointLightRepresentColor[] = {
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
-Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+Camera camera = Camera(glm::vec3(-2.0, -0.5, 2.5), glm::vec3(0, 1, 0), -35.0f, 14.0f);
 float lastX = 0.0f;
 float lastY = 0.0f;
 float lastTime = (float)glfwGetTime();
@@ -129,6 +132,43 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("Src/resources/diffuse_map.png", &width, &height, &nrChannels, 0);
+
+    unsigned int diffuseMap;
+    glGenTextures(1, &diffuseMap);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    /*
+    The first argument specifies the texture target; setting this to GL_TEXTURE_2D means this operation will generate a texture on the currently bound texture object at the same target (so any textures bound to targets GL_TEXTURE_1D or GL_TEXTURE_3D will not be affected).
+
+    The second argument specifies the mipmap level for which we want to create a texture for if you want to set each mipmap level manually, but we'll leave it at the base level which is 0.
+
+    The third argument tells OpenGL in what kind of format we want to store the texture. Our image has only RGB values so we'll store the texture with RGB values as well.
+
+    The 4th and 5th argument sets the width and height of the resulting texture. We stored those earlier when loading the image so we'll use the corresponding variables.
+
+    The next argument should always be 0 (some legacy stuff).
+
+    The 7th and 8th argument specify the format and datatype of the source image. We loaded the image with RGB values and stored them as chars (bytes) so we'll pass in the corresponding values.
+
+    The last argument is the actual image data.
+    */
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout<< "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
 
@@ -155,7 +195,7 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("Shaders\\2_3\\MaterialsVS23.vs", "Shaders\\2_3\\MaterialsFS23.fs", NULL);
+    Shader shaderProgram = Shader("Shaders\\2_4\\DiffuseMapVS24.vs", "Shaders\\2_4\\DiffuseMapFS24.fs", NULL);
     Shader lampShader = Shader("Shaders\\2_2\\VertexShader22.vs", "Shaders\\2_1\\LightFragmentShader.fs", NULL);
 
     glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -187,22 +227,19 @@ int main()
         shaderProgram.setMat4("projection", projection);
         shaderProgram.setVec3("lightPos", lightPos);
         shaderProgram.setVec3("viewPos", camera.Position);
-        shaderProgram.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        shaderProgram.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
         shaderProgram.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         
-        glm::vec3 lightColor;
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
+        glm::vec3 lightColor = glm::vec3(1.0);
         
-        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
-        
-        shaderProgram.setVec3("light.ambient", ambientColor);
-        shaderProgram.setVec3("light.diffuse", diffuseColor);
-        shaderProgram.setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
+        shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.5));
+        shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.1));
+        shaderProgram.setVec3("light.specular", lightColor); 
         shaderProgram.setFloat("material.shininess", 32.0f);
+        shaderProgram.setInt("material.diffuse", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -238,6 +275,11 @@ void processInput(GLFWwindow * window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+    {
+        auto pos = camera.Position;
+        std::cout << pos.x << "," << pos.y << "," << pos.z << "; Yaw " << camera.Yaw << " Pitch " << camera.Pitch << std::endl;
+    }
     
 }
 
