@@ -1,3 +1,13 @@
+/*
+# Spotlight
+
+LightDir: the vector pointing from the fragment to the light source.
+SpotDir: the direction the spotlight is aiming at.
+Phi ϕ: the cutoff angle that specifies the spotlight's radius. Everything outside this angle is not lit by the spotlight.
+Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ value should be smaller than Φ to be inside the spotlight.
+
+*/
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -89,7 +99,7 @@ glm::vec3 pointLightRepresentColor[] = {
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
-Camera camera = Camera(glm::vec3(-2.0, -0.5, 2.5), glm::vec3(0, 1, 0), -35.0f, 14.0f);
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
 float lastY = 0.0f;
 float lastTime = (float)glfwGetTime();
@@ -99,6 +109,8 @@ void frame_buffer_callback(GLFWwindow * window, int , int );
 void scroll_callback(GLFWwindow *, double , double);
 void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
+unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
+
 
 int main()
 {
@@ -132,43 +144,9 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
-    int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("Src/resources/diffuse_map.png", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/specular_map.png", &width1, &height1, &nrChannels1, 0);
-
-    unsigned int diffuseMap, specularMap;
-    glGenTextures(1, &diffuseMap);
-    glGenTextures(1, &specularMap);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if(data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout<< "Failed to load texture" << std::endl;
-    }
-    glBindTexture(GL_TEXTURE_2D, specularMap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if(data1)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout<< "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-    stbi_image_free(data1);
+    unsigned int diffuseTexture, specularTexture;
+    diffuseTexture = loadImage("Src/resources/diffuse_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+    specularTexture = loadImage("Src/resources/specular_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -196,13 +174,11 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("Shaders\\2_4\\SpecularMapVS24.vs", "Shaders\\2_4\\SpecularMapFS24.fs", NULL);
+    Shader shaderProgram = Shader("Shaders\\2_5\\LightVS25.vs", "Shaders\\2_5\\LightFS25.fs", NULL);
     Shader lampShader = Shader("Shaders\\2_2\\VertexShader22.vs", "Shaders\\2_1\\LightFragmentShader.fs", NULL);
 
-    glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
-    glm::mat4 model = glm::mat4(1.0);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2));
+    glm::vec3 lightPos = glm::vec3(0.5, 0.5f, 1.0f);
+    
 
     glEnable(GL_DEPTH_TEST);
 
@@ -210,43 +186,64 @@ int main()
     {
         processInput(window);
         
+        glClearColor(0.1, 0.1, 0.1, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
-
-        lampShader.use();
-        lampShader.setMat4("model", model);
-        lampShader.setMat4("view", view);
-        lampShader.setMat4("projection", projection);
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+    
+        // ** Point Light
+        // glm::mat4 model = glm::mat4(1.0);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2));
+        // lampShader.use();
+        // lampShader.setMat4("model", model);
+        // lampShader.setMat4("view", view);
+        // lampShader.setMat4("projection", projection);
+        // glBindVertexArray(lightVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
 
         shaderProgram.use();
-        shaderProgram.setMat4("model", glm::mat4(1.0));
-        shaderProgram.setMat4("view", view);
-        shaderProgram.setMat4("projection", projection);
-        shaderProgram.setVec3("lightPos", lightPos);
-        shaderProgram.setVec3("viewPos", camera.Position);
-        shaderProgram.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        
-        glm::vec3 lightColor = glm::vec3(1.0);
-        
-        shaderProgram.setVec3("light.ambient", lightColor * glm::vec3(0.5));
-        shaderProgram.setVec3("light.diffuse", lightColor * glm::vec3(0.1));
-        shaderProgram.setVec3("light.specular", lightColor);
-        shaderProgram.setFloat("material.shininess", 32.0f);
-        shaderProgram.setInt("material.diffuse", 0);
-        shaderProgram.setInt("material.specular", 1);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glBindTexture(GL_TEXTURE_2D, specularTexture);
+
+        shaderProgram.setInt("material.diffuse", 0);
+        shaderProgram.setInt("material.specular", 1);
+        shaderProgram.setFloat("material.shininess", 32.0f);
+
+        shaderProgram.setVec3("viewPos", camera.Position);
+        shaderProgram.setVec3("light.position", camera.Position);
+        shaderProgram.setVec3("light.direction", camera.Front);
+        shaderProgram.setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
+        shaderProgram.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+        shaderProgram.setVec3("light.ambient", glm::vec3(0.2));
+        shaderProgram.setVec3("light.diffuse", glm::vec3(0.5));
+        shaderProgram.setVec3("light.specular", glm::vec3(1));
+
+        // ** Point Light
+        // shaderProgram.setFloat("light.constant",  1.0f);
+        // shaderProgram.setFloat("light.linear",    0.09f);
+        // shaderProgram.setFloat("light.quadratic", 0.032f);	
+
+        shaderProgram.setMat4("view", view);
+        shaderProgram.setMat4("projection", projection);
 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        for ( int i = 0; i < 10 ; ++ i)
+        {
+            glm::mat4 model = glm::mat4(1.0);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            shaderProgram.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -279,11 +276,6 @@ void processInput(GLFWwindow * window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-    {
-        auto pos = camera.Position;
-        std::cout << pos.x << "," << pos.y << "," << pos.z << "; Yaw " << camera.Yaw << " Pitch " << camera.Pitch << std::endl;
-    }
     
 }
 
@@ -307,4 +299,32 @@ void mouse_callback(GLFWwindow * window, double xPos, double yPos)
     lastY = (float) yPos;
 
     camera.ProcessMouseMovement(offsetX, offsetY);
+}
+
+unsigned int loadImage(const char * fileName, GLint format, bool verticalFlip, GLint wrapMode)
+{
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_set_flip_vertically_on_load(verticalFlip);
+    int width, height, nrchannel;
+    unsigned char * data = stbi_load(fileName, &width, &height, &nrchannel, 0);
+    if ( data != NULL )
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "ERROR::LOAD IMAGE::FAILED!" << std::endl;
+    }
+    
+    stbi_image_free(data);
+    return texture;
 }
