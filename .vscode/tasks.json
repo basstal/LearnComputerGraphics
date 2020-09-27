@@ -9,7 +9,7 @@
 		{
 			"type":"shell",
 			"label": "mkdir",
-			"command":"rm -r build; mkdir build",
+			"command":"rm -r build; mkdir build"
 		},
 		{
 			"type": "shell",
@@ -40,7 +40,7 @@
 			},
 			"problemMatcher": [
 				"$msCompile"
-			],
+			]
 		},
 		{
 			"type": "shell",
@@ -68,14 +68,14 @@
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/User32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/Gdi32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/Shell32.lib",
-				"/NODEFAULTLIB:MSVCRT.LIB",
+				"/NODEFAULTLIB:MSVCRT.LIB"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/build/"
 			},
 			"problemMatcher": [
 				"$msCompile"
-			],
+			]
 		},
 		{
 			"label": "build",
