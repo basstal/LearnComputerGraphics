@@ -19,6 +19,7 @@
 				"/MDd",
 				"/I${workspaceFolder}/Src/include/",
 				"/I${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/",
+				"/I${workspaceFolder}/Plugins/assimp-5.0.1/include/",
 				"/EHsc",
 				"/Fe:",
 				"${workspaceFolder}/build/output.exe",
@@ -26,6 +27,7 @@
 				"${workspaceFolder}/Src/include/shader.cpp",
 				"${file}",
 				"/link ${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/lib-vc2019/glfw3.lib",
+				"${workspaceFolder}/Plugins/assimp-5.0.1/lib/assimp-vc142-mtd.lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/OpenGL32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/kernel32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/User32.Lib",
@@ -81,7 +83,7 @@
 			"dependsOrder": "sequence",
 			"dependsOn":[
 				"mkdir",
-				"cl-build-with-imgui",
+				"cl-build",
 				"run"
 			],
 			"group": {

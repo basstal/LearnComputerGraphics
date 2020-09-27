@@ -18,11 +18,13 @@ class Model
 {
 public:
     Model(const char * path);
-    void Draw(Shader shader);
-    std::vector<Mesh> meshes;
+    void Draw(Shader &shader);
 private:
-    std::vector<Texture> textures_loaded;
+    // model data
+    std::vector<Mesh> meshes;
     std::string directory;
+
+    std::vector<Texture> textures_loaded;
 
     void loadModel(std::string path);
     void processNode(aiNode * node, const aiScene * scene);
@@ -35,7 +37,7 @@ Model::Model(const char * path)
     loadModel(path);
 }
 
-void Model::Draw(Shader shader)
+void Model::Draw(Shader &shader)
 {
     // std::cout << "meshes.size() = "  << meshes.size() << std::endl;
     for (unsigned int i = 0; i < meshes.size(); ++i)
@@ -45,6 +47,17 @@ void Model::Draw(Shader shader)
 void Model::loadModel(std::string path)
 {
     Assimp::Importer importer;
+    /*
+    aiProcess_GenNormals: creates normal vectors for each vertex if the model doesn't contain normal vectors.
+    
+    aiProcess_SplitLargeMeshes: splits large meshes into smaller sub-meshes which is useful if your rendering has a maximum number of vertices allowed and can only process smaller meshes.
+    
+    aiProcess_OptimizeMeshes: does the reverse by trying to join several meshes into one larger mesh, reducing drawing calls for optimization.
+    
+    aiProcess_Triangulate: we tell Assimp that if the model does not (entirely) consist of triangles, it should transform all the model's primitive shapes to triangles first.
+    
+    aiProcess_FlipUVs: flips the texture coordinates on the y-axis where necessary during processing.
+    */
     const aiScene * scene = importer.ReadFile(path, aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_CalcTangentSpace);
     // check scene is successfully loaded
     if ( !scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

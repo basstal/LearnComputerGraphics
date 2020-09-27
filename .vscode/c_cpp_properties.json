@@ -4,6 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/",
+                "${workspaceFolder}/Plugins/assimp-5.0.1/include/",
                 "${workspaceFolder}/Src/include/"
             ],
             "defines": [

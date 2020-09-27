@@ -31,13 +31,16 @@ struct Texture
 class Mesh
 {
 public:
+    // mesh data
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
+
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
     void Draw(Shader shader);
-    unsigned int VAO, VBO, EBO;
 private:
+    // render data
+    unsigned int VAO, VBO, EBO;
     void setupMesh();
 };
 
@@ -60,6 +63,9 @@ void Mesh::setupMesh()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    /*
+    if we were to represent a struct as an array of data, it would only contain the struct's variables in sequential order which directly translates to a float (actually byte) array that we want for an array buffer.
+    */
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -69,6 +75,9 @@ void Mesh::setupMesh()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
 
     glEnableVertexAttribArray(1);
+    /* 
+    Another great use of structs is a preprocessor directive called offsetof(s,m) that takes as its first argument a struct and as its second argument a variable name of the struct. The macro returns the byte offset of that variable from the start of the struct. 
+    */
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, Normal));
 
     glEnableVertexAttribArray(2);
