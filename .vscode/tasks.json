@@ -12,6 +12,11 @@
 			"command":"rm -r build; mkdir build"
 		},
 		{
+			"type":"shell",
+			"label":"copy-dll",
+			"command":"copy ${workspaceFolder}/Plugins/assimp-5.0.1/lib-WIN32/assimp-vc142-mtd.dll ${workspaceFolder}/build/"
+		},
+		{
 			"type": "shell",
 			"label": "cl-build",
 			"command": "cl.exe",
@@ -27,7 +32,7 @@
 				"${workspaceFolder}/Src/include/shader.cpp",
 				"${file}",
 				"/link ${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/lib-vc2019/glfw3.lib",
-				"${workspaceFolder}/Plugins/assimp-5.0.1/lib/assimp-vc142-mtd.lib",
+				"${workspaceFolder}/Plugins/assimp-5.0.1/lib-WIN32/assimp-vc142-mtd.lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/OpenGL32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/kernel32.Lib",
 				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/User32.Lib",
@@ -84,6 +89,7 @@
 			"dependsOn":[
 				"mkdir",
 				"cl-build",
+				"copy-dll",
 				"run"
 			],
 			"group": {

@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.bytes": "c",
+        "**/Logs/*.bytes": "lua",
+        "**/Lua/**/*.bytes": "lua",
+        "**/FCode/*.bytes": "lua",
+        "**/XLua/**/*.txt": "lua",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "string": "cpp",
+        "xmemory": "cpp",
+        "iostream": "cpp",
+        "fstream": "cpp"
+    }
+}

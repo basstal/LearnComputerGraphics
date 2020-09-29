@@ -51,6 +51,8 @@ artifacts/
 *.ilk
 *.meta
 *.obj
+# except 3D model resources
+!**/resources/**/*.obj
 *.pch
 *.pdb
 *.pgc

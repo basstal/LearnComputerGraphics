@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <mesh.h>
@@ -119,7 +120,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
             texCoord.x = mesh->mTextureCoords[0][i].x;
             texCoord.y = mesh->mTextureCoords[0][i].y;
         }
-        vertex.TexCoord = texCoord;
+        vertex.TexCoords = texCoord;
         vertices.push_back(vertex);
     }
 
@@ -192,12 +193,13 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
         }
         if (!skip)
         {
+            // if texture hasn't been loaded already, load it
             Texture texture;
             texture.ID = loadImage(str.C_Str(), directory);
             texture.Type = typeName;
             texture.Path = str;
             textures.push_back(texture);
-            textures_loaded.push_back(texture);
+            textures_loaded.push_back(texture); // add to loaded textures
         }
     }
     return textures;
