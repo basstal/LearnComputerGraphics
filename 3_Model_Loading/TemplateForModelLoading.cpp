@@ -59,9 +59,9 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    Model nanosuit = Model(string("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj").c_str());
+    Model nanosuit = Model("/Users/wangjunke/Documents/OpenGL/OpenGLResource/nanosuit/nanosuit.obj", false);
     // 画不出来=，=
-    Model light = Model(string("F:/Documents/OpenGL/Models/ZAHA LIGHT pendants/ZAHA LIGHT white pendant.obj").c_str());
+    Model light = Model("F:/Documents/OpenGL/Models/ZAHA LIGHT pendants/ZAHA LIGHT white pendant.obj", false);
     Shader shader = Shader("VertexShader3.glsl", "FragmentShader3.glsl", "");
     Shader lightShader = Shader("VertexShader3.glsl", "LightFragmentShader.glsl", "");
 
