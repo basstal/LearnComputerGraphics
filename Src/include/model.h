@@ -5,23 +5,22 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
 #include <mesh.h>
 #include <shader.h>
 #include <vector>
 #include <string>
 
-unsigned int loadImage(const char * path, const std::string &);
+#include "utils.h"
+
 
 class Model
 {
 public:
-    Model(const char * path);
+    Model(const char * path, bool flipTexturesOnLoad);
     void Draw(Shader &shader);
 private:
-    // model data
+    bool flipTexturesOnLoad = false;
     std::vector<Mesh> meshes;
     std::string directory;
 
@@ -33,8 +32,9 @@ private:
     std::vector<Texture> loadMaterialTexture(aiMaterial * mat, aiTextureType type, std::string typeName);
 };
 
-Model::Model(const char * path)
+Model::Model(const char * path, bool flipTexturesOnLoad)
 {
+    this->flipTexturesOnLoad = flipTexturesOnLoad;
     loadModel(path);
 }
 
@@ -66,6 +66,7 @@ void Model::loadModel(std::string path)
         std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
         return;
     }
+    replaceStringInPlace(path, "\\", "/");
     directory = path.substr(0, path.find_last_of('/'));
     processNode( scene->mRootNode, scene );
 }
@@ -163,7 +164,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
 
             // map a texture by you self
             Texture texture;
-            texture.ID = loadImage("Orange.jpg", "");
+            texture.ID = loadImage("Orange.jpg", "", flipTexturesOnLoad);
             texture.Type = "my_diffuse";
             textures.push_back(texture);
             textures_loaded.push_back(texture);
@@ -195,7 +196,7 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
         {
             // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.ID = loadImage(str.C_Str(), directory);
+            texture.ID = loadImage(str.C_Str(), directory, flipTexturesOnLoad);
             texture.Type = typeName;
             texture.Path = str;
             textures.push_back(texture);
@@ -206,43 +207,5 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
 }
 
 
-unsigned int loadImage(const char * path, const std::string &directory)
-{
-    std::string fileName = std::string(path);
-    if (!directory.empty())
-        fileName = directory + '/' + fileName;
-
-    unsigned int texture;
-    glGenTextures(1, &texture);
-
-    int width, height, nrchannel;
-    unsigned char * data = stbi_load(fileName.c_str(), &width, &height, &nrchannel, 0);
-    if ( data != NULL )
-    {
-        GLint format;
-        if (nrchannel == 1)
-            format = GL_RED;
-        else if (nrchannel == 3)
-            format = GL_RGB;
-        else if (nrchannel == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        std::cout << "ERROR::LOAD IMAGE::FAILED!" << std::endl;
-    }
-    
-    stbi_image_free(data);
-    return texture;
-}
 
 #endif
