@@ -1,15 +1,13 @@
 /*
 
-Blending in OpenGL happens with the following equation:
+The glCullFace function has three possible options:
 
-C¯result=C¯source∗Fsource+C¯destination∗Fdestination
-
-C¯source: the source color vector. This is the color output of the fragment shader.
-C¯destination: the destination color vector. This is the color vector that is currently stored in the color buffer.
-Fsource: the source factor value. Sets the impact of the alpha value on the source color.
-Fdestination: the destination factor value. Sets the impact of the alpha value on the destination color.
+GL_BACK: Culls only the back faces.
+GL_FRONT: Culls only the front faces.
+GL_FRONT_AND_BACK: Culls both the front and back faces.
 
 */
+
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -29,50 +27,55 @@ Fdestination: the destination factor value. Sets the impact of the alpha value o
 
 bool wireframe = false;
 
-float cubeVertices[] = {
-    // Back face
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-    0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+float vertices[] = {
+    // back face
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
-    // Front face
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right    
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right              
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left                
+    // front face
     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-    0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-    0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right        
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
-    // Left face
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left        
+    // left face
     -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left       
     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
     -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-    // Right face
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
-    0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-    0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-    0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-    // Bottom face
+    // right face
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right      
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right          
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+    // bottom face          
     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-    0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left        
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
     -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
     -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-    // Top face
+    // top face
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right                 
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // bottom-left  
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // top-left              
 };
+
+/* Also make sure to add a call to OpenGL to specify that triangles defined by a clockwise ordering 
+   are now 'front-facing' triangles so the cube is rendered as normal:
+   glFrontFace(GL_CW);
+*/
 
 float planeVertices[] = {
     // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
@@ -83,15 +86,6 @@ float planeVertices[] = {
         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
     -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
-};
-
-float windowVertices[] = {
-    -0.5f,  -0.5f,  0.0f,   1.0f,   1.0f,
-    -0.5f,  0.5f,   0.0f,   1.0f,   0.0f,
-    0.5f,   -0.5f,  0.0f,   0.0f,   1.0f,
-    0.5f,   -0.5f,  0.0f,   0.0f,   1.0f,
-    -0.5f,  0.5f,   0.0f,   1.0f,   0.0f,
-    0.5f,   0.5f,   0.0f,   0.0f,   0.0f,
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -116,7 +110,7 @@ float lastTime = 0.0f;
 int samples = 4;
 
 unsigned int cubeVAO, cubeVBO;
-unsigned int vegetationVAO, vegetationVBO;
+unsigned int windowVAO, windowVBO;
 unsigned int planeVAO, planeVBO;
 unsigned int quadVAO, quadVBO;
 unsigned int frameBuffer, multiSampleFBO;
@@ -153,22 +147,22 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
     floorTexture = loadImage("metal.png", "Src/resources", false);
-    grassTexture = loadImage("grass.png", "Src/resources", false);
 
     Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", NULL);
-    Shader vegetationShader("Shaders/4_1/VertexShader.vs", "Shaders/4_3/VegetationFragmentShader.fs", NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
     glBindVertexArray(cubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
@@ -187,31 +181,13 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
 
-    std::vector<glm::vec3> vegetation;
-    vegetation.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
-    vegetation.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
-    vegetation.push_back(glm::vec3( 0.0f,  0.0f,  0.7f));
-    vegetation.push_back(glm::vec3(-0.3f,  0.0f, -2.3f));
-    vegetation.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));  
-
-    // vegetation VAO
-    glGenVertexArrays(1, &vegetationVAO);
-    glGenBuffers(1, &vegetationVBO);
-    glBindVertexArray(vegetationVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, vegetationVAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5* sizeof(float), (void *)(3*sizeof(float)));
-    glBindVertexArray(0);
-
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     float scale = 1.0f;
+
 
     while(!glfwWindowShouldClose(window))
     {
@@ -248,21 +224,6 @@ int main()
         glBindTexture(GL_TEXTURE_2D, floorTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
-
-        vegetationShader.use();
-        vegetationShader.setMat4("projection", projection);
-        vegetationShader.setMat4("view", view);
-        glBindVertexArray(vegetationVAO);
-        glBindTexture(GL_TEXTURE_2D, grassTexture);  
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        for(unsigned int i = 0; i < vegetation.size(); i++) 
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);				
-            vegetationShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

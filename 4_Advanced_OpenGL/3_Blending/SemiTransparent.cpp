@@ -102,7 +102,7 @@ float planeVertices[] = {
         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
 };
 
-float grassVertices[] = {
+float windowVertices[] = {
     -0.5f,  -0.5f,  0.0f,   1.0f,   1.0f,
     -0.5f,  0.5f,   0.0f,   1.0f,   0.0f,
     0.5f,   -0.5f,  0.0f,   0.0f,   1.0f,
@@ -218,7 +218,7 @@ int main()
     glGenBuffers(1, &windowVBO);
     glBindVertexArray(windowVAO);
     glBindBuffer(GL_ARRAY_BUFFER, windowVAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), grassVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
