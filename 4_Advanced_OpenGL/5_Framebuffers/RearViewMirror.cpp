@@ -78,24 +78,25 @@ float planeVertices[] = {
 
         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
     -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-        5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
+        5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 };
 
 float quadVertices[] = {  
     // positions   // texCoords
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  0.0f, 0.0f,
-    1.0f, -1.0f,  1.0f, 0.0f,
+    -0.2f,  1.0f,  0.0f, 1.0f,
+    -0.2f, 0.6f,  0.0f, 0.0f,
+    0.2f, 0.6f,  1.0f, 0.0f,
 
-    -1.0f,  1.0f,  0.0f, 1.0f,
-    1.0f, -1.0f,  1.0f, 0.0f,
-    1.0f,  1.0f,  1.0f, 1.0f
+    -0.2f,  1.0f,  0.0f, 1.0f,
+    0.2f, 0.6f,  1.0f, 0.0f,
+    0.2f,  1.0f,  1.0f, 1.0f
 };	
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+void DrawScene(Shader simpleShader);
 
 // settings
 const unsigned int SCR_WIDTH = 1280;
@@ -164,7 +165,7 @@ int main()
     floorTexture = loadImage("metal.png", "Src/resources", false);
 
     Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", NULL);
-    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/PostProcessing.fs", NULL);
+    Shader framebufferShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/FramebufferFS.fs", NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
@@ -190,17 +191,18 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
 
-    // quadVAO
+    // quad VAO
     glGenVertexArrays(1, &quadVAO);
-    glBindVertexArray(quadVAO);
     glGenBuffers(1, &quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVAO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
     glBindVertexArray(0);
+
 
     // framebuffer
     glGenFramebuffers(1, &framebuffer);
@@ -252,22 +254,20 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
-        camera.Up = glm::vec3(- camera.Up);
-        glm::mat4 view = camera.GetViewMatrix();
-        DrawScene(simpleShader, view);
+        float angle = 180 / camera.MouseSensitivity;
+        camera.ProcessMouseMovement(angle, 0);
+        DrawScene(simpleShader);
 
-
+        camera.ProcessMouseMovement(-angle, 0);
 
         // second pass
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(0.1, 0.1, 0.1, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        camera.Up = glm::vec3(-camera.Up);
-        view = camera.GetViewMatrix();
-
-        glBindVertexArray(planeVAO);
-
+        DrawScene(simpleShader);
+        
+        framebufferShader.use();
         glBindVertexArray(quadVAO);
         glBindTexture(GL_TEXTURE_2D, framebufferTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -339,11 +339,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
-void DrawScene(Shader simpleShader, glm::mat4 view)
+void DrawScene(Shader simpleShader)
 {
     simpleShader.use();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = camera.GetViewMatrix();
     simpleShader.setMat4("view", view);
     simpleShader.setMat4("projection", projection);
     simpleShader.setMat4("model", model);
