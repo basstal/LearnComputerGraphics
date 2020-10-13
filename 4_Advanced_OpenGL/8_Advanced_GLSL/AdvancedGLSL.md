@@ -46,8 +46,81 @@
 
     From OpenGL 4.2 however, we can still sort of mediate between both sides by redeclaring the gl_FragDepth variable at the top of the fragment shader with a depth condition: **layout (depth_<condition>) out float gl_FragDepth;**
 
-    Condition	Description
-    any	        The default value. Early depth testing is disabled.
-    greater	    You can only make the depth value larger compared to gl_FragCoord.z.
-    less	    You can only make the depth value smaller compared to gl_FragCoord.z.
-    unchanged	If you write to gl_FragDepth, you will write exactly gl_FragCoord.z.
+    |Condition	|Description|
+    |---|---|
+    |any	   |     The default value. Early depth testing is disabled.|
+    |greater|	    You can only make the depth value larger compared to gl_FragCoord.z.|
+    |less	  |  You can only make the depth value smaller compared to gl_FragCoord.z.|
+    |unchanged|	If you write to gl_FragDepth, you will write exactly gl_FragCoord.z.|
+
+## Interface blocks
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out VS_OUT
+{
+    vec2 TexCoords;
+} vs_out;
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos, 1.0);    
+    vs_out.TexCoords = aTexCoords;
+}  
+```
+
+```glsl
+#version 330 core
+out vec4 FragColor;
+
+in VS_OUT
+{
+    vec2 TexCoords;
+} fs_in;
+
+uniform sampler2D texture;
+
+void main()
+{             
+    FragColor = texture(texture, fs_in.TexCoords);   
+} 
+```
+
+## Uniform buffer objects
+
+OpenGL gives us a tool called uniform buffer objects that allow us to declare a set of global uniform variables that remain the same over any number of shader programs. When using uniform buffer objects we set the relevant uniforms only once in fixed GPU memory.
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
+
+uniform mat4 model;
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}  
+```
+
+### Uniform block layout
+
+|Type|	                        Layout rule|
+|---|---|
+|Scalar e.g. int or bool|	        Each scalar has a base alignment of N.|
+|Vector	              |          Either 2N or 4N. This means that a vec3 has a base alignment of 4N.|
+|Array of scalars or vectors|	    Each element has a base alignment equal to that of a vec4.|
+|Matrices	                |    Stored as a large array of column vectors, where each of those vectors has a base alignment of vec4.|
+|Struct	                   |     Equal to the computed size of its elements according to the previous rules, but padded to a multiple of the size of a vec4.|
