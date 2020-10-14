@@ -19,6 +19,7 @@ class Model
 public:
     Model(const char * path, bool flipTexturesOnLoad);
     void Draw(Shader &shader);
+    std::vector<Mesh> &GetMeshes();
 private:
     bool flipTexturesOnLoad = false;
     std::vector<Mesh> meshes;
@@ -36,6 +37,11 @@ Model::Model(const char * path, bool flipTexturesOnLoad)
 {
     this->flipTexturesOnLoad = flipTexturesOnLoad;
     loadModel(path);
+}
+
+std::vector<Mesh> &Model::GetMeshes()
+{
+    return meshes;
 }
 
 void Model::Draw(Shader &shader)

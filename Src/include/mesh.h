@@ -38,6 +38,8 @@ public:
 
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
     void Draw(Shader shader);
+    void BindTexture(Shader shader);
+    unsigned int GetVAO();
 private:
     // render data
     unsigned int VAO, VBO, EBO;
@@ -51,6 +53,11 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
     this->textures = textures;
 
     setupMesh();
+}
+
+unsigned int Mesh::GetVAO()
+{
+    return VAO;
 }
 
 void Mesh::setupMesh()
@@ -86,7 +93,7 @@ void Mesh::setupMesh()
     glBindVertexArray(0);
 }
 
-void Mesh::Draw(Shader shader)
+void Mesh::BindTexture(Shader shader)
 {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -112,7 +119,10 @@ void Mesh::Draw(Shader shader)
         shader.setInt(("material." + name + number), i);
         glBindTexture(GL_TEXTURE_2D, textures[i].ID);
     }
-
+}
+void Mesh::Draw(Shader shader)
+{
+    BindTexture(shader);
     glActiveTexture(GL_TEXTURE0);
 
     glBindVertexArray(VAO);

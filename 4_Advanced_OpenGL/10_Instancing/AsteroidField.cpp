@@ -12,8 +12,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0, 0.0f, 60.0f));
@@ -55,12 +55,12 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    unsigned int amount = 1000;
+    unsigned int amount = 100000;
     glm::mat4 *modelMatrices;
     modelMatrices = new glm::mat4[amount];
     srand(glfwGetTime()); // initialize random seed	
-    float radius = 50.0;
-    float offset = 2.5f;
+    float radius = 150.0f;
+    float offset = 25.0f;
     for(unsigned int i = 0; i < amount; i++)
     {
         glm::mat4 model = glm::mat4(1.0f);
@@ -88,8 +88,37 @@ int main()
 
 
     Shader shader("Shaders/4_10/AsteroidFieldVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", NULL);
+    Shader instanceAsteroidShader("Shaders/4_10/InstanceAsteroidVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", NULL);
     Model planet("Src/resources/planet/planet.obj", false);
     Model rock("Src/resources/rock/rock.obj", false);
+
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    std::vector<Mesh> meshes = rock.GetMeshes();
+    for (unsigned int i = 0; i < meshes.size(); ++i)
+    {
+        unsigned int VAO = meshes[i].GetVAO();
+        glBindVertexArray(VAO);
+        
+        std::size_t vec4Size = sizeof(glm::vec4);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)0);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size));
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size * 2));
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size * 3));
+
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glVertexAttribDivisor(5, 1);
+        glVertexAttribDivisor(6, 1);
+        glBindVertexArray(0);
+    }
+
 
     while(!glfwWindowShouldClose(window))
     {
@@ -98,7 +127,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
@@ -108,10 +137,23 @@ int main()
         shader.setMat4("model", model);
         planet.Draw(shader);
         
-        for(unsigned int i = 0; i < amount; i++)
+        // use no instancing
+        // for(unsigned int i = 0; i < amount; i++)
+        // {
+        //     shader.setMat4("model", modelMatrices[i]);
+        //     rock.Draw(shader);
+        // }
+
+        // use instancing
+        instanceAsteroidShader.use();
+        instanceAsteroidShader.setMat4("projection", projection);
+        instanceAsteroidShader.setMat4("view", view);
+        for (unsigned int i = 0; i < meshes.size(); ++i)
         {
-            shader.setMat4("model", modelMatrices[i]);
-            rock.Draw(shader);
+            Mesh mesh = meshes[i];
+            mesh.BindTexture(instanceAsteroidShader);
+            glBindVertexArray(mesh.GetVAO());
+            glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0, amount);
         }
 
         glfwSwapBuffers(window);
