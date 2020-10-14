@@ -2,6 +2,8 @@
 
 Follow https://learnopengl-cn.github.io/
 
+Using VSCode on windows 10-64bit for editing.
+
 ## FAQ
 
 1. CL.exe not found??
