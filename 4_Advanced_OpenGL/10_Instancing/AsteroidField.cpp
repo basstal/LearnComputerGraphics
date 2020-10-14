@@ -4,17 +4,7 @@
 
 #include <camera.h>
 #include <shader.h>
-
-float quadVertices[] = {
-    // positions     // colors
-    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
-     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
-    -0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
-
-    -0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
-     0.05f, -0.05f,  0.0f, 1.0f, 0.0f,   
-     0.05f,  0.05f,  0.0f, 1.0f, 1.0f		    		
-};
+#include <model.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -26,7 +16,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0, 0.0f, 60.0f));
 float lastX = (float)SCR_WIDTH  / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -56,56 +46,73 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    Shader shader("Shaders/4_10/InstancingVS.vs", "Shaders/4_10/InstancingFS.fs", NULL);
 
-    glm::vec2 translations[100];
-    int index = 0;
-    float offset = 0.1f;
-    for(int y = -10; y < 10; y += 2)
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glEnable(GL_DEPTH_TEST);
+
+    unsigned int amount = 1000;
+    glm::mat4 *modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime()); // initialize random seed	
+    float radius = 50.0;
+    float offset = 2.5f;
+    for(unsigned int i = 0; i < amount; i++)
     {
-        for(int x = -10; x < 10; x += 2)
-        {
-            glm::vec2 translation;
-            translation.x = (float)x / 10.0f + offset;
-            translation.y = (float)y / 10.0f + offset;
-            translations[index++] = translation;
-        }
+        glm::mat4 model = glm::mat4(1.0f);
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x, y, z));
+
+        // 2. scale: scale between 0.05 and 0.25f
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
     }
 
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
-    glBindVertexArray(0);
 
-    unsigned int instanceVBO;
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    /*
-    What makes this code interesting is the last line where we call glVertexAttribDivisor. This function tells OpenGL when to update the content of a vertex attribute to the next element. Its first parameter is the vertex attribute in question and the second parameter the attribute divisor. By default, the attribute divisor is 0 which tells OpenGL to update the content of the vertex attribute each iteration of the vertex shader. By setting this attribute to 1 we're telling OpenGL that we want to update the content of the vertex attribute when we start to render a new instance. By setting it to 2 we'd update the content every 2 instances and so on. By setting the attribute divisor to 1 we're effectively telling OpenGL that the vertex attribute at attribute location 2 is an instanced array.
-    */
-    glVertexAttribDivisor(2, 1);
+    Shader shader("Shaders/4_10/AsteroidFieldVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", NULL);
+    Model planet("Src/resources/planet/planet.obj", false);
+    Model rock("Src/resources/rock/rock.obj", false);
 
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         shader.use();
-        glBindVertexArray(quadVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        shader.setMat4("projection", projection);
+        shader.setMat4("view", view);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(4.0));
+        shader.setMat4("model", model);
+        planet.Draw(shader);
+        
+        for(unsigned int i = 0; i < amount; i++)
+        {
+            shader.setMat4("model", modelMatrices[i]);
+            rock.Draw(shader);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -121,7 +128,7 @@ void processInput(GLFWwindow *window)
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 

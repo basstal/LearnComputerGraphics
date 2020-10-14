@@ -144,14 +144,14 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         std::vector<Texture> reflectionTexture = loadMaterialTexture(material, aiTextureType_AMBIENT, "texture_reflection");
         textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
         std::vector<Texture> tangentTexture = loadMaterialTexture(material, aiTextureType_HEIGHT, "texture_tangent");
-        textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
+        textures.insert(textures.end(), tangentTexture.begin(), tangentTexture.end());
     }
     else
     {
         bool skip = false;
         for (unsigned int i = 0 ; i < textures_loaded.size(); ++i)
         {
-            if (textures_loaded[i].Type == "my_diffuse")
+            if (textures_loaded[i].Type == "texture_diffuse")
             {
                 textures.push_back(textures_loaded[i]);
                 skip = true;
@@ -165,7 +165,7 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
             // map a texture by you self
             Texture texture;
             texture.ID = loadImage("Orange.jpg", "", flipTexturesOnLoad);
-            texture.Type = "my_diffuse";
+            texture.Type = "texture_diffuse";
             textures.push_back(texture);
             textures_loaded.push_back(texture);
         }
