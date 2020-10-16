@@ -14,8 +14,8 @@
 bool wireframe = false;
 
 
-const int WIDTH = 1280;
 const int HEIGHT = 780;
+const int WIDTH = 1280;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -24,22 +24,40 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-Camera camera = Camera();
+Camera camera = Camera(glm::vec3(0.0, 0.0, 3.0));
 
 
-// 1-blinn phong
-bool openBlinn = false;
-bool glBlinnPressed = false;
+// 2-gamma correction
+bool openGammaCorrection = false;
+bool glGammaCorrection = false;
 
+// set up vertex data (and buffer(s)) and configure vertex attributes
+// ------------------------------------------------------------------
 float planeVertices[] = {
     // positions            // normals         // texcoords
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+        10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
     -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
     -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
 
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+        10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
     -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-    10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+        10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+};
+
+// lighting info
+// -------------
+glm::vec3 lightPositions[] = {
+    glm::vec3(-3.0f, 0.0f, 0.0f),
+    glm::vec3(-1.0f, 0.0f, 0.0f),
+    glm::vec3 (1.0f, 0.0f, 0.0f),
+    glm::vec3 (3.0f, 0.0f, 0.0f)
+};
+
+glm::vec3 lightColors[] = {
+    glm::vec3(0.25),
+    glm::vec3(0.50),
+    glm::vec3(0.75),
+    glm::vec3(1.00)
 };
 
 using namespace std;
@@ -67,7 +85,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "AdvancedLighting", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -76,19 +94,17 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetScrollCallback(window, mouse_scroll_callback);
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
     {
         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
         glfwTerminate();
         return -1;
     }
-
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetScrollCallback(window, mouse_scroll_callback);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -97,49 +113,52 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    // 1-blinn phong
-    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_1/BlinnPhongFS.fs", NULL);
-
-    // planeVAO
+    // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
-
     glBindVertexArray(planeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
 
-    unsigned int planeTex = loadImage("wood.png", "Src/resources", true);
-    
+    unsigned int floorTexture = loadImageGamma("Src/resources/wood.png", false, false);
+    unsigned int floorTextureGammaCorrected = loadImageGamma("Src/resources/wood.png", true, false);
+
+    Shader shader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_2/GammaCorrectionFS.fs", NULL);
+
 
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
-
-        blinnShader.use();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
-        blinnShader.setMat4("projection", projection);
-        glm::mat4 view = camera.GetViewMatrix();
-        blinnShader.setMat4("view", view);
-        blinnShader.setBool("openBlinn", openBlinn);
-        blinnShader.setVec3("lightPos", glm::vec3(0.0, 0.0, 0.0));
-        blinnShader.setVec3("viewPos", camera.Position);
-
-        glBindTexture(GL_TEXTURE_2D, planeTex);
-        glBindVertexArray(planeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
         
+        // render
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shader.use();
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+
+        shader.setVec3("lightPositions", &lightPositions[0][0], 4);
+        shader.setVec3("lightColors", &lightColors[0][0], 4);
+
+        shader.setVec3("viewPos", camera.Position);
+        shader.setInt("gamma", openGammaCorrection);
+        
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, (openGammaCorrection? floorTextureGammaCorrected : floorTexture));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -176,15 +195,15 @@ void processInput(GLFWwindow * window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
 
-    // 1 -blinn phong
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !glBlinnPressed)
+    // 2-gamma correction
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !glGammaCorrection)
     {
-        openBlinn = !openBlinn;
-        glBlinnPressed = true;
+        openGammaCorrection = !openGammaCorrection;
+        glGammaCorrection = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
     {
-        glBlinnPressed = false;
+        glGammaCorrection = false;
     }
 }
 
