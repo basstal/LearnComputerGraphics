@@ -10,6 +10,7 @@
         "string": "cpp",
         "xmemory": "cpp",
         "iostream": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "random": "cpp"
     }
 }

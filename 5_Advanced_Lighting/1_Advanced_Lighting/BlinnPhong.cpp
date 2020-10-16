@@ -33,13 +33,13 @@ bool glBlinnPressed = false;
 
 float planeVertices[] = {
     // positions            // normals         // texcoords
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  1.0f,  1.0f,
-    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  1.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,
+    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
 
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  1.0f,  1.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,
-    10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f
+    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+    10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
 };
 
 using namespace std;
@@ -137,20 +137,23 @@ int main()
         glm::mat4 model(1.0);
         blinnShader.setMat4("model", model);
         blinnShader.setBool("openBlinn", openBlinn);
-        blinnShader.setVec3("light.position", glm::vec3(0.0, 5.0, 3.0));
-        blinnShader.setFloat("light.ambient", 0.2);
-        blinnShader.setFloat("light.diffuse", 0.5);
-        blinnShader.setFloat("light.specular", 0.7);
+        blinnShader.setVec3("light.position", glm::vec3(0.0, 0.0, 0.0));
+        blinnShader.setFloat("light.ambient", 0.05);
+        blinnShader.setFloat("light.diffuse", 1);
+        blinnShader.setFloat("light.specular", 1);
         blinnShader.setFloat("shininess", 32.0f);
         blinnShader.setVec3("viewPos", camera.Position);
-        glBindTexture(GL_TEXTURE_2D, planeTex);
 
+        glBindTexture(GL_TEXTURE_2D, planeTex);
         glBindVertexArray(planeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glfwTerminate();
+    return 0;
 }
 
 void processInput(GLFWwindow * window)

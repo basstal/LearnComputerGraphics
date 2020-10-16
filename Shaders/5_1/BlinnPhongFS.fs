@@ -27,34 +27,31 @@ uniform Light light;
 
 void main()
 {
-    // vec3 lightDir = normalize(light.position - fs_in.FragPos);
-    // vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-    // // ambient
-    // vec3 ambient = light.ambient * vec3(texture(tex, fs_in.TexCoords));
+    vec3 color = vec3(texture(tex, fs_in.TexCoords));
+
+    vec3 lightDir = normalize(light.position - fs_in.FragPos);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+    // ambient
+    vec3 ambient = light.ambient * color;
     
-    // // diffuse 
-    // vec3 norm = normalize(fs_in.Normal);
-    // float diff = max(dot(norm, lightDir), 0.0);
-    // vec3 diffuse = light.diffuse * (diff * vec3(texture(tex, fs_in.TexCoords)));
+    // diffuse 
+    vec3 norm = normalize(fs_in.Normal);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * (diff * color);
     
-    // // specular
-    // vec3 specular;
-
-    // if (openBlinn)
-    // {
-    //     vec3 halfwayDir = normalize(lightDir + viewDir);
-    //     float spec = pow(max(dot(halfwayDir, norm), 0.0), shininess);
-    //     specular = light.specular * (spec * vec3(texture(tex, fs_in.TexCoords)));
-    // }
-    // else
-    // {
-    //     vec3 reflectDir = reflect(-lightDir, norm);
-    //     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    //     specular = light.specular * (spec * vec3(texture(tex, fs_in.TexCoords)));
-    // }
-
-    // vec3 result = ambient + diffuse + specular;
-    // FragColor = vec4(result, 1.0);
-
-    FragColor = texture(tex, fs_in.TexCoords);
+    // specular
+    float spec = 0.0;
+    if (openBlinn)
+    {
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        spec = pow(max(dot(halfwayDir, norm), 0.0), shininess);
+    }
+    else
+    {
+        vec3 reflectDir = reflect(-lightDir, norm);
+        spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess / 4);
+    }
+    vec3 specular = light.specular * (spec * vec3(0.3)); // assuming bright white light color
+    vec3 result = ambient + diffuse + specular;
+    FragColor = vec4(result, 1.0);
 }
