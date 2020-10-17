@@ -156,14 +156,14 @@ glBindBuffer(GL_UNIFORM_BUFFER, 0);
 To set a shader uniform block to a specific binding point we call glUniformBlockBinding that takes a program object, a uniform block index, and the binding point to link to. The uniform block index is a location index of the defined uniform block in the shader. This can be retrieved via a call to glGetUniformBlockIndex that accepts a program object and the name of the uniform block.
 
 ```c++
-unsigned int lights_index = glGetUniformBlockIndex(shaderA.ID, "Lights");   
+unsigned int lights_index = glGetUniformBlockIndex(shaderA.ID, "Lights");
 glUniformBlockBinding(shaderA.ID, lights_index, 2);
 ```
 
 The function glBindbufferBase expects a target, a binding point index and a uniform buffer object. This function links uboExampleBlock to binding point 2; from this point on, both sides of the binding point are linked. You can also use glBindBufferRange that expects an extra offset and size parameter - this way you can bind only a specific range of the uniform buffer to a binding point. Using glBindBufferRange you could have multiple different uniform blocks linked to a single uniform buffer object.
 
 ```c++
-glBindBufferBase(GL_UNIFORM_BUFFER, 2, uboExampleBlock); 
+glBindBufferBase(GL_UNIFORM_BUFFER, 2, uboExampleBlock);
 // or
 glBindBufferRange(GL_UNIFORM_BUFFER, 2, uboExampleBlock, 0, 152);
 ```
@@ -171,6 +171,6 @@ glBindBufferRange(GL_UNIFORM_BUFFER, 2, uboExampleBlock, 0, 152);
 ```c++
 glBindBuffer(GL_UNIFORM_BUFFER, uboExampleBlock);
 int b = true; // bools in GLSL are represented as 4 bytes, so we store it in an integer
-glBufferSubData(GL_UNIFORM_BUFFER, 144, 4, &b); 
+glBufferSubData(GL_UNIFORM_BUFFER, 144, 4, &b);
 glBindBuffer(GL_UNIFORM_BUFFER, 0);
 ```

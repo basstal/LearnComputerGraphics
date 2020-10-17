@@ -50,5 +50,5 @@ glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, 8 * sizeof(
 float vertexData[] = { ... };
 glBindBuffer(GL_ARRAY_BUFFER, vbo1);
 glBindBuffer(GL_COPY_WRITE_BUFFER, vbo2);
-glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, 8 * sizeof(float)); 
+glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, 8 * sizeof(float));
 ```
