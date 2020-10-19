@@ -87,6 +87,7 @@ int main()
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_CULL_FACE);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
@@ -96,8 +97,9 @@ int main()
 
     // 2 shadow mapping
     Shader simpleShadowShader = Shader("Shaders/5_3/SimpleShadowVS.vs", "Shaders/5_3/SimpleShadowFS.fs", NULL);
-    Shader visualDebugShader("Shaders/4_5/FramebufferVS.vs", "Shaders/5_3/DebugDepthMapFS.fs", NULL);
+    Shader renderingShadowShader("Shaders/5_3/RenderingShdowVS.vs", "Shaders/5_3/RenderingShdowFS.fs", NULL);
 
+    unsigned int woodTexture = loadImage("wood.png", "Src/resources/", false);
     // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
@@ -170,11 +172,25 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, WIDTH, HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        visualDebugShader.use();
-        visualDebugShader.setFloat("near_plane", near_plane);
-        visualDebugShader.setFloat("far_plane", far_plane);
+        renderingShadowShader.use();
+        renderingShadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        renderingShadowShader.setMat4("projection", projection);
+        renderingShadowShader.setMat4("view", view);
+
+        renderingShadowShader.setInt("diffuseTexture", 0);
+        renderingShadowShader.setInt("shadowMap", 1);
+
+        renderingShadowShader.setVec3("lightPos", lightPos);
+        renderingShadowShader.setVec3("viewPos", camera.Position);
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
-        renderQuadSimple();
+        renderScene(renderingShadowShader, planeVAO);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
