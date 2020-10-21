@@ -27,18 +27,7 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-Camera camera = Camera(glm::vec3(0.0, 0.0, 3.0));
-
-float planeVertices[] = {
-    // positions            // normals         // texcoords
-    -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-    -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-        25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-
-    -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-        25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-        25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
-};
+Camera camera = Camera(glm::vec3(0, 0, 3));
 
 using namespace std;
 
@@ -75,6 +64,12 @@ int main()
 
     glfwMakeContextCurrent(window);
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetScrollCallback(window, mouse_scroll_callback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
     {
         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
@@ -87,112 +82,105 @@ int main()
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
-    
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetScrollCallback(window, mouse_scroll_callback);
+    glEnable(GL_CULL_FACE);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    unsigned int shadowPointFBO;
+    glGenFramebuffers(1, &shadowPointFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowPointFBO);
 
-    // 2 shadow mapping
-    Shader simpleShadowShader = Shader("Shaders/5_3/SimpleShadowVS.vs", "Shaders/5_3/SimpleShadowFS.fs", NULL);
-    Shader renderingShadowShader("Shaders/5_3/RenderingShadowVS.vs", "Shaders/5_3/RenderingShadowFS.fs", NULL);
+    unsigned int cubeMap;
+    glGenTextures(1, &cubeMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 
-    unsigned int woodTexture = loadImage("wood.png", "Src/resources/", false);
-    // plane VAO
-    unsigned int planeVAO, planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
+    for (unsigned int i = 0; i < 6 ; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    }
 
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    
-    // 2 shadow mapping
-    unsigned int shadowFBO;
-    glGenFramebuffers(1, &shadowFBO);
-
-    unsigned int depthTexture;
-    glGenTextures(1, &depthTexture);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, cubeMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "ERROR:: FRAME BUFFER INIT FAILED! " << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glm::vec3 lightPos = glm::vec3(-2.0f, 4.0f, -1.0f);
+    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vs", "Shaders/5_4/PointShadowFS.fs", "Shaders/5_4/PointShadowGS.gs");
+    Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vs", "Shaders/5_4/RenderingShadowFS.fs", NULL);
 
+    unsigned int woodTexture = loadImage("wood.png", "Src/resources/", false);
+    
+    glm::vec3 lightPos(0);
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+
+        lightPos.z = sin(glfwGetTime() * 0.5) * 3.0;
+        
+        float aspect = (float)SHADOW_WIDTH/(float)SHADOW_HEIGHT;
+        float near_plane = 1.0f;
+        float far_plane = 25.0f;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane); 
+        std::vector<glm::mat4> shadowTransforms;
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3( 1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0,-1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3( 0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3( 0.0,-1.0, 0.0), glm::vec3(0.0, 0.0,-1.0)));
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3( 0.0, 0.0, 1.0), glm::vec3(0.0,-1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * 
+                        glm::lookAt(lightPos, lightPos + glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0,-1.0, 0.0)));
+
         
         // render
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        // 2 shadow mapping
-        float near_plane = 1.0f, far_plane = 7.5f;
-        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        glm::mat4 view = glm::lookAt(lightPos,
-                        glm::vec3(0),
-                        glm::vec3(0.f, 1.f, 0.f));
-
-        glm::mat4 lightSpaceMatrix = lightProjection * view;
-
-        simpleShadowShader.use();
-        simpleShadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowPointFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        renderScene(simpleShadowShader, planeVAO);
-
+        pointShadowShader.use();
+        pointShadowShader.setVec3("lightPos", lightPos);
+        pointShadowShader.setFloat("far_plane", far_plane);
+        for (int i = 0; i < shadowTransforms.size(); ++i)
+        {
+            pointShadowShader.setMat4("shadowMatrices[" + to_string(i) + "]", shadowTransforms[i]);
+        }
+        renderScene3D(pointShadowShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         glViewport(0, 0, WIDTH, HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderingShadowShader.use();
-        renderingShadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        pointShadowDrawShader.use();
+        pointShadowDrawShader.setVec3("viewPos", camera.Position);
+        pointShadowDrawShader.setVec3("lightPos", lightPos);
+        pointShadowDrawShader.setFloat("far_plane", far_plane);
 
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        renderingShadowShader.setMat4("projection", projection);
-        renderingShadowShader.setMat4("view", view);
+        glm::mat4 proj = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.01f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        pointShadowDrawShader.setMat4("projection", proj);
+        pointShadowDrawShader.setMat4("view", view);
 
-        renderingShadowShader.setInt("diffuseTexture", 0);
-        renderingShadowShader.setInt("shadowMap", 1);
+        pointShadowDrawShader.setInt("shadowMap", 0);
+        pointShadowDrawShader.setInt("diffuseTexture", 1);
 
-        renderingShadowShader.setVec3("lightPos", lightPos);
-        renderingShadowShader.setVec3("viewPos", camera.Position);
-        
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthTexture);
-        renderScene(renderingShadowShader, planeVAO);
-        
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+
+        renderScene3D(pointShadowDrawShader);
+
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -228,6 +216,7 @@ void processInput(GLFWwindow * window)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
+
 }
 
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
@@ -257,6 +246,7 @@ void mouse_scroll_callback(GLFWwindow * window, double offsetX, double offsetY)
 {
     camera.ProcessMouseScroll((float)offsetY);
 }
+
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
