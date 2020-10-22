@@ -9,11 +9,32 @@ in VS_OUT {
 
 uniform sampler2D diffuseTexture;
 uniform samplerCube shadowMap;
+uniform vec3 sampleOffsetDirections[20];
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
 uniform float far_plane;
+
+float ShadowWithPCF(vec3 fragToLight)
+{
+    float currentDepth = length(fragToLight);
+
+    float shadow = 0.0;
+    float bias   = 0.15;
+    int samples  = 20;
+    float viewDistance = length(fs_in.FragPos - viewPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(shadowMap, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);
+    return shadow;
+}
 
 float ShadowCalculation(vec3 fragPos)
 {
@@ -21,11 +42,12 @@ float ShadowCalculation(vec3 fragPos)
     float closestDepth = texture(shadowMap, fragToLight).r;
 
     closestDepth *= far_plane;
-    float currentDepth = length(fragToLight);
+    return ShadowWithPCF(fragToLight);
+    // float currentDepth = length(fragToLight);
 
-    float bias = 0.05;
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-    return shadow;
+    // float bias = 0.05;
+    // float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    // return shadow;
 }
 
 void main()

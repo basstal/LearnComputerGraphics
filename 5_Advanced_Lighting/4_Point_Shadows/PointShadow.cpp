@@ -30,6 +30,7 @@ float deltaTime = 0.0f;
 Camera camera = Camera(glm::vec3(0, 0, 3));
 
 using namespace std;
+using namespace glm;
 
 void frame_buffer_callback(GLFWwindow *, int , int);
 void cursor_pos_callback(GLFWwindow *, double, double);
@@ -114,8 +115,21 @@ int main()
     Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vs", "Shaders/5_4/RenderingShadowFS.fs", NULL);
 
     unsigned int woodTexture = loadImage("wood.png", "Src/resources/", false);
+    vec3 sampleOffsetDirections[20] = {
+        vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+        vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+        vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+        vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+        vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+    };
     
     glm::vec3 lightPos(0);
+
+    pointShadowDrawShader.use();
+    for(int i = 0; i < 20; ++i)
+    {
+        pointShadowDrawShader.setVec3("sampleOffsetDirections[" + to_string(i) + "]", sampleOffsetDirections[i]);
+    }
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
