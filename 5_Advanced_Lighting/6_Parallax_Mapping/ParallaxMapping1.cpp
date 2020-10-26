@@ -24,7 +24,7 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-Camera camera = Camera(glm::vec3(0, 0, 3));
+Camera camera = Camera(glm::vec3(0, 0, 3.0));
 
 using namespace std;
 
@@ -80,21 +80,18 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader normalMappingShader = Shader("Shaders/5_5/NormalMappingVS.vs", "Shaders/5_5/NormalMappingFS.fs", NULL);
-    Shader simpleShader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", NULL);
+    Shader parallaxMappingShader = Shader("Shaders/5_6/ParallaxMappingVS.vs", "Shaders/5_6/ParallaxMappingFS.fs", NULL);
 
-    normalMappingShader.use();
-    normalMappingShader.setInt("diffuseTexture", 0);
-    normalMappingShader.setInt("normalMapping", 1);
-    glm::vec3 lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
-    
-    unsigned int diffuseTex = loadImage("brickwall.jpg", "Src/resources/", false);
-    unsigned int normalMappingTex = loadImage("brickwall_normal.jpg", "Src/resources/", false);
+    unsigned int diffuseTex = loadImage("toy_box_diffuse.png", "Src/resources/",  false);
+    unsigned int normalTex = loadImage("toy_box_normal.png", "Src/resources/",  false);
+    unsigned int depthTex = loadImage("toy_box_disp.png", "Src/resources/",  false);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, diffuseTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, normalMappingTex);
+    glm::vec3 lightPos(1.5, 0.5, 2.0);
+    parallaxMappingShader.use();
+    parallaxMappingShader.setInt("diffuseMap", 0);
+    parallaxMappingShader.setInt("normalMap", 1);
+    parallaxMappingShader.setInt("depthMap", 2);
+    parallaxMappingShader.setVec3("lightPos", lightPos);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -104,28 +101,23 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        normalMappingShader.use();
+        parallaxMappingShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-
-        normalMappingShader.setMat4("projection", projection);
-        normalMappingShader.setMat4("view", view);
-        normalMappingShader.setVec3("lightPos", lightPos);
-        normalMappingShader.setVec3("viewPos", camera.Position);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-        normalMappingShader.setMat4("model", model);
-        renderQuad();
+        glm::mat4 view = camera.GetViewMatrix();
+        parallaxMappingShader.setMat4("projection", projection);
+        parallaxMappingShader.setMat4("view", view);
+        parallaxMappingShader.setMat4("model", model);
+        parallaxMappingShader.setVec3("viewPos", camera.Position);
+        parallaxMappingShader.setFloat("height_scale", 0.1);
 
-        simpleShader.use();
-        model = glm::mat4(1.0);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.1));
-        simpleShader.setMat4("projection", projection);
-        simpleShader.setMat4("view", view);
-        simpleShader.setMat4("model", model);
-        renderCubeSimple();
-        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTex);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normalTex);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthTex);
+        renderQuad();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -429,7 +421,7 @@ void renderQuad()
         bitangent2 = glm::normalize(bitangent2);
 
         float quadVertices[] = {
-            // positions            // texture Coords  // normal        // tangent                          //bitangent
+            // positions            // texture Coords  // normal      // tangent                       //bitangent
             pos1.x, pos1.y, pos1.z, uv1.x, uv1.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
             pos2.x, pos2.y, pos2.z, uv2.x, uv2.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
             pos3.x, pos3.y, pos3.z, uv3.x, uv3.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,

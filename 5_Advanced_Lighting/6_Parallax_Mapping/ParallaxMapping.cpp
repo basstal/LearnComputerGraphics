@@ -17,9 +17,6 @@ bool wireframe = false;
 const int HEIGHT = 780;
 const int WIDTH = 1280;
 
-const int SHADOW_WIDTH = 1024;
-const int SHADOW_HEIGHT = 1024;
-
 bool firstMove = true;
 float lastX = 0.0f;
 float lastY = 0.0f;
