@@ -94,10 +94,8 @@
 				"copy-dll",
 				"run"
 			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"group": "build",
+			"problemMatcher": []
 		},
 		{
 			"label": "build-with-ImGui",
@@ -108,7 +106,12 @@
 				"cl-build-with-ImGui",
 				"copy-dll",
 				"run"
-			]
+			],
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
 		}
 	]
 }
