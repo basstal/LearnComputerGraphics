@@ -28,7 +28,7 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-Camera camera = Camera();
+Camera camera = Camera(glm::vec3(4, 1, 3.5f));
 
 bool openIMGUI = true;
 bool isEditMode = false;
@@ -105,8 +105,8 @@ int main()
 
     // 6 Bloom
     Shader bloomShader = Shader("Shaders/5_8/ColorThresholdVS.vs", "Shaders/5_8/ColorThresholdFS.fs", NULL);
-    // Shader gaussianBlurShader = Shader("VertexShaderGaussianBlur.glsl", "FragmentShaderGaussianBlur.glsl", "");
-    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_7/HDRQuadFS.fs", NULL);
+    Shader gaussianBlurShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/GaussianBlurFS.fs", NULL);
+    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/HDRQuadWithBlurFS.fs", NULL);
     Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/5_8/LightThresholdFS.fs", NULL);
 
     // 6 Bloom
@@ -141,33 +141,30 @@ int main()
         cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // unsigned int pingpongFBO[2];
-    // glGenFramebuffers(2, pingpongFBO);
-    // unsigned int pingpongBuffer[2];
-    // glGenTextures(2, pingpongBuffer);
-    // for (unsigned int i = 0; i < 2; ++i)
-    // {
-    //     glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
-    //     glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
-    //     glBindTexture(GL_TEXTURE_2D, 0);
-    //     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    //         cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+    unsigned int pingpongFBO[2];
+    unsigned int pingpongBuffer[2];
+    glGenFramebuffers(2, pingpongFBO);
+    glGenTextures(2, pingpongBuffer);
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     // 6 bloom
     bloomQuadShader.use();
     bloomQuadShader.setInt("texHDR", 0);
-    // gaussianBlurShader.use();
-    // gaussianBlurShader.setInt("image", 0);
-    bloomShader.use();
-    bloomShader.setInt("diffuseTex", 0);
+    bloomQuadShader.setInt("bloomBlur", 1);
 
     std::vector<glm::vec3> lightPositions;
     lightPositions.push_back(glm::vec3( 0.0f, 0.5f,  1.5f));
@@ -181,7 +178,7 @@ int main()
     lightColors.push_back(glm::vec3(0.0f,   0.0f,  15.0f));
     lightColors.push_back(glm::vec3(0.0f,   5.0f,  0.0f));
 
-    float constant = 0.2, linear = 0.5, quadratic = 25, shininess = 64, ambientStrength = 0.5, exposure = 2.0f;
+    float constant = 0, linear = 0, quadratic = 1, shininess = 64, ambientStrength = 0.2, exposure = 0.5f;
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -210,6 +207,8 @@ int main()
             ImGui::InputFloat("shininess", &shininess);
             ImGui::InputFloat("ambientStrength", &ambientStrength);
             ImGui::InputFloat("exposure", &exposure);
+            ImGui::Text("camera position");
+            ImGui::InputFloat3("pos", glm::value_ptr(camera.Position));
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::Text("Press space key to navigating in scene");
@@ -308,20 +307,19 @@ int main()
             renderCubeSimple();
         }
 
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        // bool firstIteration = true, horizontal = true;
-        // unsigned int amount = 10;
-        // gaussianBlurShader.use();
-        // for (unsigned int i = 0; i < amount; ++i)
-        // {
-        //     glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
-        //     gaussianBlurShader.setBool("horizontal", horizontal);
-        //     glBindTexture(GL_TEXTURE_2D, firstIteration ? colorBuffers[1] : pingpongBuffer[!horizontal]);
-        //     renderQuadSimple();
-        //     horizontal = !horizontal;
-        //     if( firstIteration )
-        //         firstIteration = false;
-        // }
+        bool firstIteration = true, horizontal = true;
+        unsigned int amount = 10;
+        gaussianBlurShader.use();
+        for (unsigned int i = 0; i < amount; ++i)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+            gaussianBlurShader.setBool("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, firstIteration ? colorBuffers[1] : pingpongBuffer[!horizontal]);
+            renderQuadSimple();
+            horizontal = !horizontal;
+            if( firstIteration )
+                firstIteration = false;
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -329,8 +327,8 @@ int main()
         bloomQuadShader.setFloat("exposure", exposure);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
         renderQuadSimple();
 
         if (openIMGUI)
