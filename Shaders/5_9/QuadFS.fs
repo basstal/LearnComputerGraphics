@@ -42,7 +42,7 @@ void main()
         // specular
         vec3 reflectDir = reflect(-lightDir, Normal);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        vec3 specular = Specular * spec * light.Color;
+        vec3 specular = Specular * spec * Albedo * light.Color;
         
         float distance = length(light.Position - FragPos);
         float attenuation = 1.0 / (1 + light.linear * distance + light.quadratic * (distance * distance));
