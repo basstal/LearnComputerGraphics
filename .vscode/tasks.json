@@ -49,6 +49,37 @@
 		},
 		{
 			"type": "shell",
+			"label": "cl-build-glad43",
+			"command": "cl.exe",
+			"args": [
+				"/MDd",
+				"/I${workspaceFolder}/Src/include/",
+				"/I${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/include/",
+				"/I${workspaceFolder}/Plugins/assimp-5.0.1/include/",
+				"/EHsc",
+				"/Fe:",
+				"${workspaceFolder}/build/output.exe",
+				"${workspaceFolder}/Src/include/glad43/glad.c",
+				"${workspaceFolder}/Src/include/shader.cpp",
+				"${file}",
+				"/link ${workspaceFolder}/Plugins/glfw-3.3.2.bin.WIN32/lib-vc2019/glfw3.lib",
+				"${workspaceFolder}/Plugins/assimp-5.0.1/lib-WIN32/assimp-vc142-mtd.lib",
+				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/OpenGL32.Lib",
+				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/kernel32.Lib",
+				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/User32.Lib",
+				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/Gdi32.Lib",
+				"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.17763.0/um/x86/Shell32.lib",
+				"/NODEFAULTLIB:MSVCRT.LIB"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			]
+		},
+		{
+			"type": "shell",
 			"label": "cl-build-with-ImGui",
 			"command": "cl.exe",
 			"args": [
@@ -112,6 +143,19 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "build-glad43",
+			"type": "shell",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"mkdir",
+				"cl-build-glad43",
+				"copy-dll",
+				"run"
+			],
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

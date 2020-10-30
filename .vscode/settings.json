@@ -11,6 +11,19 @@
         "xmemory": "cpp",
         "iostream": "cpp",
         "fstream": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "algorithm": "cpp",
+        "exception": "cpp",
+        "filesystem": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "memory": "cpp",
+        "ostream": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "xfacet": "cpp",
+        "xhash": "cpp",
+        "xlocale": "cpp",
+        "*.rh": "cpp"
     }
 }
