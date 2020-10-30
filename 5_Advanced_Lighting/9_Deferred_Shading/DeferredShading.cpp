@@ -91,39 +91,9 @@ int main()
     Shader quadShader = Shader("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/QuadFS.fs", NULL);
     Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", NULL);
 
-    // 7 Deferred shading
-    // unsigned int cacheDepthFBO;
-    // glGenFramebuffers(1, &cacheDepthFBO);
-    // glBindFramebuffer(GL_FRAMEBUFFER, cacheDepthFBO);
-    // unsigned int depthTex;
-    // glGenTextures(1, &depthTex);
-    // glBindTexture(GL_TEXTURE_2D, depthTex);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
-    // glBindTexture(GL_TEXTURE_2D, 0);
-    // // glDrawBuffer(GL_NONE);
-    // // glReadBuffer(GL_NONE);
-    // if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    //     cout << "ERROR::FRAME BUFFER INIT FAILED! CACHE DEPTH FBO" <<endl;
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
     unsigned int gBufferFBO;
     glGenFramebuffers(1, &gBufferFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
-
-    // unsigned int textures[3];
-    // glGenTextures(3, textures);
-    // for (unsigned int i = 0; i < 3 ; ++i)
-    // {
-    //     glBindTexture(GL_TEXTURE_2D, textures[i]);
-    //     glTexImage2D(GL_TEXTURE_2D, 0, (i > 1 ? GL_RGBA: GL_RGB16F), WIDTH, HEIGHT, 0, i> 1? GL_RGBA : GL_RGB, i> 1? GL_UNSIGNED_BYTE : GL_FLOAT, NULL);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, textures[i], 0);
-    // }
 
     unsigned int gPosition, gNormal, gAlbedoSpec;
     // position color buffer
@@ -183,7 +153,12 @@ int main()
     const unsigned int NR_LIGHTS = 32;
     std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec3> lightColors;
+    std::vector<float> lightRadius;
     srand(13);
+    float constant  = 1.0; 
+    float linear    = 0.7;
+    float quadratic = 1.8;
+
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
     {
         // calculate slightly random offsets
@@ -195,7 +170,15 @@ int main()
         float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
         float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
         float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        lightColors.push_back(glm::vec3(rColor, gColor, bColor));
+
+        glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
+        lightColors.push_back(lightColor);
+
+        float lightMax  = std::fmaxf(std::fmaxf(lightColor.r, lightColor.g), lightColor.b);
+        float radius    = 
+        (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
+        / (2 * quadratic);  
+        lightRadius.push_back(radius);
     }
 
     while(!glfwWindowShouldClose(window))
@@ -262,12 +245,6 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
         quadShader.use();
-        // for (unsigned int i = 0; i < 3 ; ++ i)
-        // {
-        //     glActiveTexture(GL_TEXTURE0 + i);
-        //     glBindTexture(GL_TEXTURE_2D, textures[i]);
-        // }
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -281,12 +258,9 @@ int main()
         {
             quadShader.setVec3("lights[" + to_string(i) + "].Position", lightPositions[i]);
             quadShader.setVec3("lights[" + to_string(i) + "].Color", lightColors[i]);
-            // update attenuation parameters and calculate radius
-            const float constant = 1.0; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
-            const float linear = 0.7;
-            const float quadratic = 1.8;
-            quadShader.setFloat("lights[" + to_string(i) + "].linear", linear);
-            quadShader.setFloat("lights[" + to_string(i) + "].quadratic", quadratic);
+            quadShader.setFloat("lights[" + to_string(i) + "].Radius", lightRadius[i]);
+            quadShader.setFloat("lights[" + to_string(i) + "].Linear", linear);
+            quadShader.setFloat("lights[" + to_string(i) + "].Quadratic", quadratic);
         }
         renderQuadSimple();
 
