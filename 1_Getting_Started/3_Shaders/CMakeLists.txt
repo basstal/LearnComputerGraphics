@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 message("${ROOT_PATH}")
 
-set(PROJECT_NAME "HelloTriangle")
+set(PROJECT_NAME "Shaders")
 
 # Project name
 project(${PROJECT_NAME})
@@ -17,13 +17,9 @@ add_library(glad
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
 
-set(PROJECT_SOURCE_HELPER 
-    "${ROOT_PATH}/Scripts/Helper.cpp")
-
 # project source
 add_executable(${PROJECT_NAME} 
-    ${PROJECT_SOURCE_HELPER}
-    Triangle.cpp)
+    Main.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/glfw-3.3.4/lib-vc2019/glfw3.lib"

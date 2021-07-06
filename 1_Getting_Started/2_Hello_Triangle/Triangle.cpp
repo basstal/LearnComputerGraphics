@@ -43,7 +43,9 @@ const char *yellowFragmentShaderSource ="#version 330 core\n"
 "{\n"
 " FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
 "}\n";
-const bool wireframe = false;
+
+extern bool wireframe;
+extern void processInputWireframe(GLFWwindow * window);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -227,4 +229,5 @@ void processInput(GLFWwindow *window)
     {
         glfwSetWindowShouldClose(window, true);
     }
+    processInputWireframe(window);
 }
