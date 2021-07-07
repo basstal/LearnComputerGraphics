@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <shader.h>
+#include <Shader.h>
 
 static const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos; // the position variable has attribute position 0\n"
@@ -36,6 +36,23 @@ static float vertices[] = {
 //         glfwSetWindowShouldClose(window, true);
 //     }
 // }
+static Shader * shaderProgram;
+static unsigned int VAO, VBO;
+
+void exercise_setup(GLFWwindow* window)
+{
+    shaderProgram = new Shader(vertexShaderSource, fragmentShaderSource, NULL, true);
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+}
 
 int exercise(GLFWwindow * window)
 {
@@ -59,29 +76,17 @@ int exercise(GLFWwindow * window)
     //     return -1;
     // }
 
-    Shader shaderProgram = Shader(vertexShaderSource, fragmentShaderSource, NULL, true);
-
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     
     // while(!glfwWindowShouldClose(window))
     // {
     //     processInput(window);
 
-        shaderProgram.use();
+        shaderProgram->use();
         glBindVertexArray(VAO);
         glClear(GL_COLOR_BUFFER_BIT);
         float timeValue = (float)glfwGetTime();
         float offset = (sin(timeValue) / 2.0f) + 0.5f;
-        shaderProgram.setFloat("horizontalOffset", offset);
+        shaderProgram->setFloat("horizontalOffset", offset);
         /*
         The image may not be exactly what you would expect, since we only supplied 3 colors, not the huge color palette we're seeing right now. This is all the result of something called fragment interpolation in the fragment shader. When rendering a triangle the rasterization stage usually results in a lot more fragments than vertices originally specified. The rasterizer then determines the positions of each of those fragments based on where they reside on the triangle shape.
         

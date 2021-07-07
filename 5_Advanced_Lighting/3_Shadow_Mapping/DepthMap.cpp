@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -95,8 +95,8 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 2 shadow mapping
-    Shader simpleShadowShader = Shader("Shaders/5_3/SimpleShadowVS.vs", "Shaders/5_3/SimpleShadowFS.fs", NULL);
-    Shader visualDebugShader("Shaders/4_5/FramebufferVS.vs", "Shaders/5_3/DebugDepthMapFS.fs", NULL);
+    Shader simpleShadowShader = Shader("../../Shaders/5_3/SimpleShadowVS.vs", "../../Shaders/5_3/SimpleShadowFS.fs", NULL);
+    Shader visualDebugShader("../../Shaders/4_5/FramebufferVS.vs", "../../Shaders/5_3/DebugDepthMapFS.fs", NULL);
 
     // plane VAO
     unsigned int planeVAO, planeVBO;

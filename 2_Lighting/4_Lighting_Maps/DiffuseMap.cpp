@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <glm/matrix.hpp>
@@ -133,7 +133,7 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("Src/resources/diffuse_map.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("../../Assets/diffuse_map.png", &width, &height, &nrChannels, 0);
 
     unsigned int diffuseMap;
     glGenTextures(1, &diffuseMap);

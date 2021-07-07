@@ -23,7 +23,7 @@ triangle_strip
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 #include <camera.h>
 
@@ -72,11 +72,11 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
-    Shader explodingShader("Shaders/4_9/ExplodingVS.vs", "Shaders/4_9/ExplodingFS.fs", "Shaders/4_9/ExplodingGS.gs");
+    Shader explodingShader("../../Shaders/4_9/ExplodingVS.vs", "../../Shaders/4_9/ExplodingFS.fs", "../../Shaders/4_9/ExplodingGS.gs");
 
     explodingShader.use();
 
-    Model backpackModel("Src/resources/backpack/backpack.obj", true);
+    Model backpackModel("../../Assets/backpack/backpack.obj", true);
 
     while(!glfwWindowShouldClose(window))
     {

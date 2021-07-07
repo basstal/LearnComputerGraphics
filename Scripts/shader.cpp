@@ -1,4 +1,4 @@
-#include <shader.h>
+#include <Shader.h>
 
 Shader::Shader(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode, bool isSource)
 {

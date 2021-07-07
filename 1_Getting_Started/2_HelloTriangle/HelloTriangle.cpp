@@ -7,8 +7,8 @@
 OpenGL doesn't simply transform all your 3D coordinates to 2D pixels on your screen; OpenGL only processes 3D coordinates when they're in a specific range between -1.0 and 1.0 on all 3 axes (x, y and z). All coordinates within this so called normalized device coordinates range will end up visible on your screen (and all coordinates outside this region won't).
 */
 float vertices[] = {
-     0.5f,  0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
+    0.5f,  0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
     -0.5f, 0.5f, 0.0f
 };
 
@@ -44,8 +44,30 @@ const char *yellowFragmentShaderSource ="#version 330 core\n"
 " FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
 "}\n";
 
-extern bool wireframe;
-extern void processInputWireframe(GLFWwindow * window);
+// ** 开启线框模式
+static bool wireframe = false;
+
+static int key_state_left_control = GLFW_RELEASE;
+static int key_state_f = GLFW_RELEASE;
+
+void processInputWireframe(GLFWwindow * window)
+{
+    // ** Ctrl+F 开启/关闭 线框模式
+    int key_state_left_control_changed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL);
+    if (key_state_left_control_changed != key_state_left_control)
+    {
+        key_state_left_control = key_state_left_control_changed;
+    }
+    int key_state_f_changed = glfwGetKey(window, GLFW_KEY_F);
+    if (key_state_f_changed != key_state_f)
+    {
+        key_state_f = key_state_f_changed;
+        if (key_state_f == GLFW_PRESS && key_state_left_control == GLFW_PRESS)
+        {
+            wireframe = !wireframe;
+        }
+    }
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -59,7 +81,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "HelloTriangle", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;

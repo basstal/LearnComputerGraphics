@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -98,7 +98,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // 1-blinn phong
-    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_1/BlinnPhongFS.fs", NULL);
+    Shader blinnShader("../../Shaders/5_1/BlinnPhongVS.vs", "../../Shaders/5_1/BlinnPhongFS.fs", NULL);
 
     // planeVAO
     unsigned int planeVAO, planeVBO;

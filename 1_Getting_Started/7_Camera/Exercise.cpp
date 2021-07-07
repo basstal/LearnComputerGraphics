@@ -1,4 +1,7 @@
-#define STB_IMAGE_IMPLEMENTATION
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <stb_image.h>
 
 #include <glm/glm.hpp>
@@ -6,9 +9,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 
-glm::vec3 cubePositions[] = {
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+static glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
     glm::vec3( 2.0f,  5.0f, -15.0f), 
     glm::vec3(-1.5f, -2.2f, -2.5f),  
@@ -21,7 +27,7 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)  
 };
 
-float vertices[] = {
+static float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -65,45 +71,77 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+static float deltaTime = 0.0f;
+static float lastFrame = 0.0f;
 
-const float width = 1920;
-const float height = 1080;
-float lastX = height/2, lastY = width /2;
-float yaw = -90.0f;
-float pitch = 0.0f;
-bool firstMouse = true;
+static const float width = 1920;
+static const float height = 1080;
+static float lastX = height/2, lastY = width /2;
+static float yaw = -90.0f;
+static float pitch = 0.0f;
+static bool firstMouse = true;
 
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+static glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+static glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+static glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+static Shader *shaderProgram;
+static unsigned int VAO, VBO;
 
-void processInput(GLFWwindow *window)
+static float cameraRotatorSensitivity = 0.1f;
+static float cameraSpeed = 2.5f;
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void mouseCallback(GLFWwindow *window, double xPos, double yPos);
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, mouseCallback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMouse = true;
+    }
+    bCursorOff = !bCursorOff;
+}
+
+static void processInput(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
     }
-    float currentFrame = glfwGetTime();
+    float currentFrame = (float)glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    float cameraSpeed = 2.5f * deltaTime;
+    float deltaSpeed = cameraSpeed * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
+        cameraPos += deltaSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
+        cameraPos -= deltaSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
+    }
 }
 
-void mouseCallback(GLFWwindow *window, double xPos, double yPos)
+static void mouseCallback(GLFWwindow *window, double xPos, double yPos)
 {
     if (firstMouse)
     {
@@ -116,9 +154,8 @@ void mouseCallback(GLFWwindow *window, double xPos, double yPos)
     lastX = xPos;
     lastY = yPos;
 
-    const float sensitivity = 0.1f;
-    xOffset *= sensitivity;
-    yOffset *= sensitivity;
+    xOffset *= cameraRotatorSensitivity;
+    yOffset *= cameraRotatorSensitivity;
     // ** for exercise 1, you should comment line 130 ~ 138 and open this comments
     // ** prevent from small movement from y-axis cause the camera shake
     // if (abs(xOffset) < abs(yOffset))
@@ -143,7 +180,7 @@ void mouseCallback(GLFWwindow *window, double xPos, double yPos)
     cameraFront = glm::normalize(direction);
 }
 
-glm::mat4 LookAtMat4(glm::vec3 cameraPos, glm::vec3 targetPos, glm::vec3 up)
+static glm::mat4 LookAtMat4(glm::vec3 cameraPos, glm::vec3 targetPos, glm::vec3 up)
 {
     glm::vec3 cameraDirection = glm::normalize(cameraPos - targetPos);
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
@@ -167,34 +204,54 @@ glm::mat4 LookAtMat4(glm::vec3 cameraPos, glm::vec3 targetPos, glm::vec3 up)
     return cameraMat4A * cameraMat4B;
 }
 
-int main()
+void exercise_imgui(GLFWwindow * window)
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    ImGui::Separator();
+    if (bCursorOff)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+        ImGui::Text("Press P to release control of the camera, and show cursor.");
     }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    else
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
+        ImGui::Text("Press P or belowd Button to take control of the camera");
+        if(ImGui::Button("Posses camera") && !bCursorOff)
+        {
+            switch_cursor(window);
+        }
     }
+    if(ImGui::CollapsingHeader("Params"))
+    {
+        ImGui::SliderFloat("camera speed", (float *)&cameraSpeed, 0.0, 5.0);
+        ImGui::SliderFloat("camera zoom sensitivity", (float *)&cameraRotatorSensitivity, 0.0, 1.0);
+    }
+    // ImGui::SetWindowSize(ImVec2(345, 200));
+}
+void exercise_setup(GLFWwindow *window)
+{
+    // glfwInit();
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
+    // if (window == NULL)
+    // {
+    //     std::cout << "Failed to create GLFW window" << std::endl;
+    //     glfwTerminate();
+    //     return -1;
+    // }
+    // glfwMakeContextCurrent(window);
+
+    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    // {
+    //     std::cout << "Failed to initialize GLAD" << std::endl;
+    //     return -1;
+    // }
     
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouseCallback);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("Src/resources/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -229,7 +286,6 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
@@ -240,46 +296,53 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    Shader shaderProgram = Shader("Shaders/1_6/VertexShader16.vs", "Shaders/1_6/FragmentShader16.fs", NULL);
-    shaderProgram.use();
+    shaderProgram = new Shader("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", NULL);
+    shaderProgram->use();
 
-    shaderProgram.setInt("texture0", 0);
-    shaderProgram.setInt("texture1", 1);
+    shaderProgram->setInt("texture0", 0);
+    shaderProgram->setInt("texture1", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
-    shaderProgram.setMat4("projection", projection);
+    shaderProgram->setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
 
-    const float radius = 10.0f;
-    while(!glfwWindowShouldClose(window))
+    // const float radius = 10.0f;
+    // while(!glfwWindowShouldClose(window))
+    // {
+    //     processInput(window);
+        
+
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();    
+    // }
+    // glfwTerminate();
+}
+
+int exercise(GLFWwindow *window)
+{
+    processInput(window);
+    glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 view = LookAtMat4(cameraPos, cameraPos + cameraFront, cameraUp);
+    shaderProgram->setMat4("view", view);
+
+    glBindVertexArray(VAO);
+    for (int i = 0; i < 10; ++i)
     {
-        processInput(window);
-        glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 view = LookAtMat4(cameraPos, cameraPos + cameraFront, cameraUp);
-        shaderProgram.setMat4("view", view);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, cubePositions[i]);
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
+        shaderProgram->setMat4("model", model);
 
-        glBindVertexArray(VAO);
-        for (int i = 0; i < 10; ++i)
-        {
-
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            shaderProgram.setMat4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();    
+        glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    glfwTerminate();
     return 0;
+
 }

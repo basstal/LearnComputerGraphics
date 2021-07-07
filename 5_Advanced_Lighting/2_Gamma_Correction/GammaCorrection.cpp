@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -128,10 +128,10 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
 
-    unsigned int floorTexture = loadImageGamma("Src/resources/wood.png", false, false);
-    unsigned int floorTextureGammaCorrected = loadImageGamma("Src/resources/wood.png", true, false);
+    unsigned int floorTexture = loadImageGamma("../../Assets/wood.png", false, false);
+    unsigned int floorTextureGammaCorrected = loadImageGamma("../../Assets/wood.png", true, false);
 
-    Shader shader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_2/GammaCorrectionFS.fs", NULL);
+    Shader shader("../../Shaders/5_1/BlinnPhongVS.vs", "../../Shaders/5_2/GammaCorrectionFS.fs", NULL);
 
 
     while(!glfwWindowShouldClose(window))

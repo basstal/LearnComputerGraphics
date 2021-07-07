@@ -6,7 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 #include <model.h>
 
@@ -177,10 +177,10 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader shader("Shaders/4_6/CubemapsVS.vs", "Shaders/4_6/CubemapsFS.fs", NULL);
-    Shader refractionShader("Shaders/4_6/ReflectionVS.vs", "Shaders/4_6/RefractionFS.fs", NULL);
+    Shader shader("../../Shaders/4_6/CubemapsVS.vs", "../../Shaders/4_6/CubemapsFS.fs", NULL);
+    Shader refractionShader("../../Shaders/4_6/ReflectionVS.vs", "../../Shaders/4_6/RefractionFS.fs", NULL);
 
-    Model backpackModel("Src/resources/backpack/backpack.obj", false);
+    Model backpackModel("../../Assets/backpack/backpack.obj", false);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
@@ -208,12 +208,12 @@ int main()
     glBindVertexArray(0);
 
     std::vector<std::string> skyboxTexs = {
-        "Src/resources/skybox/default/right.jpg",
-        "Src/resources/skybox/default/left.jpg",
-        "Src/resources/skybox/default/top.jpg",
-        "Src/resources/skybox/default/bottom.jpg",
-        "Src/resources/skybox/default/front.jpg",
-        "Src/resources/skybox/default/back.jpg",
+        "../../Assets/skybox/default/right.jpg",
+        "../../Assets/skybox/default/left.jpg",
+        "../../Assets/skybox/default/top.jpg",
+        "../../Assets/skybox/default/bottom.jpg",
+        "../../Assets/skybox/default/front.jpg",
+        "../../Assets/skybox/default/back.jpg",
     };
     skyboxTextures = LoadSkyboxTex(skyboxTexs);
 

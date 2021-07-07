@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -80,16 +80,16 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader normalMappingShader = Shader("Shaders/5_5/NormalMappingVS.vs", "Shaders/5_5/NormalMappingFS.fs", NULL);
-    Shader simpleShader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", NULL);
+    Shader normalMappingShader = Shader("../../Shaders/5_5/NormalMappingVS.vs", "../../Shaders/5_5/NormalMappingFS.fs", NULL);
+    Shader simpleShader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
 
     normalMappingShader.use();
     normalMappingShader.setInt("diffuseTexture", 0);
     normalMappingShader.setInt("normalMapping", 1);
     glm::vec3 lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
     
-    unsigned int diffuseTex = loadImage("brickwall.jpg", "Src/resources/", false);
-    unsigned int normalMappingTex = loadImage("brickwall_normal.jpg", "Src/resources/", false);
+    unsigned int diffuseTex = loadImage("brickwall.jpg", "../../Assets/", false);
+    unsigned int normalMappingTex = loadImage("brickwall_normal.jpg", "../../Assets/", false);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseTex);

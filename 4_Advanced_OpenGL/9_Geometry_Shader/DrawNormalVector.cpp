@@ -23,7 +23,7 @@ triangle_strip
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 #include <camera.h>
 
@@ -73,11 +73,11 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    Shader shader("Shaders/4_9/DrawModelVS.vs", "Shaders/4_9/DrawModelFS.fs", NULL);
+    Shader shader("../../Shaders/4_9/DrawModelVS.vs", "../../Shaders/4_9/DrawModelFS.fs", NULL);
 
-    Shader normalVectorShader("Shaders/4_9/DrawNormalVectorVS.vs", "Shaders/4_9/DrawNormalVectorFS.fs", "Shaders/4_9/DrawNormalVectorGS.gs");
+    Shader normalVectorShader("../../Shaders/4_9/DrawNormalVectorVS.vs", "../../Shaders/4_9/DrawNormalVectorFS.fs", "../../Shaders/4_9/DrawNormalVectorGS.gs");
 
-    Model backpackModel("Src/resources/backpack/backpack.obj", true);
+    Model backpackModel("../../Assets/backpack/backpack.obj", true);
 
     unsigned int ubo;
     glGenBuffers(1, &ubo);

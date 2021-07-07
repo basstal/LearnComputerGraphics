@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <glm/matrix.hpp>
@@ -128,8 +128,8 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/ColorsFragmentShader.fs", NULL);
-    Shader shaderProgramForLight = Shader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", NULL);
+    Shader shaderProgram = Shader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/ColorsFragmentShader.fs", NULL);
+    Shader shaderProgramForLight = Shader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
 
     shaderProgram.use();
     shaderProgram.setVec3("objectColor", 1.0, 0.5, 0.31);

@@ -5,18 +5,19 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 # message("${ROOT_PATH}")
 
-set(PROJECT_NAME "Shaders")
+set(PROJECT_NAME "Camera")
 
 # Project name
 project(${PROJECT_NAME})
 
-# lib source
+# lib source glad
 add_library(glad
     "${ROOT_PATH}/Plugins/glad/glad.c")
 
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
 
+# lib source imgui
 add_library(imgui
     "${ROOT_PATH}/Plugins/imgui/imgui.cpp"
     "${ROOT_PATH}/Plugins/imgui/imgui_widgets.cpp"
@@ -33,12 +34,12 @@ target_include_directories(imgui PUBLIC
 # project source
 add_executable(${PROJECT_NAME} 
     Main.cpp
-    MaxVertexAttributes.cpp
-    MoreAttributes.cpp
-    SendColor.cpp
-    Uniform.cpp
     Exercise.cpp
-    "${ROOT_PATH}/Scripts/Shader.cpp")
+    LookAround.cpp
+    LookAtMatrix.cpp
+    Zoom.cpp
+    "${ROOT_PATH}/Scripts/Shader.cpp"
+    "${ROOT_PATH}/Scripts/STBImage.cpp")
 
 target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/glfw-3.3.4/lib-vc2019/glfw3.lib"
@@ -54,4 +55,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS
         "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT.LIB")
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} /wd4244") # Suppress 'warning C4244: 'conversion' conversion from 'type1' to 'type2', possible loss of data'
 endif()

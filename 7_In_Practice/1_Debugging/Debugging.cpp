@@ -7,7 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 
 #include <iostream>
 
@@ -141,7 +141,7 @@ int main()
     glEnable(GL_CULL_FACE);
  
     // OpenGL initial state
-    Shader shader("Shaders/1_4/VertexShader14.vs", "Shaders/1_4/FragmentShader14.fs", NULL);
+    Shader shader("../../Shaders/1_4/VertexShader14.vs", "../../Shaders/1_4/FragmentShader14.fs", NULL);
 
     // configure 3D cube
     unsigned int cubeVAO, cubeVBO;
@@ -208,7 +208,7 @@ int main()
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     int width, height, nrComponents;
-    unsigned char *data = stbi_load("Src/resources/wood.png", &width, &height, &nrComponents, 0);
+    unsigned char *data = stbi_load("../../Assets/wood.png", &width, &height, &nrComponents, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

@@ -14,7 +14,7 @@ Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ v
 #include <string>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <glm/matrix.hpp>
@@ -145,8 +145,8 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     unsigned int diffuseTexture, specularTexture;
-    diffuseTexture = loadImage("Src/resources/diffuse_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    specularTexture = loadImage("Src/resources/specular_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+    diffuseTexture = loadImage("../../Assets/diffuse_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+    specularTexture = loadImage("../../Assets/specular_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);

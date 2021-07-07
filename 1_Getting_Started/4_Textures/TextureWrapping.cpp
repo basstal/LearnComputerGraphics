@@ -18,15 +18,15 @@ To specify the filtering method between mipmap levels we can replace the origina
     GL_LINEAR_MIPMAP_LINEAR: linearly interpolates between the two closest mipmaps and samples the interpolated level via linear interpolation.
 */
 
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include <shader.h>
+#include <Shader.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-float vertices[] = {
+static float vertices[] = {
     // positions          // colors           // texture coords
      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
@@ -34,12 +34,12 @@ float vertices[] = {
     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 
-int indices[] = {
+static int indices[] = {
     0,1,3,
     2,3,1
 };
 
-const char *vertexShaderSource = "#version 330 core\n"
+static const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
 "layout (location = 2) in vec2 aTexCoord;\n"
@@ -52,7 +52,7 @@ const char *vertexShaderSource = "#version 330 core\n"
     "TexCoord = aTexCoord;\n"
 "}\n";
 
-const char *fragmentShaderSource = "#version 330 core\n"
+static const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
   
 "in vec3 ourColor;\n"
@@ -68,40 +68,21 @@ const char *fragmentShaderSource = "#version 330 core\n"
 
 
 
-void processInput(GLFWwindow *window)
+// void processInput(GLFWwindow *window)
+// {
+//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//     {
+//         glfwSetWindowShouldClose(window, true);
+//     }
+// }
+static unsigned int VAO, VBO, EBO;
+
+void textureWrapping_setup(GLFWwindow* window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
-int main()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("Src/resources/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("..\\..\\Assets\\container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("..\\..\\Assets\\awesomeface.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -155,7 +136,6 @@ int main()
     // ** for debug use
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -179,18 +159,42 @@ int main()
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
 
-    while(!glfwWindowShouldClose(window))
-    {
-        processInput(window);
+int textureWrapping(GLFWwindow* window)
+{
+    // glfwInit();
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    // if (window == NULL)
+    // {
+    //     std::cout << "Failed to create GLFW window" << std::endl;
+    //     glfwTerminate();
+    //     return -1;
+    // }
+    // glfwMakeContextCurrent(window);
+
+    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    // {
+    //     std::cout << "Failed to initialize GLAD" << std::endl;
+    //     return -1;
+    // }
+
+    
+
+    // while(!glfwWindowShouldClose(window))
+    // {
+        // processInput(window);
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-    glfwTerminate();
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();
+    // }
+    // glfwTerminate();
     return 0;
 }

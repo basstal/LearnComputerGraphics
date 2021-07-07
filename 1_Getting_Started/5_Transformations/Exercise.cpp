@@ -6,7 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -38,7 +38,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Transformations", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -55,8 +55,8 @@ int main()
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("Src/resources/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -91,7 +91,7 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    Shader shaderProgram = Shader("Shaders/1_5/VertexShader15.vs", "Shaders/1_5/FragmentShader15.fs", "");
+    Shader shaderProgram = Shader("../../Shaders/1_5/VertexShader15.vs", "../../Shaders/1_5/FragmentShader15.fs", "");
 
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);

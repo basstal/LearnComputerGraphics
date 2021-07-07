@@ -1,4 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <glm/glm.hpp>
@@ -6,9 +5,21 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 
-glm::vec3 cubePositions[] = {
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+// void processInput(GLFWwindow *window)
+// {
+//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//     {
+//         glfwSetWindowShouldClose(window, true);
+//     }
+// }
+
+static glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
     glm::vec3( 2.0f,  5.0f, -15.0f), 
     glm::vec3(-1.5f, -2.2f, -2.5f),  
@@ -21,7 +32,7 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)  
 };
 
-float vertices[] = {
+static float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -65,43 +76,36 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+static unsigned int VAO, VBO;
+static Shader * shaderProgram;
+static glm::mat4 view = glm::mat4(1.0f);
 
-void processInput(GLFWwindow *window)
+void exercise_setup(GLFWwindow * window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
+    // glfwInit();
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-int main()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
+    // if (window == NULL)
+    // {
+    //     std::cout << "Failed to create GLFW window" << std::endl;
+    //     glfwTerminate();
+    //     return -1;
+    // }
+    // glfwMakeContextCurrent(window);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    // {
+    //     std::cout << "Failed to initialize GLAD" << std::endl;
+    //     return -1;
+    // }
     
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("Src/resources/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -136,7 +140,6 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
@@ -147,45 +150,71 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    Shader shaderProgram = Shader("Shaders/1_6/VertexShader16.vs", "Shaders/1_6/FragmentShader16.fs", NULL);
-    shaderProgram.use();
+    shaderProgram = new Shader("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", NULL);
+    shaderProgram->use();
 
-    shaderProgram.setInt("texture0", 0);
-    shaderProgram.setInt("texture1", 1);
+    shaderProgram->setInt("texture0", 0);
+    shaderProgram->setInt("texture1", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
-
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
-    shaderProgram.setMat4("view", view);
-    shaderProgram.setMat4("projection", projection);
+    
     glEnable(GL_DEPTH_TEST);
 
-    while(!glfwWindowShouldClose(window))
+    // while(!glfwWindowShouldClose(window))
+    // {
+    //     processInput(window);
+        
+
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();    
+    // }
+    // glfwTerminate();
+}
+
+int exercise(GLFWwindow * window)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindVertexArray(VAO);
+    float time = (float)glfwGetTime();
+    float fov = abs(sin(time)) * 30.0f + 45.0f;
+    glm::mat4 projection = glm::perspective(glm::radians(fov), (float)4/3, 0.1f, 100.0f);
+    shaderProgram->setMat4("projection", projection);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        processInput(window);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glBindVertexArray(VAO);
-        for (int i = 0; i < 10; ++i)
-        {
-
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            shaderProgram.setMat4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();    
+        view = glm::translate(view, glm::vec3(0.0f, 0.0, 0.1f));
     }
-    glfwTerminate();
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        view = glm::translate(view, glm::vec3(0.0f, 0.0, -0.1f));
+    }
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        view = glm::translate(view, glm::vec3(0.1f, 0.0, 0.0f));
+    }
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        view = glm::translate(view, glm::vec3(-0.1f, 0.0, 0.0));
+    }
+    shaderProgram->setMat4("view", view);
+
+    for (int i = 0; i < 10; ++i)
+    {
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, cubePositions[i]);
+        auto degree = glm::radians(20.0f * i);
+        if (i % 3 == 0)
+        {
+            degree = time * degree;
+        }
+        model = glm::rotate(model, degree, glm::vec3(0.5f, 1.0f, 0.0f));
+        shaderProgram->setMat4("model", model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
     return 0;
+
 }

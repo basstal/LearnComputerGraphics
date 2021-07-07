@@ -17,7 +17,7 @@ level: the mipmap level. We keep this at 0.
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 #include <model.h>
 
@@ -164,8 +164,8 @@ int main()
     cubeTexture  = loadImage("container.jpg", "Src/resources", false);
     floorTexture = loadImage("metal.png", "Src/resources", false);
 
-    Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", NULL);
-    Shader framebufferShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/FramebufferFS.fs", NULL);
+    Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
+    Shader framebufferShader("../../Shaders/4_5/FramebufferVS.vs", "../../Shaders/4_5/FramebufferFS.fs", NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

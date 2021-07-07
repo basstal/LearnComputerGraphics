@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -81,15 +81,15 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 7 Deferred Shading
-    Model backpack("Src/resources/backpack/backpack.obj", true);
+    Model backpack("../../Assets/backpack/backpack.obj", true);
 
     
     // 7 Deferred Shading
-    Shader deferredShader = Shader("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", NULL);
+    Shader deferredShader = Shader("../../Shaders/5_9/GBufferVS.vs", "../../Shaders/5_9/GBufferFS.fs", NULL);
     // use this shader to debug G-Buffer
-    Shader debugQuadShader("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", NULL);
-    Shader quadShader = Shader("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/QuadFS.fs", NULL);
-    Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", NULL);
+    Shader debugQuadShader("../../Shaders/5_9/DebugQuadVS.vs", "../../Shaders/5_9/DebugQuadFS.fs", NULL);
+    Shader quadShader = Shader("../../Shaders/5_9/DebugQuadVS.vs", "../../Shaders/5_9/QuadFS.fs", NULL);
+    Shader lightShader = Shader("../../Shaders/2_3/MaterialsVS23.vs", "../../Shaders/2_3/ExerciseLight23.fs", NULL);
 
     unsigned int gBufferFBO;
     glGenFramebuffers(1, &gBufferFBO);

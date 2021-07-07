@@ -12,7 +12,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -100,10 +100,10 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    unsigned int woodTexture = loadImageGamma("Src/resources/wood.png", true, false);
+    unsigned int woodTexture = loadImageGamma("../../Assets/wood.png", true, false);
     // 5 HDR
-    Shader HDRObjectShader = Shader("Shaders/5_7/HDRObjectVS.vs", "Shaders/5_7/HDRObjectFS.fs", NULL);
-    Shader HDRQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_7/HDRQuadFS.fs", NULL);
+    Shader HDRObjectShader = Shader("../../Shaders/5_7/HDRObjectVS.vs", "../../Shaders/5_7/HDRObjectFS.fs", NULL);
+    Shader HDRQuadShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_7/HDRQuadFS.fs", NULL);
 
     // 5 HDR
     unsigned int fbo;

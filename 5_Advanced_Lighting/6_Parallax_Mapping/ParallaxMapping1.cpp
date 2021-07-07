@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -80,11 +80,11 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader parallaxMappingShader = Shader("Shaders/5_6/ParallaxMappingVS.vs", "Shaders/5_6/ParallaxMappingFS.fs", NULL);
+    Shader parallaxMappingShader = Shader("../../Shaders/5_6/ParallaxMappingVS.vs", "../../Shaders/5_6/ParallaxMappingFS.fs", NULL);
 
-    unsigned int diffuseTex = loadImage("toy_box_diffuse.png", "Src/resources/",  false);
-    unsigned int normalTex = loadImage("toy_box_normal.png", "Src/resources/",  false);
-    unsigned int depthTex = loadImage("toy_box_disp.png", "Src/resources/",  false);
+    unsigned int diffuseTex = loadImage("toy_box_diffuse.png", "../../Assets/",  false);
+    unsigned int normalTex = loadImage("toy_box_normal.png", "../../Assets/",  false);
+    unsigned int depthTex = loadImage("toy_box_disp.png", "../../Assets/",  false);
 
     glm::vec3 lightPos(1.5, 0.5, 2.0);
     parallaxMappingShader.use();

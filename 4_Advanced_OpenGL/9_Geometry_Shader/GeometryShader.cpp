@@ -23,7 +23,7 @@ triangle_strip
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 
 float points[] = {
     -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
@@ -62,7 +62,7 @@ int main()
         return -1;
     }
 
-    Shader geometryShader("Shaders/4_9/SimpleGeometryVS.vs", "Shaders/4_9/SimpleGeometryFS.fs", "Shaders/4_9/SimpleGeometryGS.gs");
+    Shader geometryShader("../../Shaders/4_9/SimpleGeometryVS.vs", "../../Shaders/4_9/SimpleGeometryFS.fs", "../../Shaders/4_9/SimpleGeometryGS.gs");
 
     geometryShader.use();
 

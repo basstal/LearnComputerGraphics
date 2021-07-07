@@ -20,7 +20,7 @@ GL_GEQUAL	    Passes if the fragment's depth value is greater than or equal to t
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <iostream>
@@ -152,7 +152,7 @@ int main()
     cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
     floorTexture = loadImage("metal.png", "Src/resources", false);
 
-    Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", NULL);
+    Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

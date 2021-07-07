@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <glm/matrix.hpp>

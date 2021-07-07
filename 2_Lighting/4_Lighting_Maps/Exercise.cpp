@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <glm/matrix.hpp>
@@ -133,12 +133,12 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     int width, height, nrChannels, width1, height1, nrChannels1, width2, height2, nrChannels2;
-    unsigned char *data = stbi_load("Src/resources/diffuse_map.png", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("Src/resources/specular_map.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("../../Assets/diffuse_map.png", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/specular_map.png", &width1, &height1, &nrChannels1, 0);
     // ** Exercise 4
-    unsigned char *dataEmission = stbi_load("Src/resources/matrix.jpg", &width2, &height2, &nrChannels2, 0);
+    unsigned char *dataEmission = stbi_load("../../Assets/matrix.jpg", &width2, &height2, &nrChannels2, 0);
     // ** Exercise 3
-    // unsigned char *data1 = stbi_load("Src/resources/specular_color_map.png", &width1, &height1, &nrChannels1, 0);
+    // unsigned char *data1 = stbi_load("../../Assets/specular_color_map.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int diffuseMap, specularMap, emissionMap;
     glGenTextures(1, &diffuseMap);

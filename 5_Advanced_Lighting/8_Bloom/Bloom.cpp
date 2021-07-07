@@ -12,7 +12,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -100,14 +100,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    unsigned int woodTexture = loadImageGamma("Src/resources/wood.png", true, false);
-    unsigned int container = loadImageGamma("Src/resources/diffuse_map.png", true, false);
+    unsigned int woodTexture = loadImageGamma("../../Assets/wood.png", true, false);
+    unsigned int container = loadImageGamma("../../Assets/diffuse_map.png", true, false);
 
     // 6 Bloom
-    Shader bloomShader = Shader("Shaders/5_8/ColorThresholdVS.vs", "Shaders/5_8/ColorThresholdFS.fs", NULL);
-    Shader gaussianBlurShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/GaussianBlurFS.fs", NULL);
-    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/HDRQuadWithBlurFS.fs", NULL);
-    Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/5_8/LightThresholdFS.fs", NULL);
+    Shader bloomShader = Shader("../../Shaders/5_8/ColorThresholdVS.vs", "../../Shaders/5_8/ColorThresholdFS.fs", NULL);
+    Shader gaussianBlurShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_8/GaussianBlurFS.fs", NULL);
+    Shader bloomQuadShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_8/HDRQuadWithBlurFS.fs", NULL);
+    Shader lightShader = Shader("../../Shaders/2_3/MaterialsVS23.vs", "../../Shaders/5_8/LightThresholdFS.fs", NULL);
 
     // 6 Bloom
     unsigned int bloomFBO;

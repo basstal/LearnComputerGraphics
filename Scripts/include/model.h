@@ -7,7 +7,7 @@
 
 
 #include <mesh.h>
-#include <shader.h>
+#include <Shader.h>
 #include <vector>
 #include <string>
 

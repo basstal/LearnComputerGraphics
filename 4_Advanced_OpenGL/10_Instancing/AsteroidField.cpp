@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -87,10 +87,10 @@ int main()
     }
 
 
-    Shader shader("Shaders/4_10/AsteroidFieldVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", NULL);
-    Shader instanceAsteroidShader("Shaders/4_10/InstanceAsteroidVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", NULL);
-    Model planet("Src/resources/planet/planet.obj", false);
-    Model rock("Src/resources/rock/rock.obj", false);
+    Shader shader("../../Shaders/4_10/AsteroidFieldVS.vs", "../../Shaders/4_10/AsteroidFieldFS.fs", NULL);
+    Shader instanceAsteroidShader("../../Shaders/4_10/InstanceAsteroidVS.vs", "../../Shaders/4_10/AsteroidFieldFS.fs", NULL);
+    Model planet("../../Assets/planet/planet.obj", false);
+    Model rock("../../Assets/rock/rock.obj", false);
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);

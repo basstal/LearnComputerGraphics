@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <shader.h>
+#include <Shader.h>
 
 #include <glm/matrix.hpp>
 

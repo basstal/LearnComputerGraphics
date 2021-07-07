@@ -8,7 +8,7 @@
 #include <random>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 #include <model.h>
 
 bool wireframe = false;
@@ -111,10 +111,10 @@ int main()
         cout << "ERROR:: FRAME BUFFER INIT FAILED! " << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vs", "Shaders/5_4/PointShadowFS.fs", "Shaders/5_4/PointShadowGS.gs");
-    Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vs", "Shaders/5_4/RenderingShadowFS.fs", NULL);
+    Shader pointShadowShader("../../Shaders/5_4/PointShadowVS.vs", "../../Shaders/5_4/PointShadowFS.fs", "../../Shaders/5_4/PointShadowGS.gs");
+    Shader pointShadowDrawShader("../../Shaders/5_4/RenderingShadowVS.vs", "../../Shaders/5_4/RenderingShadowFS.fs", NULL);
 
-    unsigned int woodTexture = loadImage("wood.png", "Src/resources/", false);
+    unsigned int woodTexture = loadImage("wood.png", "../../Assets/", false);
     vec3 sampleOffsetDirections[20] = {
         vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
         vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),

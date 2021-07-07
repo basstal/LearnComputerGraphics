@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 # message("${ROOT_PATH}")
 
-set(PROJECT_NAME "Shaders")
+set(PROJECT_NAME "Transformations")
 
 # Project name
 project(${PROJECT_NAME})
@@ -32,11 +32,6 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Main.cpp
-    MaxVertexAttributes.cpp
-    MoreAttributes.cpp
-    SendColor.cpp
-    Uniform.cpp
     Exercise.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp")
 

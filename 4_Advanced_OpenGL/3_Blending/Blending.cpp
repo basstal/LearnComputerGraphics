@@ -18,7 +18,7 @@ Fdestination: the destination factor value. Sets the impact of the alpha value o
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 #include <iostream>
@@ -160,8 +160,8 @@ int main()
     floorTexture = loadImage("metal.png", "Src/resources", false);
     grassTexture = loadImage("grass.png", "Src/resources", false);
 
-    Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", NULL);
-    Shader vegetationShader("Shaders/4_1/VertexShader.vs", "Shaders/4_3/VegetationFragmentShader.fs", NULL);
+    Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
+    Shader vegetationShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_3/VegetationFragmentShader.fs", NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

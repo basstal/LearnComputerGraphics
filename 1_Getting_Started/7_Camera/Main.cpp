@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
+#include "FuncSet.h"
 
 static void processInput(GLFWwindow *window)
 {
@@ -15,36 +16,25 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int maxVertexAttributes(GLFWwindow *);
-extern int moreAttributes(GLFWwindow *);
-extern int sendColor(GLFWwindow *);
-extern int uniform(GLFWwindow *window);
+extern int lookAround(GLFWwindow *);
 extern int exercise(GLFWwindow * window);
+extern int lookAtMatrix(GLFWwindow * window);
+extern int zoom(GLFWwindow * window);
 
-extern void maxVertexAttributes_setup(GLFWwindow *);
-extern void moreAttributes_setup(GLFWwindow *);
-extern void sendColor_setup(GLFWwindow *);
-extern void uniform_setup(GLFWwindow *);
+extern void lookAround_setup(GLFWwindow *);
 extern void exercise_setup(GLFWwindow *);
+extern void lookAtMatrix_setup(GLFWwindow *);
+extern void zoom_setup(GLFWwindow *);
 
-class FuncSet
-{
-public:
-    int (*draw)(GLFWwindow *);
-    void (*setup)(GLFWwindow *);
-    FuncSet(void (*in_setup)(GLFWwindow *), int (*in_draw)(GLFWwindow *))
-    {
-        draw = in_draw;
-        setup = in_setup;
-    }
-};
+extern void exercise_imgui(GLFWwindow * );
+extern void zoom_imgui(GLFWwindow * );
+extern void lookAround_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"maxVertexAttributes", FuncSet(maxVertexAttributes_setup, maxVertexAttributes)},
-    {"moreAttributes", FuncSet(moreAttributes_setup, moreAttributes)},
-    {"sendColor", FuncSet(sendColor_setup, sendColor)},
-    {"uniform", FuncSet(uniform_setup, uniform)},
-    {"exercise", FuncSet(exercise_setup, exercise)},
+    {"lookAround", FuncSet(lookAround_setup, lookAround, lookAround_imgui)},
+    {"exercise", FuncSet(exercise_setup, exercise, exercise_imgui)},
+    {"lookAtMatrix", FuncSet(lookAtMatrix_setup, lookAtMatrix)},
+    {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -64,7 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Shaders", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "CoordinateSystems", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -94,6 +84,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
     int (*current_draw)(GLFWwindow *) = nullptr;
+    void (*current_imgui)(GLFWwindow *) = nullptr;
 
     while(!glfwWindowShouldClose(window))
     {
@@ -110,12 +101,21 @@ int main()
             {
                 if (ImGui::Button(entry.first.c_str()))
                 {
-                    if(entry.second.setup)
+                    FuncSet funcSet = entry.second;
+                    if(funcSet.setup)
                     {
-                        entry.second.setup(window);
+                        funcSet.setup(window);
                     }
-                    current_draw = entry.second.draw;
+                    current_draw = funcSet.draw;
+                    current_imgui = funcSet.imgui;
                 }
+            }
+            if (current_imgui)
+            {
+                // Exceptionally add an extra assert here for people confused about initial Dear ImGui setup
+                // Most ImGui functions would normally just crash if the context is missing.
+                IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
+                current_imgui(window);
             }
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -126,6 +126,7 @@ int main()
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (current_draw)

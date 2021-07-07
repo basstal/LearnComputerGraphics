@@ -6,7 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 #include <model.h>
 
@@ -147,12 +147,12 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    Shader shader("Shaders/3_3/ModelVS33.vs", "Shaders/4_2/SimpleFragmentShader.fs", NULL);
-    Shader backpackShader("Shaders/3_3/ModelVS33.vs", "Shaders/4_3/WindowFragmentShader.fs", NULL);
-    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/PostProcessing.fs", NULL);
+    Shader shader("../../Shaders/3_3/ModelVS33.vs", "../../Shaders/4_2/SimpleFragmentShader.fs", NULL);
+    Shader backpackShader("../../Shaders/3_3/ModelVS33.vs", "../../Shaders/4_3/WindowFragmentShader.fs", NULL);
+    Shader postProcessingShader("../../Shaders/4_5/FramebufferVS.vs", "../../Shaders/4_5/PostProcessing.fs", NULL);
 
     // backpack
-    Model backpack("Src/resources/backpack/backpack.obj", true);
+    Model backpack("../../Assets/backpack/backpack.obj", true);
 
     // cube
     glGenVertexArrays(1, &cubeVAO);

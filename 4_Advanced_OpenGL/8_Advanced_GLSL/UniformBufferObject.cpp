@@ -6,7 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader.h>
+#include <Shader.h>
 #include <camera.h>
 
 
@@ -101,10 +101,10 @@ int main()
         return -1;
     }
     
-    Shader redShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS1.fs", NULL);
-    Shader greenShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS2.fs", NULL);
-    Shader blueShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS3.fs", NULL);
-    Shader yellowShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS4.fs", NULL);
+    Shader redShader("../../Shaders/4_8/UniformBufferObjectVS.vs", "../../Shaders/4_8/UniformBufferObjectFS1.fs", NULL);
+    Shader greenShader("../../Shaders/4_8/UniformBufferObjectVS.vs", "../../Shaders/4_8/UniformBufferObjectFS2.fs", NULL);
+    Shader blueShader("../../Shaders/4_8/UniformBufferObjectVS.vs", "../../Shaders/4_8/UniformBufferObjectFS3.fs", NULL);
+    Shader yellowShader("../../Shaders/4_8/UniformBufferObjectVS.vs", "../../Shaders/4_8/UniformBufferObjectFS4.fs", NULL);
 
     unsigned int redUniformBlockIndex = glGetUniformBlockIndex(redShader.ID, "Matrices");
     unsigned int greenUniformBlockIndex = glGetUniformBlockIndex(greenShader.ID, "Matrices");

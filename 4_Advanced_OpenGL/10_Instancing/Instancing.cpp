@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <camera.h>
-#include <shader.h>
+#include <Shader.h>
 
 float quadVertices[] = {
     // positions     // colors
@@ -56,7 +56,7 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    Shader shader("Shaders/4_10/InstancingVS.vs", "Shaders/4_10/InstancingFS.fs", NULL);
+    Shader shader("../../Shaders/4_10/InstancingVS.vs", "../../Shaders/4_10/InstancingFS.fs", NULL);
 
     glm::vec2 translations[100];
     int index = 0;

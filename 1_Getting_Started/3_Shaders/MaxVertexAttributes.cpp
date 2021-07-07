@@ -9,6 +9,12 @@
 //         glfwSetWindowShouldClose(window, true);
 //     }
 // }
+void maxVertexAttributes_setup(GLFWwindow * window)
+{
+    int nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
+} 
 
 int maxVertexAttributes(GLFWwindow * window)
 {
@@ -26,9 +32,7 @@ int maxVertexAttributes(GLFWwindow * window)
     //     return -1;
     // }
 
-    int nrAttributes;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
+    
     
     // while(!glfwWindowShouldClose(window))
     // {
