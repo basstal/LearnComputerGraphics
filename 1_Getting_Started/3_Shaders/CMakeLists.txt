@@ -17,17 +17,39 @@ add_library(glad
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
 
+add_library(imgui
+    "${ROOT_PATH}/Plugins/imgui/imgui.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_widgets.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_draw.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_demo.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_impl_glfw.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_impl_opengl3.cpp")
+
+target_include_directories(imgui PUBLIC
+    "${ROOT_PATH}/Plugins/imgui/"
+    "${ROOT_PATH}/Plugins/glfw-3.3.4/include"
+    "${ROOT_PATH}/Plugins")
+
 # project source
 add_executable(${PROJECT_NAME} 
-    Main.cpp)
+    Main.cpp
+    MaxVertexAttributes.cpp
+    MoreAttributes.cpp
+    SendColor.cpp
+    Uniform.cpp
+    Exercise.cpp
+    "${ROOT_PATH}/Scripts/Shader.cpp")
 
 target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/glfw-3.3.4/lib-vc2019/glfw3.lib"
-    glad)
+    glad
+    imgui)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
     "${ROOT_PATH}/Plugins/glfw-3.3.4/include"
-    "${ROOT_PATH}/Plugins")
+    "${ROOT_PATH}/Plugins/imgui"
+    "${ROOT_PATH}/Plugins"
+    "${ROOT_PATH}/Scripts/include")
 
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS

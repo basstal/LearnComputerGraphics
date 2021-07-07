@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-const char *vertexShaderSource = "#version 330 core\n"
+static const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos; // the position variable has attribute position 0\n"
 "out vec4 vertexColor; // specify a color output to the fragment shader\n"
 "void main()\n"
@@ -11,7 +11,7 @@ const char *vertexShaderSource = "#version 330 core\n"
     "vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // set the output variable to a dark-red color\n"
 "}\n";
 
-const char *fragmentShaderSource = "#version 330 core\n"
+static const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)  \n"
 "void main()\n"
@@ -19,41 +19,41 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "FragColor = vertexColor;\n"
 "} \n";
 
-float vertices[] = {
+static float vertices[] = {
      0.0f,  0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
     -0.5f, -0.5f, 0.0f
 };
 
-void processInput(GLFWwindow *window)
+// void processInput(GLFWwindow *window)
+// {
+//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//     {
+//         glfwSetWindowShouldClose(window, true);
+//     }
+// }
+
+int sendColor(GLFWwindow * window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
+    // glfwInit();
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-int main()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    // if (window == NULL)
+    // {
+    //     std::cout << "Failed to create GLFW window" << std::endl;
+    //     glfwTerminate();
+    //     return -1;
+    // }
+    // glfwMakeContextCurrent(window);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    // {
+    //     std::cout << "Failed to initialize GLAD" << std::endl;
+    //     return -1;
+    // }
     
     unsigned int vertexShader, fragmentShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -82,17 +82,17 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    while(!glfwWindowShouldClose(window))
-    {
-        processInput(window);
+    // while(!glfwWindowShouldClose(window))
+    // {
+    //     processInput(window);
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         
-        glfwSwapBuffers(window);
-        glfwPollEvents();    
-    }
-    glfwTerminate();
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();    
+    // }
+    // glfwTerminate();
     return 0;
 }
