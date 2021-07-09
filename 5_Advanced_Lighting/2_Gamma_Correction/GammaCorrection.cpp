@@ -9,7 +9,7 @@
 
 #include <Camera.h>
 #include <Shader.h>
-#include <model.h>
+#include <Model.h>
 
 bool wireframe = false;
 

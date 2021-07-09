@@ -45,7 +45,7 @@ GL_INVERT	    Bitwise inverts the current stencil buffer value.
 #include <vector>
 #include <map>
 
-#include "utils.h"
+#include "Utils.h"
 
 bool wireframe = false;
 
@@ -169,8 +169,8 @@ int main()
     glEnable(GL_STENCIL_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
+    cubeTexture  = loadImage("marble.jpg", false);
+    floorTexture = loadImage("metal.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
     Shader outlineShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_2/SimpleFragmentShader.fs", NULL);

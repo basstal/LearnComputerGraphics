@@ -4,7 +4,7 @@
 
 #include <Camera.h>
 #include <Shader.h>
-#include <model.h>
+#include <Model.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);

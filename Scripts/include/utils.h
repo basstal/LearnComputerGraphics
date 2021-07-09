@@ -3,7 +3,7 @@
 
 #include <string>
 
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs)
@@ -87,18 +87,18 @@ unsigned int loadImageGamma(const char * path, bool openGammaCorrection, bool fl
     return texture;
 }
 
-unsigned int loadImage(const char * path, const std::string &directory, bool flipOnLoad)
+unsigned int loadImage(const char * path, bool flipOnLoad)
 {
-    std::string fileName = std::string(path);
-    if (!directory.empty())
-        fileName = directory + '/' + fileName;
+    // std::string fileName = std::string(path);
+    // if (!directory.empty())
+        // fileName = directory + '/' + fileName;
 
     unsigned int texture;
     glGenTextures(1, &texture);
 
     int width, height, nrchannel;
     stbi_set_flip_vertically_on_load(flipOnLoad);
-    unsigned char * data = stbi_load(fileName.c_str(), &width, &height, &nrchannel, 0);
+    unsigned char * data = stbi_load(path, &width, &height, &nrchannel, 0);
     if ( data != NULL )
     {
         GLint format;

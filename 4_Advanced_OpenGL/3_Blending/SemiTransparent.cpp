@@ -42,7 +42,7 @@ GL_MAX: takes the component-wise maximum of both colors: C¯result=max(Dst,Src).
 #include <vector>
 #include <map>
 
-#include "utils.h"
+#include "Utils.h"
 
 bool wireframe = false;
 
@@ -175,9 +175,9 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
-    windowTexture = loadImage("window.png", "Src/resources", false);
+    cubeTexture  = loadImage("marble.jpg", false);
+    floorTexture = loadImage("metal.png", false);
+    windowTexture = loadImage("window.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
     Shader windowShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_3/WindowFragmentShader.fs", NULL);

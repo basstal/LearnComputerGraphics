@@ -51,8 +51,6 @@ artifacts/
 *.ilk
 *.meta
 *.obj
-# except 3D model resources
-!**/resources/**/*.obj
 *.pch
 *.pdb
 *.pgc
@@ -308,5 +306,8 @@ _deps
 
 *.sln
 *.vcxproj*
+
+# except 3D model resources
+!**/Assets/**/*.obj
 
 .vscode

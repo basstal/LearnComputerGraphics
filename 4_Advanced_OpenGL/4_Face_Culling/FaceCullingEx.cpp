@@ -23,7 +23,7 @@ GL_FRONT_AND_BACK: Culls both the front and back faces.
 #include <vector>
 #include <map>
 
-#include "utils.h"
+#include "Utils.h"
 
 bool wireframe = false;
 
@@ -152,8 +152,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
+    cubeTexture  = loadImage("marble.jpg", false);
+    floorTexture = loadImage("metal.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
 

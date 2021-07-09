@@ -4,6 +4,12 @@ Follow https://learnopengl.com/
 
 Use cmake for make & build project in each section
 
+```shell
+cd 1_GettingStarted/1_HelloWindow
+cmake .
+cmake --build .
+```
+
 ## FAQ
 
 1. CL.exe not found??

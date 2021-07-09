@@ -27,7 +27,7 @@ GL_GEQUAL	    Passes if the fragment's depth value is greater than or equal to t
 #include <vector>
 #include <map>
 
-#include "utils.h"
+#include "Utils.h"
 
 bool wireframe = false;
 
@@ -149,8 +149,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
+    cubeTexture  = loadImage("../../Assets/marble.jpg", false);
+    floorTexture = loadImage("../../Assets/metal.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
 

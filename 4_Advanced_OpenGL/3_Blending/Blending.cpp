@@ -25,7 +25,7 @@ Fdestination: the destination factor value. Sets the impact of the alpha value o
 #include <vector>
 #include <map>
 
-#include "utils.h"
+#include "Utils.h"
 
 bool wireframe = false;
 
@@ -156,9 +156,9 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("marble.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
-    grassTexture = loadImage("grass.png", "Src/resources", false);
+    cubeTexture  = loadImage("marble.jpg", false);
+    floorTexture = loadImage("metal.png", false);
+    grassTexture = loadImage("grass.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
     Shader vegetationShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_3/VegetationFragmentShader.fs", NULL);

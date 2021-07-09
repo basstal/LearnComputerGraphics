@@ -9,7 +9,7 @@
 
 #include <Camera.h>
 #include <Shader.h>
-#include <model.h>
+#include <Model.h>
 
 bool wireframe = false;
 
@@ -119,7 +119,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    unsigned int planeTex = loadImage("wood.png", "Src/resources", true);
+    unsigned int planeTex = loadImage("wood.png", true);
     
 
     while(!glfwWindowShouldClose(window))

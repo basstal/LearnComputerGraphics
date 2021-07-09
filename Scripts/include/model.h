@@ -6,12 +6,12 @@
 #include <assimp/postprocess.h>
 
 
-#include <mesh.h>
+#include <Mesh.h>
 #include <Shader.h>
 #include <vector>
 #include <string>
 
-#include "utils.h"
+#include "Utils.h"
 
 
 class Model
@@ -166,11 +166,11 @@ Mesh Model::processMesh(aiMesh * mesh, const aiScene * scene)
         }
         if (!skip)
         {
-            std::cout << "my orange loaded" << std::endl;
+            std::cout << "awesomeface loaded" << std::endl;
 
             // map a texture by you self
             Texture texture;
-            texture.ID = loadImage("Orange.jpg", "", flipTexturesOnLoad);
+            texture.ID = loadImage("../../Assets/awesomeface.png", flipTexturesOnLoad);
             texture.Type = "texture_diffuse";
             textures.push_back(texture);
             textures_loaded.push_back(texture);
@@ -202,7 +202,17 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
         {
             // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.ID = loadImage(str.C_Str(), directory, flipTexturesOnLoad);
+            if (!directory.empty())
+            {
+                std::string pathStr(directory);
+                pathStr.append("/");
+                pathStr.append(str.C_Str());
+                texture.ID = loadImage(pathStr.c_str(), flipTexturesOnLoad);
+            }
+            else
+            {
+                texture.ID = loadImage(str.C_Str(), flipTexturesOnLoad);
+            }
             texture.Type = typeName;
             texture.Path = str;
             textures.push_back(texture);

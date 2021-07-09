@@ -24,7 +24,7 @@ triangle_strip
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <model.h>
+#include <Model.h>
 #include <Camera.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);

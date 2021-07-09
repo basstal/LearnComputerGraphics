@@ -19,7 +19,7 @@ level: the mipmap level. We keep this at 0.
 
 #include <Shader.h>
 #include <Camera.h>
-#include <model.h>
+#include <Model.h>
 
 #include <iostream>
 #include <vector>
@@ -161,8 +161,8 @@ int main()
         return -1;
     }
 
-    cubeTexture  = loadImage("container.jpg", "Src/resources", false);
-    floorTexture = loadImage("metal.png", "Src/resources", false);
+    cubeTexture  = loadImage("container.jpg", false);
+    floorTexture = loadImage("metal.png", false);
 
     Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
     Shader framebufferShader("../../Shaders/4_5/FramebufferVS.vs", "../../Shaders/4_5/FramebufferFS.fs", NULL);
