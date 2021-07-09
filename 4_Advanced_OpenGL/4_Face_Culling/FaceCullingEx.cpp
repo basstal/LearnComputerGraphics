@@ -17,7 +17,7 @@ GL_FRONT_AND_BACK: Culls both the front and back faces.
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <iostream>
 #include <vector>

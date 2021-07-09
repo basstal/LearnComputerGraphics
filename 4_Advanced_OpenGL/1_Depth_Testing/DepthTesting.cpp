@@ -21,7 +21,7 @@ GL_GEQUAL	    Passes if the fragment's depth value is greater than or equal to t
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <iostream>
 #include <vector>

@@ -15,13 +15,13 @@ Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ v
 #include <iostream>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 float vertices[] = {
@@ -174,8 +174,8 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("Shaders\\2_5\\LightVS25.vs", "Shaders\\2_5\\LightFS25.fs", NULL);
-    Shader lampShader = Shader("Shaders\\2_2\\VertexShader22.vs", "Shaders\\2_1\\LightFragmentShader.fs", NULL);
+    Shader shaderProgram = Shader("../../Shaders/2_5/LightVS25.vs", "../../Shaders/2_5/LightFS25.fs", NULL);
+    Shader lampShader = Shader("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
 
     glm::vec3 lightPos = glm::vec3(0.5, 0.5f, 1.0f);
     

@@ -110,7 +110,7 @@ Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath, const GLc
 
         vertexCode = vShaderStram.str();
         fragmentCode = fShaderStram.str();
-		if (geometryPath != NULL && strcmp(geometryPath, "") == 1)
+		if (geometryPath && strcmp(geometryPath, "") == 1)
 		{
 			std::cout << "use geometry" << geometryPath << std::endl;
 			gShaderFile.open(geometryPath);

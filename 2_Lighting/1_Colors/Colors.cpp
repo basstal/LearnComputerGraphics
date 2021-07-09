@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>

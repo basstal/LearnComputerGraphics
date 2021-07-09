@@ -308,3 +308,5 @@ _deps
 
 *.sln
 *.vcxproj*
+
+.vscode

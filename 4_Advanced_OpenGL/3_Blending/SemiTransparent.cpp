@@ -36,7 +36,7 @@ GL_MAX: takes the component-wise maximum of both colors: C¯result=max(Dst,Src).
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <iostream>
 #include <vector>

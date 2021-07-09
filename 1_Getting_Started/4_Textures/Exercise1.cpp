@@ -33,7 +33,7 @@ static float mixParam = 0.5f;
 //     }
 // }
 static unsigned int texture, texture1;
-static Shader * shaderProgram;
+static std::shared_ptr<Shader> shaderProgram;
 static unsigned int VAO, EBO, VBO;
 
 void exercise1_setup(GLFWwindow * window)
@@ -99,7 +99,7 @@ void exercise1_setup(GLFWwindow * window)
     }
     
     
-    shaderProgram = new Shader("../../Shaders/1_4/VertexShader14.vs", "../../Shaders/1_4/FragmentShader14.fs", NULL);
+    shaderProgram = std::make_shared<Shader>("../../Shaders/1_4/VertexShader14.vs", "../../Shaders/1_4/FragmentShader14.fs", nullptr);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);

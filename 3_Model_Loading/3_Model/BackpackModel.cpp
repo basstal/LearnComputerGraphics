@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 
-#include <camera.h>
+#include <Camera.h>
 #include <model.h>
 
 #include <glm/matrix.hpp>
@@ -76,7 +76,7 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    Model backpack = Model("Src\\resources\\backpack\\backpack.obj", true);
+    Model backpack = Model("Src/resources/backpack/backpack.obj", true);
     Shader shader = Shader("../../Shaders/3_3/ModelVS33.vs", "../../Shaders/3_3/ModelFS33.fs", NULL);
     float materialShininess = 32.0f;
     glm::vec3 pointLightPosition = glm::vec3(1.2f, 1.0f, 1.0f);

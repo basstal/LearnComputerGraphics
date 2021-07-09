@@ -18,7 +18,7 @@ level: the mipmap level. We keep this at 0.
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 #include <model.h>
 
 #include <iostream>

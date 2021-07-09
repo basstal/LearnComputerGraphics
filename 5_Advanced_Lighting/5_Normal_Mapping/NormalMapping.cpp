@@ -7,7 +7,7 @@
 #include <vector>
 #include <random>
 
-#include <camera.h>
+#include <Camera.h>
 #include <Shader.h>
 #include <model.h>
 

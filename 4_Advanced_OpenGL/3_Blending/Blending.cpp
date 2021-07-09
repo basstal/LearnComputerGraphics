@@ -19,7 +19,7 @@ Fdestination: the destination factor value. Sets the impact of the alpha value o
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <iostream>
 #include <vector>

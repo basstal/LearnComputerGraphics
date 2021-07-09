@@ -39,7 +39,7 @@ GL_INVERT	    Bitwise inverts the current stencil buffer value.
 #include <glm/gtc/type_ptr.hpp>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <iostream>
 #include <vector>

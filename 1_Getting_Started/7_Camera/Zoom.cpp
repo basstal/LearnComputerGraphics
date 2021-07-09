@@ -87,7 +87,7 @@ static glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 static glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 static unsigned int VAO, VBO;
-static Shader * shaderProgram;
+static std::shared_ptr<Shader> shaderProgram;
 static float cameraRotatorSensitivity = 0.1f;
 static float cameraSpeed = 2.5f;
 static float cameraZoomFactor = 1.0f;
@@ -284,7 +284,7 @@ void zoom_setup(GLFWwindow * window)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    shaderProgram = new Shader("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", NULL);
+    shaderProgram = std::make_shared<Shader>("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", nullptr);
     shaderProgram->use();
 
     shaderProgram->setInt("texture0", 0);

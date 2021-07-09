@@ -1,6 +1,3 @@
-/*
-Should use 'cl-build-with-imgui' VSCode Tasks label to compile this file
-*/
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -14,13 +11,13 @@ Should use 'cl-build-with-imgui' VSCode Tasks label to compile this file
 #include <iostream>
 
 #include <Shader.h>
-#include <camera.h>
+#include <Camera.h>
 
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 float vertices[] = {
@@ -95,8 +92,8 @@ glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-const int WIDTH = 1280;
-const int HEIGHT = 720;
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
 
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
@@ -109,6 +106,26 @@ void scroll_callback(GLFWwindow *, double , double);
 void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
 unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, mouse_callback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        moveMouse = true;
+    }
+    bCursorOff = !bCursorOff;
+}
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -125,7 +142,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "MultipleLights", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
@@ -159,7 +176,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    // glfwSetCursorPosCallback(window, mouse_callback);
 
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
@@ -194,7 +211,7 @@ int main()
     glEnableVertexAttribArray(0);
 
     Shader shaderProgram = Shader("../../Shaders/2_6/MultipleLightsVS26.vs", "../../Shaders/2_6/MultipleLightsFS26.fs", NULL);
-    Shader lampShader = Shader("Shaders\\2_2\\VertexShader22.vs", "Shaders\\2_6\\LightFS26.fs", NULL);
+    Shader lampShader = Shader("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_6/LightFS26.fs", NULL);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -231,37 +248,65 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Editor");
-        ImGui::InputFloat("Material shininess", &materialShininess);
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-        ImGui::Text("Lights Color");
-        for (int i = 0; i < 4; ++i)
+        if(ImGui::Begin("Editor"))
         {
-            ImGui::ColorEdit3(("light" + std::to_string(i)).c_str(), glm::value_ptr(pointLightRepresentColor[i]));
+            ImGui::InputFloat("Material shininess", &materialShininess);
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            ImGui::Text("Lights Color");
+            for (int i = 0; i < 4; ++i)
+            {
+                ImGui::ColorEdit3(("light" + std::to_string(i)).c_str(), glm::value_ptr(pointLightRepresentColor[i]));
+            }
+            ImGui::Text("Lights Properties");
+            ImGui::Spacing();
+            ImGui::SliderFloat3("dirDirection", glm::value_ptr(dirDirection), -5, 5);
+            ImGui::SliderFloat("dirAmbientStrength", &dirAmbientStrength, 0, 1);
+            ImGui::SliderFloat("dirDiffuseStrength", &dirDiffuseStrength, 0, 1);
+            ImGui::SliderFloat("dirSpecularStrength", &dirSpecularStrength, 0, 1);
+
+            ImGui::Spacing();
+            ImGui::SliderFloat("pointAmbientStrength", &pointAmbientStrength, 0, 1);
+            ImGui::SliderFloat("pointDiffuseStrength", &pointDiffuseStrength, 0, 1);
+            ImGui::SliderFloat("pointSpecularStrength", &pointSpecularStrength, 0, 1);
+
+            ImGui::Spacing();
+            ImGui::SliderFloat("cutOff", &cutOff, 10.0f, 45.0f);
+            ImGui::SliderFloat("outerCutOff", &outerCutOff, cutOff, cutOff + 20.0f);
+            outerCutOff = glm::max(outerCutOff, cutOff);
+            ImGui::SliderFloat("spotAmbientStrength", &spotAmbientStrength, 0, 1);
+            ImGui::SliderFloat("spotDiffuseStrength", &spotDiffuseStrength, 0, 1);
+            ImGui::SliderFloat("spotSpecularStrength", &spotSpecularStrength, 0, 1);
+
+            
+            ImGui::End();
         }
-        ImGui::Text("Lights Properties");
-        ImGui::Spacing();
-        ImGui::SliderFloat3("dirDirection", glm::value_ptr(dirDirection), -5, 5);
-        ImGui::SliderFloat("dirAmbientStrength", &dirAmbientStrength, 0, 1);
-        ImGui::SliderFloat("dirDiffuseStrength", &dirDiffuseStrength, 0, 1);
-        ImGui::SliderFloat("dirSpecularStrength", &dirSpecularStrength, 0, 1);
+        
+        if(ImGui::Begin("Viewer"))
+        {
+            ImGui::Separator();
+            if (bCursorOff)
+            {
+                ImGui::Text("Press P to release control of the camera, and show cursor.");
+            }
+            else
+            {
+                ImGui::Text("Press P or belowd Button to take control of the camera");
+                if(ImGui::Button("Posses camera") && !bCursorOff)
+                {
+                    switch_cursor(window);
+                }
+            }
+            ImGui::Separator();
 
-        ImGui::Spacing();
-        ImGui::SliderFloat("pointAmbientStrength", &pointAmbientStrength, 0, 1);
-        ImGui::SliderFloat("pointDiffuseStrength", &pointDiffuseStrength, 0, 1);
-        ImGui::SliderFloat("pointSpecularStrength", &pointSpecularStrength, 0, 1);
+            glm::vec3 pos = camera.Position;
+            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+            ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
+            ImGui::Separator();
 
-        ImGui::Spacing();
-        ImGui::SliderFloat("cutOff", &cutOff, 10.0f, 45.0f);
-        ImGui::SliderFloat("outerCutOff", &outerCutOff, cutOff, cutOff + 20.0f);
-        outerCutOff = glm::max(outerCutOff, cutOff);
-        ImGui::SliderFloat("spotAmbientStrength", &spotAmbientStrength, 0, 1);
-        ImGui::SliderFloat("spotDiffuseStrength", &spotDiffuseStrength, 0, 1);
-        ImGui::SliderFloat("spotSpecularStrength", &spotSpecularStrength, 0, 1);
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
+            ImGui::End();
+        }
 
         // Rendering
         ImGui::Render();
@@ -379,7 +424,15 @@ void processInput(GLFWwindow * window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
+    }
 }
 
 void scroll_callback(GLFWwindow *window, double offsetX, double offsetY)

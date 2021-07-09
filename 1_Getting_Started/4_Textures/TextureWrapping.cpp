@@ -81,8 +81,8 @@ void textureWrapping_setup(GLFWwindow* window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("..\\..\\Assets\\container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("..\\..\\Assets\\awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);

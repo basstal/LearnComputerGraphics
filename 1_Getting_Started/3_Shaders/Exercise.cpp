@@ -36,12 +36,12 @@ static float vertices[] = {
 //         glfwSetWindowShouldClose(window, true);
 //     }
 // }
-static Shader * shaderProgram;
+static std::shared_ptr<Shader> shaderProgram;
 static unsigned int VAO, VBO;
 
 void exercise_setup(GLFWwindow* window)
 {
-    shaderProgram = new Shader(vertexShaderSource, fragmentShaderSource, NULL, true);
+    shaderProgram = std::make_shared<Shader>(vertexShaderSource, fragmentShaderSource, nullptr, true);
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);

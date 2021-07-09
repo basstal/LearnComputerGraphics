@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include <camera.h>
+#include <Camera.h>
 #include <Shader.h>
 #include <model.h>
 

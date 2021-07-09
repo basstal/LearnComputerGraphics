@@ -68,7 +68,7 @@ static float vertices[] = {
 };
 
 static unsigned int VAO, VBO;
-static Shader * shaderProgram;
+static std::shared_ptr<Shader> shaderProgram;
 // void processInput(GLFWwindow *window)
 // {
 //     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -147,7 +147,7 @@ void more3D_setup(GLFWwindow * window)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    shaderProgram = new Shader("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", NULL);
+    shaderProgram = std::make_shared<Shader>("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", nullptr);
     shaderProgram->use();
 
     shaderProgram->setInt("texture0", 0);

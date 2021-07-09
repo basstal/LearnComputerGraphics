@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include <camera.h>
+#include <Camera.h>
 #include <Shader.h>
 #include <model.h>
 

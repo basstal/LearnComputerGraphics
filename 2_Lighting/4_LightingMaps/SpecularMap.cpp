@@ -2,7 +2,6 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -15,6 +14,9 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+// #define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 static float vertices[] = {
     // positions          // normals           // texture coords
@@ -88,10 +90,10 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-static const int WIDTH = 800;
-static const int HEIGHT = 600;
+static const int WIDTH = 1920;
+static const int HEIGHT = 1080;
 
-static Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
+static Camera camera = Camera(glm::vec3(-2.0, -0.5, 2.5), glm::vec3(0, 1, 0), -35.0f, 14.0f);
 static float lastX = 0.0f;
 static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
@@ -103,13 +105,12 @@ static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
 
 static unsigned int VAO, VBO;
-static glm::vec3 lightPos;
-static glm::mat4 model;
 static unsigned int lightVAO;
-
 static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> lampShader;
-static int exercise_index = 0;
+static glm::vec3 lightPos;
+static glm::mat4 model;
+static unsigned int diffuseMapTexture, specularMapTexture;
 
 
 static bool bCursorOff = false;
@@ -131,7 +132,7 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void exercise_setup(GLFWwindow * window)
+void specularMap_setup(GLFWwindow * window)
 {
     // glfwInit();
     // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -163,6 +164,43 @@ void exercise_setup(GLFWwindow * window)
 
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
+    int width, height, nrChannels, width1, height1, nrChannels1;
+    unsigned char *data = stbi_load("../../Assets/diffuse_map.png", &width, &height, &nrChannels, 0);
+    unsigned char *data1 = stbi_load("../../Assets/specular_map.png", &width1, &height1, &nrChannels1, 0);
+
+    glGenTextures(1, &diffuseMapTexture);
+    glGenTextures(1, &specularMapTexture);
+    glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout<< "Failed to load texture" << std::endl;
+    }
+    glBindTexture(GL_TEXTURE_2D, specularMapTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if(data1)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout<< "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+    stbi_image_free(data1);
+
     glGenVertexArrays(1, &VAO);
 
     glGenBuffers(1, &VBO);
@@ -187,8 +225,8 @@ void exercise_setup(GLFWwindow * window)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    shaderProgram = std::make_shared<Shader>("../../Shaders/2_3/MaterialsVS23.vs", "../../Shaders/2_3/MaterialsFS23.fs", nullptr);
-    lampShader = std::make_shared<Shader>("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_3/ExerciseLight23.fs", nullptr);
+    shaderProgram = std::make_shared<Shader>("../../Shaders/2_4/SpecularMapVS24.vs", "../../Shaders/2_4/SpecularMapFS24.fs", nullptr);
+    lampShader = std::make_shared<Shader>("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_1/LightFragmentShader.fs", nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     model = glm::mat4(1.0);
@@ -208,7 +246,51 @@ void exercise_setup(GLFWwindow * window)
     // glfwTerminate();
 }
 
-void exercise_imgui(GLFWwindow * window)
+int specularMap(GLFWwindow * window)
+{
+    processInput(window);
+        
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
+
+    lampShader->use();
+    lampShader->setMat4("model", model);
+    lampShader->setMat4("view", view);
+    lampShader->setMat4("projection", projection);
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    shaderProgram->use();
+    shaderProgram->setMat4("model", glm::mat4(1.0));
+    shaderProgram->setMat4("view", view);
+    shaderProgram->setMat4("projection", projection);
+    shaderProgram->setVec3("lightPos", lightPos);
+    shaderProgram->setVec3("viewPos", camera.Position);
+    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    
+    glm::vec3 lightColor = glm::vec3(1.0);
+    
+    shaderProgram->setVec3("light.ambient", lightColor * glm::vec3(0.5));
+    shaderProgram->setVec3("light.diffuse", lightColor * glm::vec3(0.1));
+    shaderProgram->setVec3("light.specular", lightColor);
+    shaderProgram->setFloat("material.shininess", 32.0f);
+    shaderProgram->setInt("material.diffuse", 0);
+    shaderProgram->setInt("material.specular", 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMapTexture);
+
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    return 0;
+
+}
+
+void specularMap_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     if (bCursorOff)
@@ -223,83 +305,9 @@ void exercise_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-    ImGui::RadioButton("Exercise 1", &exercise_index, 0); ImGui::SameLine();
-    ImGui::RadioButton("Exercise 2", &exercise_index, 1);
-}
-
-int exercise(GLFWwindow * window)
-{
-    processInput(window);
-        
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
-
-    glm::vec3 lightColor;
-    if (exercise_index == 0)
-    {
-        // ** exercise 1
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
-    }
-    else
-    {
-        // ** exercise 2
-        lightColor = glm::vec3(1.0);
-    }
-
-    
-    lampShader->use();
-    lampShader->setVec3("lightColor", lightColor);
-    lampShader->setMat4("model", model);
-    lampShader->setMat4("view", view);
-    lampShader->setMat4("projection", projection);
-    glBindVertexArray(lightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    shaderProgram->use();
-    shaderProgram->setMat4("model", glm::mat4(1.0));
-    shaderProgram->setMat4("view", view);
-    shaderProgram->setMat4("projection", projection);
-    shaderProgram->setVec3("lightPos", lightPos);
-    shaderProgram->setVec3("viewPos", camera.Position);
-    
-    if (exercise_index == 0)
-    {
-        // ** exercise 1
-        shaderProgram->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        shaderProgram->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-        shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        shaderProgram->setFloat("material.shininess", 32.0f);
-        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
-        
-        shaderProgram->setVec3("light.ambient", ambientColor);
-        shaderProgram->setVec3("light.diffuse", diffuseColor);
-        shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
-    }
-    else
-    {
-        // ** exercise 2
-        // ** reference : [http://devernay.free.fr/cours/opengl/materials.html]
-        // light properties
-        shaderProgram->setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
-        shaderProgram->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
-        shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-        // material properties
-        shaderProgram->setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
-        shaderProgram->setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-        shaderProgram->setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
-        shaderProgram->setFloat("material.shininess", 32.0f);
-    }
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    return 0;
-
+    glm::vec3 pos = camera.Position;
+    ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
 }
 
 static void frame_buffer_callback(GLFWwindow * window, int width, int height)
