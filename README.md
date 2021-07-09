@@ -2,7 +2,7 @@
 
 Follow https://learnopengl.com/
 
-Using VSCode on windows 10-64bit for editing.
+Use cmake for make & build project in each section
 
 ## FAQ
 
