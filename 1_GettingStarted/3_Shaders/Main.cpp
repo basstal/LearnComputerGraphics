@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
+#include <FuncSet.h>
 
 static void processInput(GLFWwindow *window)
 {
@@ -27,20 +28,10 @@ extern void sendColor_setup(GLFWwindow *);
 extern void uniform_setup(GLFWwindow *);
 extern void exercise_setup(GLFWwindow *);
 
-class FuncSet
-{
-public:
-    int (*draw)(GLFWwindow *);
-    void (*setup)(GLFWwindow *);
-    FuncSet(void (*in_setup)(GLFWwindow *), int (*in_draw)(GLFWwindow *))
-    {
-        draw = in_draw;
-        setup = in_setup;
-    }
-};
+extern void maxVertexAttributes_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"maxVertexAttributes", FuncSet(maxVertexAttributes_setup, maxVertexAttributes)},
+    {"maxVertexAttributes", FuncSet(maxVertexAttributes_setup, maxVertexAttributes, maxVertexAttributes_imgui)},
     {"moreAttributes", FuncSet(moreAttributes_setup, moreAttributes)},
     {"sendColor", FuncSet(sendColor_setup, sendColor)},
     {"uniform", FuncSet(uniform_setup, uniform)},
@@ -94,6 +85,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
     int (*current_draw)(GLFWwindow *) = nullptr;
+    void (*current_imgui)(GLFWwindow *) = nullptr;
 
     while(!glfwWindowShouldClose(window))
     {
@@ -115,7 +107,12 @@ int main()
                         entry.second.setup(window);
                     }
                     current_draw = entry.second.draw;
+                    current_imgui = entry.second.imgui;
                 }
+            }
+            if (current_imgui)
+            {
+                current_imgui(window);
             }
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();

@@ -1,10 +1,11 @@
-#ifndef _UTILS_H_
-#define _UTILS_H_
 
 #include <string>
 
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <iostream>
+#include <vector>
+#include <glad/glad.h>
 
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs)
 {
@@ -92,6 +93,7 @@ unsigned int loadImage(const char * path, bool flipOnLoad)
     // std::string fileName = std::string(path);
     // if (!directory.empty())
         // fileName = directory + '/' + fileName;
+    // std::cout << "path : " << path << std::endl;
 
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -139,4 +141,20 @@ void replaceStringInPlace(std::string& subject, const std::string& search, const
     }
 }
 
-#endif
+void getProjectFilePath(char * projectRelativePath2File, std::string& outputPath)
+{
+    wchar_t absolutePath[300];
+    _wgetcwd(absolutePath, 300);
+    // std::wcout<< absolutePath <<std::endl;
+    std::wstring pathStr(absolutePath);
+    // std::wcout << pathStr <<std::endl;
+    std::wstring::size_type index = pathStr.rfind(L"LearnOpenGL");
+    // std::cout<<"index : " << index <<std::endl;
+    pathStr = pathStr.substr(0, index + 11);
+    outputPath.clear();
+    outputPath.append(pathStr.begin(), pathStr.end());
+    outputPath.push_back('\\');
+    outputPath.append(projectRelativePath2File);
+    // std::cout << "outputPath : " << outputPath << std::endl;
+    replaceStringInPlace(outputPath, "/", "\\");
+}

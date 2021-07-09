@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "Utils.h"
 
 static float vertices[] = {
     // positions          // colors           // texture coords
@@ -80,7 +81,9 @@ void exercise_setup(GLFWwindow * window)
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
-    unsigned char *img_data = stbi_load("../../Assets/awesomeface.png", &width, &height, &nrChannels, 0);
+    std::string path;
+    getProjectFilePath("Assets/awesomeface.png", path);
+    unsigned char *img_data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     // set the texture wrapping/filtering options (on the currently bound texture object)

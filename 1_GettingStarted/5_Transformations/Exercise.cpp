@@ -1,4 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <glm/glm.hpp>
@@ -9,6 +8,7 @@
 #include <Shader.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <Utils.h>
 
 float vertices[] = {
     // positions           // texture coords
@@ -55,8 +55,11 @@ int main()
 
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    std::string path;
+    getProjectFilePath("Assets/container.jpg", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    getProjectFilePath("Assets/awesomeface.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -91,7 +94,11 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    Shader shaderProgram = Shader("../../Shaders/1_5/VertexShader15.vs", "../../Shaders/1_5/FragmentShader15.fs", "");
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/1_5/VertexShader15.vs", vsPath);
+    getProjectFilePath("Shaders/1_5/FragmentShader15.fs", fsPath);
+
+    Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);

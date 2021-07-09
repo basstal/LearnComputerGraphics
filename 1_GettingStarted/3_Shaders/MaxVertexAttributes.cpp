@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -9,12 +13,17 @@
 //         glfwSetWindowShouldClose(window, true);
 //     }
 // }
+static int nrAttributes = 0;
 void maxVertexAttributes_setup(GLFWwindow * window)
 {
-    int nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
-} 
+}
+
+void maxVertexAttributes_imgui(GLFWwindow * window)
+{
+    
+    ImGui::Text("Maximum nr of vertex attributes supported: %d", nrAttributes);
+}
 
 int maxVertexAttributes(GLFWwindow * window)
 {

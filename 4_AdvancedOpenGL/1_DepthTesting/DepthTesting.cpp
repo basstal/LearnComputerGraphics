@@ -119,7 +119,16 @@ unsigned int skyboxTextures;
 unsigned int houseVAO, houseVBO;
 unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
 
-int main()
+// std::wstring ExePath() {
+//     TCHAR buffer[MAX_PATH] = { 0 };
+//     GetModuleFileName( NULL, buffer, MAX_PATH );
+//     std::wstring str = buffer;
+//     std::wstring::size_type pos = str.find_last_of(L"\\/");
+//     return str.substr(0, pos);
+// }
+
+
+int main(int args, void *argv[])
 {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -149,10 +158,16 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    cubeTexture  = loadImage("../../Assets/marble.jpg", false);
-    floorTexture = loadImage("../../Assets/metal.png", false);
+    std::string filePath;
+    getProjectFilePath("Assets/marble.jpg", filePath);
+    cubeTexture  = loadImage(filePath.c_str(), false);
+    getProjectFilePath("/Assets/metal.png", filePath);
+    floorTexture = loadImage(filePath.c_str(), false);
 
-    Shader simpleShader("../../Shaders/4_1/VertexShader.vs", "../../Shaders/4_1/FragmentShader.fs", NULL);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/4_1/VertexShader.vs", vsPath);
+    getProjectFilePath("/Shaders/4_1/FragmentShader.fs", fsPath);
+    Shader simpleShader(vsPath.c_str(), fsPath.c_str(), NULL);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

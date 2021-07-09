@@ -26,6 +26,8 @@ To specify the filtering method between mipmap levels we can replace the origina
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include <Utils.h>
+
 static float vertices[] = {
     // positions          // colors           // texture coords
      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
@@ -81,8 +83,11 @@ void textureWrapping_setup(GLFWwindow* window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    std::string path;
+    getProjectFilePath("Assets/awesomeface.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
+    getProjectFilePath("Assets/container.jpg", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
