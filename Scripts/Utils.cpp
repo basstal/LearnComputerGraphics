@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <glad/glad.h>
+#include <Utils.h>
 
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs)
 {
@@ -90,17 +91,20 @@ unsigned int loadImageGamma(const char * path, bool openGammaCorrection, bool fl
 
 unsigned int loadImage(const char * path, bool flipOnLoad)
 {
+    std::string filePath;
+    getProjectFilePath(path, filePath);
     // std::string fileName = std::string(path);
     // if (!directory.empty())
         // fileName = directory + '/' + fileName;
     // std::cout << "path : " << path << std::endl;
-
+    // std::cout << "filePath : " << filePath << std::endl;
+    
     unsigned int texture;
     glGenTextures(1, &texture);
 
     int width, height, nrchannel;
     stbi_set_flip_vertically_on_load(flipOnLoad);
-    unsigned char * data = stbi_load(path, &width, &height, &nrchannel, 0);
+    unsigned char * data = stbi_load(filePath.c_str(), &width, &height, &nrchannel, 0);
     if ( data != NULL )
     {
         GLint format;
@@ -141,20 +145,28 @@ void replaceStringInPlace(std::string& subject, const std::string& search, const
     }
 }
 
-void getProjectFilePath(char * projectRelativePath2File, std::string& outputPath)
+void getProjectFilePath(const char * projectRelativePath2File, std::string& outputPath)
 {
-    wchar_t absolutePath[300];
-    _wgetcwd(absolutePath, 300);
-    // std::wcout<< absolutePath <<std::endl;
-    std::wstring pathStr(absolutePath);
-    // std::wcout << pathStr <<std::endl;
-    std::wstring::size_type index = pathStr.rfind(L"LearnOpenGL");
-    // std::cout<<"index : " << index <<std::endl;
-    pathStr = pathStr.substr(0, index + 11);
-    outputPath.clear();
-    outputPath.append(pathStr.begin(), pathStr.end());
-    outputPath.push_back('\\');
-    outputPath.append(projectRelativePath2File);
-    // std::cout << "outputPath : " << outputPath << std::endl;
-    replaceStringInPlace(outputPath, "/", "\\");
+    std::string inPath(projectRelativePath2File);
+    if (!inPath.empty() && inPath.find("LearnOpenGL") == -1)
+    {
+        wchar_t absolutePath[300];
+        _wgetcwd(absolutePath, 300);
+        // std::wcout<< absolutePath <<std::endl;
+        std::wstring pathStr(absolutePath);
+        // std::wcout << pathStr <<std::endl;
+        std::wstring::size_type index = pathStr.rfind(L"LearnOpenGL");
+        // std::cout<<"index : " << index <<std::endl;
+        pathStr = pathStr.substr(0, index + 11);
+        outputPath.clear();
+        outputPath.append(pathStr.begin(), pathStr.end());
+        outputPath.push_back('\\');
+        outputPath.append(projectRelativePath2File);
+        // std::cout << "outputPath : " << outputPath << std::endl;
+        replaceStringInPlace(outputPath, "/", "\\");
+    }
+    else
+    {
+        outputPath = inPath;
+    }
 }

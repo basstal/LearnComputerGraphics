@@ -19,7 +19,7 @@ unsigned int loadImage(const char * path, bool flipOnLoad);
 
 void replaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace);
 
-void getProjectFilePath(char * projectRelativePath2File, std::string& outputPath);
+void getProjectFilePath(const char * projectRelativePath2File, std::string& outputPath);
 
 
 #endif

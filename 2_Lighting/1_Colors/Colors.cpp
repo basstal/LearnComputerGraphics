@@ -11,6 +11,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <Utils.h>
+
 float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -79,7 +81,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Colors", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
@@ -128,8 +130,13 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/ColorsFragmentShader.fs", NULL);
-    Shader shaderProgramForLight = Shader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vs", vsPath);
+    getProjectFilePath("Shaders/2_1/ColorsFragmentShader.fs", fsPath);
+    Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
+    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vs", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    Shader shaderProgramForLight = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
 
     shaderProgram.use();
     shaderProgram.setVec3("objectColor", 1.0, 0.5, 0.31);

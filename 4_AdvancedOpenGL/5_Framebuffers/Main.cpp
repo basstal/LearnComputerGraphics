@@ -16,24 +16,24 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int materials(GLFWwindow *);
-extern int exercise(GLFWwindow * window);
-// extern int lighting(GLFWwindow * window);
+extern int framebuffers(GLFWwindow *);
+extern int rearViewMirror(GLFWwindow * window);
+// extern int specularMap(GLFWwindow * window);
 // extern int zoom(GLFWwindow * window);
 
-extern void materials_setup(GLFWwindow *);
-extern void exercise_setup(GLFWwindow *);
-// extern void lighting_setup(GLFWwindow *);
+extern void framebuffers_setup(GLFWwindow *);
+extern void rearViewMirror_setup(GLFWwindow *);
+// extern void specularMap_setup(GLFWwindow *);
 // extern void zoom_setup(GLFWwindow *);
 
-extern void exercise_imgui(GLFWwindow * );
-// extern void lighting_imgui(GLFWwindow * );
-extern void materials_imgui(GLFWwindow *);
+extern void rearViewMirror_imgui(GLFWwindow * );
+// extern void specularMap_imgui(GLFWwindow * );
+extern void framebuffers_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"materials", FuncSet(materials_setup, materials, materials_imgui)},
-    {"exercise", FuncSet(exercise_setup, exercise, exercise_imgui)},
-    // {"lighting", FuncSet(lighting_setup, lighting, lighting_imgui)},
+    {"framebuffers", FuncSet(framebuffers_setup, framebuffers, framebuffers_imgui)},
+    {"rearViewMirror", FuncSet(rearViewMirror_setup, rearViewMirror, rearViewMirror_imgui)},
+    // {"specularMap", FuncSet(specularMap_setup, specularMap, specularMap_imgui)},
     // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
@@ -54,7 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Materials", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Framebuffers", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;

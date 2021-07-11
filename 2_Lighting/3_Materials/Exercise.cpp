@@ -15,7 +15,7 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <Utils.h>
 static float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -88,8 +88,8 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-static const int WIDTH = 800;
-static const int HEIGHT = 600;
+static const int WIDTH = 1920;
+static const int HEIGHT = 1080;
 
 static Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 static float lastX = 0.0f;
@@ -187,8 +187,13 @@ void exercise_setup(GLFWwindow * window)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    shaderProgram = std::make_shared<Shader>("../../Shaders/2_3/MaterialsVS23.vs", "../../Shaders/2_3/MaterialsFS23.fs", nullptr);
-    lampShader = std::make_shared<Shader>("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_3/ExerciseLight23.fs", nullptr);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_3/MaterialsVS23.vs", vsPath);
+    getProjectFilePath("Shaders/2_3/MaterialsFS23.fs", fsPath);
+    shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
+    getProjectFilePath("Shaders/2_3/ExerciseLight23.fs", fsPath);
+    lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     model = glm::mat4(1.0);

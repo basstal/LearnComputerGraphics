@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 # message("${ROOT_PATH}")
 
-set(PROJECT_NAME "DepthTesting")
+set(PROJECT_NAME "StencilTesting")
 
 # Project name
 project(${PROJECT_NAME})
@@ -33,7 +33,7 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    DepthTesting.cpp
+    StencilTesting.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp")

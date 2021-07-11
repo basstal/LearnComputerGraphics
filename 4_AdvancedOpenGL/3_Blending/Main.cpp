@@ -16,24 +16,24 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int materials(GLFWwindow *);
-extern int exercise(GLFWwindow * window);
-// extern int lighting(GLFWwindow * window);
+extern int blending(GLFWwindow *);
+extern int semiTransparent(GLFWwindow * window);
+// extern int specularMap(GLFWwindow * window);
 // extern int zoom(GLFWwindow * window);
 
-extern void materials_setup(GLFWwindow *);
-extern void exercise_setup(GLFWwindow *);
-// extern void lighting_setup(GLFWwindow *);
+extern void blending_setup(GLFWwindow *);
+extern void semiTransparent_setup(GLFWwindow *);
+// extern void specularMap_setup(GLFWwindow *);
 // extern void zoom_setup(GLFWwindow *);
 
-extern void exercise_imgui(GLFWwindow * );
-// extern void lighting_imgui(GLFWwindow * );
-extern void materials_imgui(GLFWwindow *);
+extern void semiTransparent_imgui(GLFWwindow * );
+// extern void specularMap_imgui(GLFWwindow * );
+extern void blending_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"materials", FuncSet(materials_setup, materials, materials_imgui)},
-    {"exercise", FuncSet(exercise_setup, exercise, exercise_imgui)},
-    // {"lighting", FuncSet(lighting_setup, lighting, lighting_imgui)},
+    {"blending", FuncSet(blending_setup, blending, blending_imgui)},
+    {"semiTransparent", FuncSet(semiTransparent_setup, semiTransparent, semiTransparent_imgui)},
+    // {"specularMap", FuncSet(specularMap_setup, specularMap, specularMap_imgui)},
     // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
@@ -54,7 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Materials", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Blending", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -133,8 +133,8 @@ int main()
         {
             current_draw(window);
         }
-
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 
 
         glfwSwapBuffers(window);

@@ -12,4 +12,5 @@ public:
         setup = in_setup;
         imgui = in_imgui;
     }
+    FuncSet(){}
 };

@@ -24,6 +24,8 @@ Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ v
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <Utils.h>
+
 float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -96,8 +98,8 @@ glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
 
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
@@ -111,7 +113,8 @@ void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
 unsigned int loadImage(const char * fileName, GLint format, bool, GLint);
 
-
+static std::shared_ptr<Shader> shaderProgram;
+static std::shared_ptr<Shader> lampShader;
 int main()
 {
     glfwInit();
@@ -121,7 +124,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "LightCasters", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
@@ -145,8 +148,11 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     unsigned int diffuseTexture, specularTexture;
-    diffuseTexture = loadImage("../../Assets/diffuse_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    specularTexture = loadImage("../../Assets/specular_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+    std::string path;
+    getProjectFilePath("Assets/diffuse_map.png", path);
+    diffuseTexture = loadImage(path.c_str(), GL_RGBA, GL_FALSE, GL_REPEAT);
+    getProjectFilePath("Assets/specular_map.png", path);
+    specularTexture = loadImage(path.c_str(), GL_RGBA, GL_FALSE, GL_REPEAT);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -174,8 +180,13 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("../../Shaders/2_5/LightVS25.vs", "../../Shaders/2_5/LightFS25.fs", NULL);
-    Shader lampShader = Shader("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_5/LightVS25.vs", vsPath);
+    getProjectFilePath("Shaders/2_5/LightFS25.fs", fsPath);
+    shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     glm::vec3 lightPos = glm::vec3(0.5, 0.5f, 1.0f);
     
@@ -203,34 +214,34 @@ int main()
         // glBindVertexArray(lightVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        shaderProgram.use();
+        shaderProgram->use();
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularTexture);
 
-        shaderProgram.setInt("material.diffuse", 0);
-        shaderProgram.setInt("material.specular", 1);
-        shaderProgram.setFloat("material.shininess", 32.0f);
+        shaderProgram->setInt("material.diffuse", 0);
+        shaderProgram->setInt("material.specular", 1);
+        shaderProgram->setFloat("material.shininess", 32.0f);
 
-        shaderProgram.setVec3("viewPos", camera.Position);
-        shaderProgram.setVec3("light.position", camera.Position);
-        shaderProgram.setVec3("light.direction", camera.Front);
-        shaderProgram.setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
-        shaderProgram.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+        shaderProgram->setVec3("viewPos", camera.Position);
+        shaderProgram->setVec3("light.position", camera.Position);
+        shaderProgram->setVec3("light.direction", camera.Front);
+        shaderProgram->setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
+        shaderProgram->setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
 
-        shaderProgram.setVec3("light.ambient", glm::vec3(0.2));
-        shaderProgram.setVec3("light.diffuse", glm::vec3(0.5));
-        shaderProgram.setVec3("light.specular", glm::vec3(1));
+        shaderProgram->setVec3("light.ambient", glm::vec3(0.2));
+        shaderProgram->setVec3("light.diffuse", glm::vec3(0.5));
+        shaderProgram->setVec3("light.specular", glm::vec3(1));
 
         // ** Point Light
-        // shaderProgram.setFloat("light.constant",  1.0f);
-        // shaderProgram.setFloat("light.linear",    0.09f);
-        // shaderProgram.setFloat("light.quadratic", 0.032f);	
+        // shaderProgram->setFloat("light.constant",  1.0f);
+        // shaderProgram->setFloat("light.linear",    0.09f);
+        // shaderProgram->setFloat("light.quadratic", 0.032f);	
 
-        shaderProgram.setMat4("view", view);
-        shaderProgram.setMat4("projection", projection);
+        shaderProgram->setMat4("view", view);
+        shaderProgram->setMat4("projection", projection);
 
         glBindVertexArray(VAO);
 
@@ -241,7 +252,7 @@ int main()
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            shaderProgram.setMat4("model", model);
+            shaderProgram->setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 

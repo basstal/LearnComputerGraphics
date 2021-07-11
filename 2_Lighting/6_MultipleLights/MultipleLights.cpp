@@ -19,6 +19,7 @@
 
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <Utils.h>
 
 float vertices[] = {
     // positions          // normals           // texture coords
@@ -181,8 +182,11 @@ int main()
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     unsigned int diffuseTexture, specularTexture;
-    diffuseTexture = loadImage("../../Assets/diffuse_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
-    specularTexture = loadImage("../../Assets/specular_map.png", GL_RGBA, GL_FALSE, GL_REPEAT);
+    std::string path;
+    getProjectFilePath("Assets/diffuse_map.png", path);
+    diffuseTexture = loadImage(path.c_str(), GL_RGBA, GL_FALSE, GL_REPEAT);
+    getProjectFilePath("Assets/specular_map.png", path);
+    specularTexture = loadImage(path.c_str(), GL_RGBA, GL_FALSE, GL_REPEAT);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -210,8 +214,14 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    Shader shaderProgram = Shader("../../Shaders/2_6/MultipleLightsVS26.vs", "../../Shaders/2_6/MultipleLightsFS26.fs", NULL);
-    Shader lampShader = Shader("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_6/LightFS26.fs", NULL);
+
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_6/MultipleLightsVS26.vs", vsPath);
+    getProjectFilePath("Shaders/2_6/MultipleLightsFS26.fs", fsPath);
+    Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
+    getProjectFilePath("Shaders/2_6/LightFS26.fs", fsPath);
+    Shader lampShader = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     glEnable(GL_DEPTH_TEST);
 

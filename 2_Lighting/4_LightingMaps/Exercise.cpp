@@ -18,6 +18,8 @@
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <Utils.h>
+
 static float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -167,12 +169,17 @@ void exercise_setup(GLFWwindow * window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     int width, height, nrChannels, width1, height1, nrChannels1, width2, height2, nrChannels2, width3, height3, nrChannels3;
-    unsigned char *data = stbi_load("../../Assets/diffuse_map.png", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("../../Assets/specular_map.png", &width1, &height1, &nrChannels1, 0);
+    std::string path;
+    getProjectFilePath("Assets/diffuse_map.png", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    getProjectFilePath("Assets/specular_map.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
     // ** Exercise 4
-    unsigned char *dataEmission = stbi_load("../../Assets/matrix.jpg", &width2, &height2, &nrChannels2, 0);
+    getProjectFilePath("Assets/matrix.jpg", path);
+    unsigned char *dataEmission = stbi_load(path.c_str(), &width2, &height2, &nrChannels2, 0);
     // ** Exercise 3
-    unsigned char *data_exercise3 = stbi_load("../../Assets/specular_color_map.png", &width3, &height3, &nrChannels3, 0);
+    getProjectFilePath("Assets/specular_color_map.png", path);
+    unsigned char *data_exercise3 = stbi_load(path.c_str(), &width3, &height3, &nrChannels3, 0);
 
     glGenTextures(1, &diffuseMap);
     glGenTextures(1, &specularMap);
@@ -264,9 +271,16 @@ void exercise_setup(GLFWwindow * window)
     glEnableVertexAttribArray(0);
 
     // ** Exercise 2
-    shaderProgram_exercise2 = std::make_shared<Shader>("../../Shaders/2_4/SpecularMapVS24.vs", "../../Shaders/2_4/InvertingSpecularMapFS.fs", nullptr);
-    shaderProgram = std::make_shared<Shader>("../../Shaders/2_4/SpecularMapVS24.vs", "../../Shaders/2_4/EmissionMapFS24.fs", nullptr);
-    lampShader = std::make_shared<Shader>("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_1/LightFragmentShader.fs", nullptr);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vs", vsPath);
+    getProjectFilePath("Shaders/2_4/InvertingSpecularMapFS.fs", fsPath);
+    shaderProgram_exercise2 = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vs", vsPath);
+    getProjectFilePath("Shaders/2_4/EmissionMapFS24.fs", fsPath);
+    shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     model = glm::mat4(1.0);

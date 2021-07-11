@@ -18,6 +18,8 @@
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <Utils.h>
+
 static float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -165,8 +167,11 @@ void specularMap_setup(GLFWwindow * window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("../../Assets/diffuse_map.png", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("../../Assets/specular_map.png", &width1, &height1, &nrChannels1, 0);
+    std::string path;
+    getProjectFilePath("Assets/diffuse_map.png", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    getProjectFilePath("Assets/specular_map.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
 
     glGenTextures(1, &diffuseMapTexture);
     glGenTextures(1, &specularMapTexture);
@@ -225,8 +230,14 @@ void specularMap_setup(GLFWwindow * window)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    shaderProgram = std::make_shared<Shader>("../../Shaders/2_4/SpecularMapVS24.vs", "../../Shaders/2_4/SpecularMapFS24.fs", nullptr);
-    lampShader = std::make_shared<Shader>("../../Shaders/2_2/VertexShader22.vs", "../../Shaders/2_1/LightFragmentShader.fs", nullptr);
+
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vs", vsPath);
+    getProjectFilePath("Shaders/2_4/SpecularMapFS24.fs", fsPath);
+    shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     model = glm::mat4(1.0);

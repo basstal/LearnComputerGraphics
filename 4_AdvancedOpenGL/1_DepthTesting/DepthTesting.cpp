@@ -135,7 +135,7 @@ int main(int args, void *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Advanced OpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "DepthTesting", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -158,11 +158,9 @@ int main(int args, void *argv[])
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    std::string filePath;
-    getProjectFilePath("Assets/marble.jpg", filePath);
-    cubeTexture  = loadImage(filePath.c_str(), false);
-    getProjectFilePath("/Assets/metal.png", filePath);
-    floorTexture = loadImage(filePath.c_str(), false);
+    
+    cubeTexture  = loadImage("Assets/marble.jpg", false);
+    floorTexture = loadImage("Assets/metal.png", false);
 
     std::string vsPath, fsPath;
     getProjectFilePath("Shaders/4_1/VertexShader.vs", vsPath);

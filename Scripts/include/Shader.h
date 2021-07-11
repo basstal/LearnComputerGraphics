@@ -18,6 +18,7 @@ public:
 
     Shader(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode, bool isSource);
     Shader(const GLchar * vertexPath, const GLchar * fragmentPath, const GLchar * geometryPath);
+    Shader(std::string vertexShaderPath, std::string fragmentShaderPath, std::string geometryShaderPath);
 
     void use();
 
@@ -32,6 +33,8 @@ public:
 
 private:
     void compileAndLinkShaders(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode);
+    void readAndCompileAll(const GLchar * vertexPath, const GLchar * fragmentPath, const GLchar * geometryPath);
+    std::string readShaderCode(const char *shaderPath);
 };
 
 #endif

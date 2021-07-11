@@ -13,6 +13,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <Utils.h>
+
 static glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
     glm::vec3( 2.0f,  5.0f, -15.0f), 
@@ -216,8 +219,11 @@ void lookAround_setup(GLFWwindow * window)
     // glfwSetCursorPosCallback(window, mouseCallback);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
-    unsigned char *data = stbi_load("../../Assets/container.jpg", &width, &height, &nrChannels, 0);
-    unsigned char *data1 = stbi_load("../../Assets/awesomeface.png", &width1, &height1, &nrChannels1, 0);
+    std::string path;
+    getProjectFilePath("Assets/container.jpg", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    getProjectFilePath("Assets/awesomeface.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
 
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
@@ -262,7 +268,10 @@ void lookAround_setup(GLFWwindow * window)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
-    shaderProgram = std::make_shared<Shader>("../../Shaders/1_6/VertexShader16.vs", "../../Shaders/1_6/FragmentShader16.fs", nullptr);
+    std::string vsPath, fsPath;
+    getProjectFilePath("Shaders/1_6/VertexShader16.vs", vsPath);
+    getProjectFilePath("Shaders/1_6/FragmentShader16.fs", fsPath);
+    shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     shaderProgram->use();
 
     shaderProgram->setInt("texture0", 0);

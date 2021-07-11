@@ -13,6 +13,8 @@
 
 #include <glm/matrix.hpp>
 
+#include <Utils.h>
+
 using namespace std;
 
 bool firstMove = true;
@@ -59,7 +61,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow * window = glfwCreateWindow(screenWidth, screenHeight, "BackpackModel", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(screenWidth, screenHeight, "Model", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW FAILED!" << endl;
@@ -96,8 +98,13 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    Model backpack = Model("../../Assets/backpack/backpack.obj", true);
-    Shader shader = Shader("../../Shaders/3_3/ModelVS33.vs", "../../Shaders/3_3/ModelFS33.fs", NULL);
+    std::string path, fsPath, vsPath;
+    getProjectFilePath("Assets/backpack/backpack.obj", path);
+
+    Model backpack = Model(path.c_str(), true);
+    getProjectFilePath("Shaders/3_3/ModelVS33.vs", vsPath);
+    getProjectFilePath("Shaders/3_3/ModelFS33.fs", fsPath);
+    Shader shader = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
     float materialShininess = 32.0f;
     glm::vec3 pointLightPosition = glm::vec3(1.2f, 1.0f, 1.0f);
     glm::vec3 clear_color = glm::vec3(0);
