@@ -14,8 +14,8 @@
 bool wireframe = false;
 
 
-const int HEIGHT = 780;
-const int WIDTH = 1280;
+const int HEIGHT = 1080;
+const int WIDTH = 1920;
 
 const int SHADOW_WIDTH = 1024;
 const int SHADOW_HEIGHT = 1024;

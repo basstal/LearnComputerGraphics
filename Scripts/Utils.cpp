@@ -47,12 +47,14 @@ unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs)
 
 unsigned int loadImageGamma(const char * path, bool openGammaCorrection, bool flipOnLoad)
 {
+    std::string filePath;
+    getProjectFilePath(path, filePath);
     unsigned int texture;
     glGenTextures(1, &texture);
 
     int width, height, nrChannel;
     stbi_set_flip_vertically_on_load(flipOnLoad);
-    unsigned char * data = stbi_load(path, &width, &height, &nrChannel, 0);
+    unsigned char * data = stbi_load(filePath.c_str(), &width, &height, &nrChannel, 0);
     if (data != NULL)
     {
         GLint format;

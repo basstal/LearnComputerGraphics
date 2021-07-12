@@ -18,8 +18,8 @@
 bool wireframe = false;
 
 
-const int HEIGHT = 780;
-const int WIDTH = 1280;
+const int HEIGHT = 1080;
+const int WIDTH = 1920;
 
 bool firstMove = true;
 float lastX = 0.0f;

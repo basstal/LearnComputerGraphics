@@ -98,7 +98,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // 1-blinn phong
-    Shader blinnShader("../../Shaders/5_1/BlinnPhongVS.vs", "../../Shaders/5_1/BlinnPhongFS.fs", NULL);
+    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_1/BlinnPhongFS.fs", NULL);
 
     // planeVAO
     unsigned int planeVAO, planeVBO;
@@ -119,7 +119,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    unsigned int planeTex = loadImage("wood.png", true);
+    unsigned int planeTex = loadImage("Assets/wood.png", true);
     
 
     while(!glfwWindowShouldClose(window))

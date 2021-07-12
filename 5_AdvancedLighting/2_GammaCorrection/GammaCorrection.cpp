@@ -14,8 +14,8 @@
 bool wireframe = false;
 
 
-const int HEIGHT = 780;
-const int WIDTH = 1280;
+const int HEIGHT = 1080;
+const int WIDTH = 1920;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -85,7 +85,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "GammaCorrection", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -128,10 +128,10 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
 
-    unsigned int floorTexture = loadImageGamma("../../Assets/wood.png", false, false);
-    unsigned int floorTextureGammaCorrected = loadImageGamma("../../Assets/wood.png", true, false);
+    unsigned int floorTexture = loadImageGamma("Assets/wood.png", false, false);
+    unsigned int floorTextureGammaCorrected = loadImageGamma("Assets/wood.png", true, false);
 
-    Shader shader("../../Shaders/5_1/BlinnPhongVS.vs", "../../Shaders/5_2/GammaCorrectionFS.fs", NULL);
+    Shader shader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_2/GammaCorrectionFS.fs", NULL);
 
 
     while(!glfwWindowShouldClose(window))
