@@ -17,7 +17,9 @@ unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs)
     int width, height, nrChannel;
     for (unsigned int i = 0 ; i < skyboxTexs.size(); ++i)
     {
-        unsigned char * data = stbi_load(skyboxTexs[i].c_str(), &width, &height, &nrChannel, 0);
+        std::string filePath;
+        getProjectFilePath(skyboxTexs[i].c_str(), filePath);
+        unsigned char * data = stbi_load(filePath.c_str(), &width, &height, &nrChannel, 0);
         GLint format;
         if (nrChannel == 1)
             format = GL_RED;

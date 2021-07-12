@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 # message("${ROOT_PATH}")
 
-set(PROJECT_NAME "FaceCulling")
+set(PROJECT_NAME "Instancing")
 
 # Project name
 project(${PROJECT_NAME})
@@ -33,9 +33,13 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    FaceCulling.cpp
+    Main.cpp
+    Instancing.cpp
+    AsteroidField.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
+    "${ROOT_PATH}/Scripts/Model.cpp"
+    "${ROOT_PATH}/Scripts/Mesh.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp")
 
 target_link_libraries(${PROJECT_NAME}
@@ -61,6 +65,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD                    # Adds a
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS
         "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT.LIB")
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} /wd4267") # Suppress 'warning C4244
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} /wd4244") # Suppress 'warning C4244: 'conversion' conversion from 'type1' to 'type2', possible loss of data'
     set(CMAKE_CXX_FLAGS

@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
@@ -6,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <Shader.h>
+#include <shader.h>
 #include <Camera.h>
 #include <Model.h>
 
@@ -14,9 +18,9 @@
 #include <vector>
 #include <map>
 
-bool wireframe = false;
+static bool wireframe = false;
 
-float skyboxVertices[] = {
+static float skyboxVertices[] = {
     // positions          
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
@@ -61,7 +65,7 @@ float skyboxVertices[] = {
      1.0f, -1.0f,  1.0f
 };
 
-float vertices[] = {
+static float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
@@ -105,89 +109,113 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+static void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+static const unsigned int SCR_WIDTH = 1920;
+static const unsigned int SCR_HEIGHT = 1080;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = (float)SCR_WIDTH  / 2.0;
-float lastY = (float)SCR_HEIGHT / 2.0;
-bool firstMouse = true;
+static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+static float lastX = (float)SCR_WIDTH  / 2.0;
+static float lastY = (float)SCR_HEIGHT / 2.0;
+static bool firstMouse = true;
 
 // timing
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+static float deltaTime = 0.0f;
+static float lastFrame = 0.0f;
 
-int samples = 4;
+static int samples = 4;
 
-unsigned int cubeVAO, cubeVBO;
-unsigned int grassVAO, grassVBO;
-unsigned int planeVAO, planeVBO;
-unsigned int quadVAO, quadVBO;
-unsigned int frameBuffer, multiSampleFBO;
-unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
-unsigned int skyboxVAO, skyboxVBO;
-unsigned int skyboxTextures;
-unsigned int houseVAO, houseVBO;
-unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+static unsigned int cubeVAO, cubeVBO;
+static unsigned int grassVAO, grassVBO;
+static unsigned int planeVAO, planeVBO;
+static unsigned int quadVAO, quadVBO;
+static unsigned int frameBuffer, multiSampleFBO;
+static unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
+static unsigned int skyboxVAO, skyboxVBO;
+static unsigned int skyboxTextures;
+static unsigned int houseVAO, houseVBO;
+static unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
 
-int main()
+static std::shared_ptr<Shader> shader;
+static std::shared_ptr<Shader> refractionShader;
+static std::shared_ptr<Model> backpackModel;
+
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-#endif
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    if (!bCursorOff)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, mouse_callback);
     }
-    glfwMakeContextCurrent(window);
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMouse = true;
+    }
+    bCursorOff = !bCursorOff;
+}
+
+void refraction_setup(GLFWwindow * window)
+{
+//     // glfw: initialize and configure
+//     // ------------------------------
+//     glfwInit();
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+// #ifdef __APPLE__
+//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
+// #endif
+
+//     // glfw window creation
+//     // --------------------
+//     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+//     if (window == NULL)
+//     {
+//         std::cout << "Failed to create GLFW window" << std::endl;
+//         glfwTerminate();
+//         return -1;
+//     }
+//     glfwMakeContextCurrent(window);
+//     glfwSetCursorPosCallback(window, mouse_callback);
+
+//     // tell GLFW to capture our mouse
+//     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+//     // glad: load all OpenGL function pointers
+//     // ---------------------------------------
+//     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+//     {
+//         std::cout << "Failed to initialize GLAD" << std::endl;
+//         return -1;
+//     }
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
-    // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
 
     // build and compile shaders
     // -------------------------
-    Shader shader("../../Shaders/4_6/CubemapsVS.vs", "../../Shaders/4_6/CubemapsFS.fs", NULL);
-    Shader refractionShader("../../Shaders/4_6/ReflectionVS.vs", "../../Shaders/4_6/RefractionFS.fs", NULL);
+    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vs", "Shaders/4_6/CubemapsFS.fs", nullptr);
+    refractionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vs", "Shaders/4_6/RefractionFS.fs", nullptr);
 
-    Model backpackModel("../../Assets/backpack/backpack.obj", false);
+    backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", false);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
     glBindVertexArray(cubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
@@ -208,12 +236,12 @@ int main()
     glBindVertexArray(0);
 
     std::vector<std::string> skyboxTexs = {
-        "../../Assets/skybox/default/right.jpg",
-        "../../Assets/skybox/default/left.jpg",
-        "../../Assets/skybox/default/top.jpg",
-        "../../Assets/skybox/default/bottom.jpg",
-        "../../Assets/skybox/default/front.jpg",
-        "../../Assets/skybox/default/back.jpg",
+        "Assets/skybox/default/right.jpg",
+        "Assets/skybox/default/left.jpg",
+        "Assets/skybox/default/top.jpg",
+        "Assets/skybox/default/bottom.jpg",
+        "Assets/skybox/default/front.jpg",
+        "Assets/skybox/default/back.jpg",
     };
     skyboxTextures = LoadSkyboxTex(skyboxTexs);
 
@@ -224,52 +252,81 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    // render loop
-    // -----------
-    while(!glfwWindowShouldClose(window))
-    {
-        // input
-        // -----
-        processInput(window);
-
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        refractionShader.use();
-        refractionShader.setMat4("projection", projection);
-        refractionShader.setMat4("view", camera.GetViewMatrix());
-        refractionShader.setVec3("cameraPos", camera.Position);
-        glm::mat4 model = glm::mat4(1.0);
-        refractionShader.setMat4("model", model);
-        glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-
-        model = glm::translate(model, glm::vec3(5.0, 0, 0));
-        refractionShader.setMat4("model", model);
-        backpackModel.Draw(refractionShader);
-
-
-        shader.use();
-        glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-
-        glBindVertexArray(skyboxVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
+    // // render loop
+    // // -----------
+    // while(!glfwWindowShouldClose(window))
+    // {
+        
 
         
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+    //     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+    //     // -------------------------------------------------------------------------------
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();
+    // }
 
-    glfwTerminate();
-    return 0;
+    // glfwTerminate();
 }
+
+void refraction_imgui(GLFWwindow * window)
+{
+    ImGui::Separator();
+    if (bCursorOff)
+    {
+        ImGui::Text("Press P to release control of the camera, and show cursor.");
+    }
+    else
+    {
+        ImGui::Text("Press P or belowd Button to take control of the camera");
+        if(ImGui::Button("Posses camera") && !bCursorOff)
+        {
+            switch_cursor(window);
+        }
+    }
+    glm::vec3 pos = camera.Position;
+    ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
+}
+
+int refraction(GLFWwindow * window)
+{
+    // input
+    // -----
+    processInput(window);
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    refractionShader->use();
+    refractionShader->setMat4("projection", projection);
+    refractionShader->setMat4("view", camera.GetViewMatrix());
+    refractionShader->setVec3("cameraPos", camera.Position);
+    glm::mat4 model = glm::mat4(1.0);
+    refractionShader->setMat4("model", model);
+    glBindVertexArray(cubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+
+    model = glm::translate(model, glm::vec3(5.0, 0, 0));
+    refractionShader->setMat4("model", model);
+    backpackModel->Draw(*refractionShader);
+
+
+    shader->use();
+    glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+
+    glBindVertexArray(skyboxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+
+    return 0;
+
+}
+
+
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -290,6 +347,15 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

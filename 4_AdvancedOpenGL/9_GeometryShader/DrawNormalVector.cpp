@@ -1,27 +1,45 @@
+/*
+At the start of a geometry shader we need to declare the type of primitive input we're receiving from the vertex shader. We do this by declaring a layout specifier in front of the in keyword. This input layout qualifier can take any of the following primitive values:
+
+points: when drawing GL_POINTS primitives (1).
+lines: when drawing GL_LINES or GL_LINE_STRIP (2).
+lines_adjacency: GL_LINES_ADJACENCY or GL_LINE_STRIP_ADJACENCY (4).
+triangles: GL_TRIANGLES, GL_TRIANGLE_STRIP or GL_TRIANGLE_FAN (3).
+triangles_adjacency : GL_TRIANGLES_ADJACENCY or GL_TRIANGLE_STRIP_ADJACENCY (6).
+
+We also need to specify a primitive type that the geometry shader will output and we do this via a layout specifier in front of the out keyword. Like the input layout qualifier, the output layout qualifier can take several primitive values:
+
+points
+line_strip
+triangle_strip
+
+*/
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include <Camera.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <Shader.h>
 #include <Model.h>
+#include <Camera.h>
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
-// settings
-static const unsigned int SCR_WIDTH = 1920;
-static const unsigned int SCR_HEIGHT = 1080;
+static const float SCR_WIDTH = 1920;
+static const float SCR_HEIGHT = 1080;
 
 // camera
-static Camera camera(glm::vec3(0, 0.0f, 60.0f));
+static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 static float lastX = (float)SCR_WIDTH  / 2.0;
 static float lastY = (float)SCR_HEIGHT / 2.0;
 static bool firstMouse = true;
@@ -30,14 +48,9 @@ static bool firstMouse = true;
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
-static std::shared_ptr<Shader> shaderProgram;
-static std::shared_ptr<Shader> instanceAsteroidShader;
-
-static std::shared_ptr<Model> planet;
-static std::shared_ptr<Model> rock;
-
-static unsigned int amount = 100000;
-
+static std::shared_ptr<Shader> shader;
+static std::shared_ptr<Shader> normalVectorShader;
+static std::shared_ptr<Model> backpackModel;
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -58,7 +71,7 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void asteroidField_setup(GLFWwindow * window)
+void drawNormalVector_setup(GLFWwindow *window)
 {
     // glfwInit();
     // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -82,87 +95,42 @@ void asteroidField_setup(GLFWwindow * window)
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
     // glfwSetCursorPosCallback(window, mouse_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
-
-    glm::mat4 *modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime()); // initialize random seed	
-    float radius = 150.0f;
-    float offset = 25.0f;
-    for(unsigned int i = 0; i < amount; i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x, y, z));
-
-        // 2. scale: scale between 0.05 and 0.25f
-        float scale = (rand() % 20) / 100.0f + 0.05;
-        model = glm::scale(model, glm::vec3(scale));
-
-        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
-        float rotAngle = (rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-
-        // 4. now add to list of matrices
-        modelMatrices[i] = model;
-    }
+    glEnable(GL_CULL_FACE);
+    shader = std::make_shared<Shader>("Shaders/4_9/DrawModelVS.vs", "Shaders/4_9/DrawModelFS.fs", nullptr);
+    normalVectorShader = std::make_shared<Shader>("Shaders/4_9/DrawNormalVectorVS.vs", "Shaders/4_9/DrawNormalVectorFS.fs", "Shaders/4_9/DrawNormalVectorGS.gs");
 
 
-    shaderProgram = std::make_shared<Shader>("Shaders/4_10/AsteroidFieldVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", nullptr);
-    instanceAsteroidShader = std::make_shared<Shader>("Shaders/4_10/InstanceAsteroidVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", nullptr);
-    planet = std::make_shared<Model>("Assets/planet/planet.obj", false);
-    rock = std::make_shared<Model>("Assets/rock/rock.obj", false);
+    backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
 
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-    std::vector<Mesh> meshes = rock->GetMeshes();
-    for (unsigned int i = 0; i < meshes.size(); ++i)
-    {
-        unsigned int VAO = meshes[i].GetVAO();
-        glBindVertexArray(VAO);
-        
-        std::size_t vec4Size = sizeof(glm::vec4);
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)0);
-        glEnableVertexAttribArray(4);
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size));
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size * 2));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void *)(vec4Size * 3));
+    unsigned int ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+    
+    unsigned int blockIndex = glGetUniformBlockIndex(shader->ID, "Matrices");
+    glUniformBlockBinding(shader->ID, blockIndex, 0);
+    unsigned int normalVectorIndex = glGetUniformBlockIndex(normalVectorShader->ID, "Matrices");
+    glUniformBlockBinding(normalVectorShader->ID, normalVectorIndex, 0);
+    
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 3 * sizeof(glm::mat4));
 
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
-        glBindVertexArray(0);
-    }
-
-
+    // // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // while(!glfwWindowShouldClose(window))
     // {
 
     //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
+    //     glfwPollEvents();    
     // }
     // glfwTerminate();
 }
 
-void asteroidField_imgui(GLFWwindow * window)
+void drawNormalVector_imgui(GLFWwindow *window)
 {
+
     ImGui::Separator();
     if (bCursorOff)
     {
@@ -181,50 +149,31 @@ void asteroidField_imgui(GLFWwindow * window)
     ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
 }
 
-int asteroidField(GLFWwindow * window)
+int drawNormalVector(GLFWwindow *window)
 {
     processInput(window);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    shaderProgram->use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 1000.0f);
+    shader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
-    shaderProgram->setMat4("projection", projection);
-    shaderProgram->setMat4("view", view);
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(4.0));
-    shaderProgram->setMat4("model", model);
-    planet->Draw(*shaderProgram);
-    
-    // use no instancing
-    // for(unsigned int i = 0; i < amount; i++)
-    // {
-    //     shader.setMat4("model", modelMatrices[i]);
-    //     rock.Draw(shader);
-    // }
+    glm::mat4 model = glm::mat4(1.0);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+    glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
 
-    // use instancing
-    instanceAsteroidShader->use();
-    instanceAsteroidShader->setMat4("projection", projection);
-    instanceAsteroidShader->setMat4("view", view);
-    std::vector<Mesh> meshes = rock->GetMeshes();
-    for (unsigned int i = 0; i < meshes.size(); ++i)
-    {
-        Mesh mesh = meshes[i];
-        mesh.BindTexture(*instanceAsteroidShader);
-        glBindVertexArray(mesh.GetVAO());
-        glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0, amount);
-    }
-    
+    backpackModel->Draw(*shader);
+    normalVectorShader->use();
+    backpackModel->Draw(*normalVectorShader);
+
     return 0;
 }
 
 
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+static void processInput(GLFWwindow *window)
 {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -254,7 +203,7 @@ void processInput(GLFWwindow *window)
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
@@ -263,7 +212,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
     {
@@ -283,7 +232,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
 }

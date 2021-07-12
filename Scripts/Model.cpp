@@ -4,7 +4,9 @@
 Model::Model(const char * path, bool flipTexturesOnLoad)
 {
     this->flipTexturesOnLoad = flipTexturesOnLoad;
-    loadModel(path);
+    std::string absPath;
+    getProjectFilePath(path, absPath);
+    loadModel(absPath);
 }
 
 std::vector<Mesh> &Model::GetMeshes()

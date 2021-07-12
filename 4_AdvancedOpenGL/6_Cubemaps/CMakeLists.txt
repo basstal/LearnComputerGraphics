@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 # message("${ROOT_PATH}")
 
-set(PROJECT_NAME "FaceCulling")
+set(PROJECT_NAME "Cubemaps")
 
 # Project name
 project(${PROJECT_NAME})
@@ -33,9 +33,14 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    FaceCulling.cpp
+    Main.cpp
+    Cubemaps.cpp
+    Reflection.cpp
+    Refraction.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
+    "${ROOT_PATH}/Scripts/Model.cpp"
+    "${ROOT_PATH}/Scripts/Mesh.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp")
 
 target_link_libraries(${PROJECT_NAME}

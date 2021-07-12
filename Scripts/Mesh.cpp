@@ -47,7 +47,7 @@ void Mesh::setupMesh()
     glBindVertexArray(0);
 }
 
-void Mesh::BindTexture(Shader shader)
+void Mesh::BindTexture(const Shader& shader)
 {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -74,7 +74,7 @@ void Mesh::BindTexture(Shader shader)
         glBindTexture(GL_TEXTURE_2D, textures[i].ID);
     }
 }
-void Mesh::Draw(Shader shader)
+void Mesh::Draw(const Shader& shader)
 {
     BindTexture(shader);
     glActiveTexture(GL_TEXTURE0);
