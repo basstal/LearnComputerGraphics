@@ -200,7 +200,7 @@ void refraction_setup(GLFWwindow * window)
 //         std::cout << "Failed to initialize GLAD" << std::endl;
 //         return -1;
 //     }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // build and compile shaders

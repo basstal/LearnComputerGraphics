@@ -50,7 +50,7 @@ static float lastFrame = 0.0f;
 
 static std::shared_ptr<Shader> shader;
 static std::shared_ptr<Shader> normalVectorShader;
-static std::shared_ptr<Model> backpackModel;
+static std::shared_ptr<Model> backpackModel = nullptr;
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -93,7 +93,7 @@ void drawNormalVector_setup(GLFWwindow *window)
     //     return -1;
     // }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
     // glfwSetCursorPosCallback(window, mouse_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -103,8 +103,10 @@ void drawNormalVector_setup(GLFWwindow *window)
     shader = std::make_shared<Shader>("Shaders/4_9/DrawModelVS.vs", "Shaders/4_9/DrawModelFS.fs", nullptr);
     normalVectorShader = std::make_shared<Shader>("Shaders/4_9/DrawNormalVectorVS.vs", "Shaders/4_9/DrawNormalVectorFS.fs", "Shaders/4_9/DrawNormalVectorGS.gs");
 
-
-    backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
+    if (!backpackModel)
+    {
+        backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
+    }
 
     unsigned int ubo;
     glGenBuffers(1, &ubo);

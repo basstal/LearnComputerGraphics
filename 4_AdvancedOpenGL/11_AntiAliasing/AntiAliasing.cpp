@@ -80,10 +80,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+void envInit();
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -103,8 +104,8 @@ unsigned int cubeVAO, cubeVBO;
 unsigned int grassVAO, grassVBO;
 unsigned int planeVAO, planeVBO;
 unsigned int quadVAO, quadVBO;
-unsigned int frameBuffer, multiSampleFBO, texMultisampleFBO;
-unsigned int renderbufferMultisample, renderbufferMultisampleColor, renderbufferDepth;
+unsigned int frameBuffer = 0, multiSampleFBO = 0, texMultisampleFBO = 0;
+unsigned int renderbufferMultisample = 0, renderbufferMultisampleColor = 0, renderbufferDepth;
 unsigned int multisampleTextureAttachment;
 unsigned int cubeTexture, floorTexture, grassTexture, windowTexture, framebufferTexture;
 unsigned int skyboxVAO, skyboxVBO;
@@ -157,8 +158,6 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetScrollCallback(window, scroll_callback);
 
     // tell GLFW to capture our mouse
     // glfwSetCursorPosCallback(window, mouse_callback);
@@ -171,6 +170,9 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+    glfwSetScrollCallback(window, scroll_callback);
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -209,66 +211,7 @@ int main()
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
 
-    // framebuffer with multisampled renderbuffer objects
-    glGenFramebuffers(1, &multiSampleFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
-
-    // use renderbuffer as color_attachment
-    glGenRenderbuffers(1, &renderbufferMultisampleColor);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisampleColor);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbufferMultisampleColor);
-
-    glGenRenderbuffers(1, &renderbufferMultisample);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisample);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: multiSampleFBO Framebuffer is not complete!" << std::endl;
-    }
-
-    // framebuffer with multisampled texture attachment
-    glGenFramebuffers(1, &texMultisampleFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, texMultisampleFBO);
-
-    glGenTextures(1, &multisampleTextureAttachment);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment, 0);
-
-    // use the same depth stencil buffer as before
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: texMultisampleFBO Framebuffer is not complete!" << std::endl;
-    }
-
-
-    // normal framebuffer with texture attachment
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-    glGenTextures(1, &framebufferTexture);
-    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
-
-    glGenRenderbuffers(1, &renderbufferDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferDepth);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: frameBuffer Framebuffer is not complete!" << std::endl;
-    }
+    envInit();
 
 
     if (!wireframe)
@@ -439,12 +382,98 @@ void processInput(GLFWwindow *window)
     }
 }
 
+void envInit()
+{
+    // framebuffer with multisampled renderbuffer objects
+    if (multiSampleFBO == 0)
+    {
+        glGenFramebuffers(1, &multiSampleFBO);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
+
+    // use renderbuffer as color_attachment
+    glDeleteRenderbuffers(1, &renderbufferMultisampleColor);
+    glGenRenderbuffers(1, &renderbufferMultisampleColor);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisampleColor);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbufferMultisampleColor);
+
+
+    glDeleteRenderbuffers(1, &renderbufferMultisample);
+    glGenRenderbuffers(1, &renderbufferMultisample);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisample);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: multiSampleFBO Framebuffer is not complete!" << std::endl;
+    }
+
+    // framebuffer with multisampled texture attachment
+    if (texMultisampleFBO == 0)
+    {
+        glGenFramebuffers(1, &texMultisampleFBO);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, texMultisampleFBO);
+
+    glDeleteTextures(1, &multisampleTextureAttachment);
+    glGenTextures(1, &multisampleTextureAttachment);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment, 0);
+
+    // use the same depth stencil buffer as before
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: texMultisampleFBO Framebuffer is not complete!" << std::endl;
+    }
+
+
+    // normal framebuffer with texture attachment
+    if (frameBuffer == 0)
+    {
+        glGenFramebuffers(1, &frameBuffer);
+
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+    glDeleteTextures(1, &framebufferTexture);
+    glGenTextures(1, &framebufferTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    glDeleteRenderbuffers(1, &renderbufferDepth);
+    glGenRenderbuffers(1, &renderbufferDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferDepth);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: frameBuffer Framebuffer is not complete!" << std::endl;
+    }
+}
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        // resize
+        envInit();
+    }
     glViewport(0, 0, width, height);
 }
 

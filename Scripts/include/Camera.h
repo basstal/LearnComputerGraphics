@@ -79,6 +79,11 @@ public:
         if (direction == RIGHT)
             Position += Right * velocity;
     }
+    void CameraYawRotate(float delta)
+    {
+        Yaw += delta;
+        updateCameraVectors();
+    }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)

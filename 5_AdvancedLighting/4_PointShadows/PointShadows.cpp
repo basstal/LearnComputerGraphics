@@ -73,7 +73,7 @@ int main()
         return -1;
     }
 
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
 
     glfwSetCursorPosCallback(window, cursor_pos_callback);

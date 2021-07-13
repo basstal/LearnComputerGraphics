@@ -18,8 +18,8 @@
 bool wireframe = false;
 
 
-const int HEIGHT = 1080;
-const int WIDTH = 1920;
+int HEIGHT = 1080;
+int WIDTH = 1920;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -28,10 +28,10 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-float isEditMode = false;
-float openIMGUI = true;
+// float isEditMode = false;
+// float openIMGUI = true;
 
-Camera camera = Camera();
+Camera camera = Camera(glm::vec3(0.0, 0.0, -1.0f));
 
 using namespace std;
 
@@ -46,6 +46,30 @@ void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
 float lerp(float, float, float);
+void envInit();
+
+static unsigned int fbo = 0;
+static unsigned int texHDR = 0;
+
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMove = true;
+    }
+    bCursorOff = !bCursorOff;
+}
 
 int main()
 {
@@ -82,9 +106,10 @@ int main()
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    // glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-
+    camera.CameraYawRotate(180);
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -104,34 +129,10 @@ int main()
     // 5 HDR
     Shader HDRObjectShader = Shader("Shaders/5_7/HDRObjectVS.vs", "Shaders/5_7/HDRObjectFS.fs", nullptr);
     Shader HDRQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_7/HDRQuadFS.fs", nullptr);
+    Shader simpleLight = Shader("Shaders/4_1/VertexShader.vs", "Shaders/5_7/SimpleInputColorFS.fs", nullptr);
 
     // 5 HDR
-    unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    unsigned int texHDR;
-    glGenTextures(1, &texHDR);
-    glBindTexture(GL_TEXTURE_2D, texHDR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texHDR, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        cout << "FramebufferStatus not success" << endl;
-    }
+    envInit();
 
     HDRObjectShader.use();
     HDRObjectShader.setInt("texture0", 0);
@@ -157,9 +158,9 @@ int main()
         processInput(window);
         glfwPollEvents();
         
-        if (openIMGUI)
-        {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        // if (openIMGUI)
+        // {
+            // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -169,29 +170,45 @@ int main()
             ImGui::Text("Lights Color & Position");
             for (int i = 0; i < 4; ++i)
             {
-                ImGui::InputFloat3(("light" + std::to_string(i) + "color").c_str(), glm::value_ptr(lightColors[i]));
-                ImGui::InputFloat3(("light" + std::to_string(i) + "position").c_str(), glm::value_ptr(lightPositions[i]));
+                ImGui::ColorEdit3(("light" + std::to_string(i) + " Color").c_str(), glm::value_ptr(lightColors[i]));
+                ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
+                ImGui::Separator();
             }
             ImGui::Spacing();
             ImGui::Text("attenuation");
-            ImGui::InputFloat("constant", &constant);
-            ImGui::InputFloat("linear", &linear);
-            ImGui::InputFloat("quadratic", &quadratic);
-            ImGui::InputFloat("shininess", &shininess);
-            ImGui::InputFloat("ambientStrength", &ambientStrength);
-            ImGui::InputFloat("exposure", &exposure);
+            ImGui::SliderFloat("constant", &constant, 0, 256.0f);
+            ImGui::SliderFloat("linear", &linear, 0, 128.f);
+            ImGui::SliderFloat("quadratic", &quadratic, 0, 32.f);
+            ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
+            ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
+            ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
 
+            ImGui::Separator();
+            if (bCursorOff)
+            {
+                ImGui::Text("Press P to release control of the camera, and show cursor.");
+            }
+            else
+            {
+                ImGui::Text("Press P or belowd Button to take control of the camera");
+                if(ImGui::Button("Posses camera") && !bCursorOff)
+                {
+                    switch_cursor(window);
+                }
+            }
+            glm::vec3 pos = camera.Position;
+            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Text("Press space key to navigating in scene");
+            // ImGui::Text("Press space key to navigating in scene");
             ImGui::End();
 
             // Rendering
             ImGui::Render();
-        }
-        else
-        {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }
+        // }
+        // else
+        // {
+        //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        // }
         
 
         // render
@@ -199,31 +216,44 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // 5 HDR
-        HDRObjectShader.use();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        HDRObjectShader.setMat4("projection", projection);
-        HDRObjectShader.setMat4("view", view);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        simpleLight.use();
+        simpleLight.setMat4("projection", projection);
+        simpleLight.setMat4("view", view);
+        glm::mat4 model = glm::mat4(1.0f);
+        for( unsigned int i = 0; i < lightPositions.size(); ++i)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.05f));
+            simpleLight.setMat4("model", model);
+            simpleLight.setVec3("lightColor", lightColors[i]);
+            renderCubeSimple();
+        }
+        HDRObjectShader.use();
         for( unsigned int i = 0; i < lightPositions.size(); ++i)
         {
             HDRObjectShader.setVec3("lights[" + to_string(i) + "].position", lightPositions[i]);
             HDRObjectShader.setVec3("lights[" + to_string(i) + "].color", lightColors[i]);
         }
+        HDRObjectShader.setMat4("projection", projection);
+        HDRObjectShader.setMat4("view", view);
         HDRObjectShader.setFloat("constant", constant);
         HDRObjectShader.setFloat("linear", linear);
         HDRObjectShader.setFloat("quadratic", quadratic);
         HDRObjectShader.setVec3("viewPos", camera.Position);
-        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 25.0));
         model = glm::scale(model, glm::vec3(2.5f, 2.5f, 27.5f));
         HDRObjectShader.setMat4("model", model);
         HDRObjectShader.setFloat("shininess", shininess);
         HDRObjectShader.setFloat("ambientStrength", ambientStrength);
         HDRObjectShader.setBool("inverseNormals", true);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
         renderCubeSimple();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -234,10 +264,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texHDR);
         renderQuadSimple();
 
-        if (openIMGUI)
-        {
+        // if (openIMGUI)
+        // {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        }
+        // }
 
         glfwSwapBuffers(window);
     }
@@ -261,49 +291,98 @@ void processInput(GLFWwindow * window)
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    if (!openIMGUI)
+    // if (!openIMGUI)
+    // {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(FORWARD, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(BACKWARD, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(LEFT, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(RIGHT, deltaTime);
-        }
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isEditMode)
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        openIMGUI = !openIMGUI;
-        isEditMode = true;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        isEditMode = false;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
+    }
+    // }
+    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isEditMode)
+    // {
+    //     // openIMGUI = !openIMGUI;
+    //     isEditMode = true;
+    // }
+    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    // {
+    //     isEditMode = false;
+    // }
+}
+
+void envInit()
+{
+    if (fbo == 0)
+    {
+        glGenFramebuffers(1, &fbo);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glDeleteTextures(1, &texHDR);
+    glGenTextures(1, &texHDR);
+    glBindTexture(GL_TEXTURE_2D, texHDR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texHDR, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // unsigned int rbo;
+    // glGenRenderbuffers(1, &rbo);
+    // glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    // if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    // {
+    //     cout << "FramebufferStatus not success" << endl;
+    // }
 }
 
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
+    // cout<< "width :" << width << ",height : " << height <<endl;
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        // resize
+        envInit();
+    }
     glViewport(0, 0, width, height);
 }
 
 
 void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
-    if (openIMGUI) 
-    {
-        firstMove = true;
-        return;
-    }
+    // if (openIMGUI) 
+    // {
+        // firstMove = true;
+        // return;
+    // }
     if (firstMove)
     {
         lastX = (float)xPos;

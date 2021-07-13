@@ -18,8 +18,8 @@
 bool wireframe = false;
 
 
-const int HEIGHT = 1080;
-const int WIDTH = 1920;
+int HEIGHT = 1080;
+int WIDTH = 1920;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -30,8 +30,8 @@ float deltaTime = 0.0f;
 
 Camera camera = Camera(glm::vec3(4, 1, 3.5f));
 
-bool openIMGUI = true;
-bool isEditMode = false;
+// bool openIMGUI = true;
+// bool isEditMode = false;
 
 using namespace std;
 
@@ -46,6 +46,32 @@ void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
 float lerp(float, float, float);
+void envInit();
+
+static unsigned int colorBuffers[2] = {0, 0};
+static unsigned int bloomFBO = 0;
+static unsigned int renderBuffer = 0;
+static unsigned int pingpongFBO[2] = {0, 0};
+static unsigned int pingpongBuffer[2] = {0, 0};
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMove = true;
+    }
+    bCursorOff = !bCursorOff;
+}
 
 int main()
 {
@@ -58,7 +84,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Bloom", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -82,7 +108,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    // glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
 
     // Setup Dear ImGui context
@@ -100,66 +127,17 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    unsigned int woodTexture = loadImageGamma("../../Assets/wood.png", true, false);
-    unsigned int container = loadImageGamma("../../Assets/diffuse_map.png", true, false);
+    unsigned int woodTexture = loadImageGamma("Assets/wood.png", true, false);
+    unsigned int container = loadImageGamma("Assets/diffuse_map.png", true, false);
 
     // 6 Bloom
-    Shader bloomShader = Shader("../../Shaders/5_8/ColorThresholdVS.vs", "../../Shaders/5_8/ColorThresholdFS.fs", NULL);
-    Shader gaussianBlurShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_8/GaussianBlurFS.fs", NULL);
-    Shader bloomQuadShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_8/HDRQuadWithBlurFS.fs", NULL);
-    Shader lightShader = Shader("../../Shaders/2_3/MaterialsVS23.vs", "../../Shaders/5_8/LightThresholdFS.fs", NULL);
+    Shader bloomShader = Shader("Shaders/5_8/ColorThresholdVS.vs", "Shaders/5_8/ColorThresholdFS.fs", nullptr);
+    Shader gaussianBlurShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/GaussianBlurFS.fs", nullptr);
+    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/HDRQuadWithBlurFS.fs", nullptr);
+    Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/5_8/LightThresholdFS.fs", nullptr);
 
     // 6 Bloom
-    unsigned int bloomFBO;
-    unsigned int colorBuffers[2];
-    glGenFramebuffers(1, &bloomFBO);
-    glGenTextures(2, colorBuffers);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
-    for (unsigned int i = 0 ; i < 2; ++i)
-    {
-        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
-    }
-
-    unsigned int renderBuffer;
-    glGenRenderbuffers(1, &renderBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    unsigned int attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, attachments);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    unsigned int pingpongFBO[2];
-    unsigned int pingpongBuffer[2];
-    glGenFramebuffers(2, pingpongFBO);
-    glGenTextures(2, pingpongBuffer);
-    for (unsigned int i = 0; i < 2; ++i)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
-        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+    envInit();
 
     // 6 bloom
     bloomQuadShader.use();
@@ -184,9 +162,9 @@ int main()
         processInput(window);
         glfwPollEvents();
         
-        if (openIMGUI)
-        {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        // if (openIMGUI)
+        // {
+            // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -196,35 +174,49 @@ int main()
             ImGui::Text("Lights Color & Position");
             for (int i = 0; i < 4; ++i)
             {
-                ImGui::InputFloat3(("light" + std::to_string(i) + "color").c_str(), glm::value_ptr(lightColors[i]));
-                ImGui::InputFloat3(("light" + std::to_string(i) + "position").c_str(), glm::value_ptr(lightPositions[i]));
+                ImGui::ColorEdit3(("light" + std::to_string(i) + " Color").c_str(), glm::value_ptr(lightColors[i]), ImGuiColorEditFlags_HDR);
+                ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
+                ImGui::Separator();
             }
             ImGui::Spacing();
             ImGui::Text("attenuation");
-            ImGui::InputFloat("constant", &constant);
-            ImGui::InputFloat("linear", &linear);
-            ImGui::InputFloat("quadratic", &quadratic);
-            ImGui::InputFloat("shininess", &shininess);
-            ImGui::InputFloat("ambientStrength", &ambientStrength);
-            ImGui::InputFloat("exposure", &exposure);
-            ImGui::Text("camera position");
-            ImGui::InputFloat3("pos", glm::value_ptr(camera.Position));
+            ImGui::SliderFloat("constant", &constant, 0, 256.0f);
+            ImGui::SliderFloat("linear", &linear, 0, 128.f);
+            ImGui::SliderFloat("quadratic", &quadratic, 0, 32.f);
+            ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
+            ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
+            ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
+            ImGui::Separator();
+            if (bCursorOff)
+            {
+                ImGui::Text("Press P to release control of the camera, and show cursor.");
+            }
+            else
+            {
+                ImGui::Text("Press P or belowd Button to take control of the camera");
+                if(ImGui::Button("Posses camera") && !bCursorOff)
+                {
+                    switch_cursor(window);
+                }
+            }
+            glm::vec3 pos = camera.Position;
+            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Text("Press space key to navigating in scene");
+            // ImGui::Text("Press space key to navigating in scene");
             ImGui::End();
 
             // Rendering
             ImGui::Render();
-        }
-        else
-        {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }
+        // }
+        // else
+        // {
+        //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        // }
 
         // render
-        glClearColor(0, 0, 0, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // glClearColor(0, 0, 0, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // 6 Bloom
         glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
@@ -310,6 +302,7 @@ int main()
         bool firstIteration = true, horizontal = true;
         unsigned int amount = 10;
         gaussianBlurShader.use();
+        // gaussianBlurShader.setVec2("textureSize", glm::vec2(WIDTH, HEIGHT));
         for (unsigned int i = 0; i < amount; ++i)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
@@ -331,10 +324,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
         renderQuadSimple();
 
-        if (openIMGUI)
-        {
+        // if (openIMGUI)
+        // {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        }
+        // }
 
         glfwSwapBuffers(window);
     }
@@ -358,49 +351,123 @@ void processInput(GLFWwindow * window)
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    if (!openIMGUI)
+    // if (!openIMGUI)
+    // {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(FORWARD, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(BACKWARD, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(LEFT, deltaTime);
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            camera.ProcessKeyboard(RIGHT, deltaTime);
-        }
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isEditMode)
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        openIMGUI = !openIMGUI;
-        isEditMode = true;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        isEditMode = false;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
+    }
+    // }
+    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isEditMode)
+    // {
+    //     openIMGUI = !openIMGUI;
+    //     isEditMode = true;
+    // }
+    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    // {
+    //     isEditMode = false;
+    // }
 }
 
+void envInit()
+{
+    if (bloomFBO == 0)
+    {
+        glGenFramebuffers(1, &bloomFBO);
+    }
+    glDeleteTextures(2, colorBuffers);
+    glGenTextures(2, colorBuffers);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+    for (unsigned int i = 0 ; i < 2; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+    }
+
+    glDeleteRenderbuffers(1, &renderBuffer);
+    glGenRenderbuffers(1, &renderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    unsigned int attachments[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, attachments);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (pingpongFBO[0] == 0)
+    {
+        glGenFramebuffers(2, pingpongFBO);
+    }
+    glDeleteTextures(2, pingpongBuffer);
+    glGenTextures(2, pingpongBuffer);
+    for (unsigned int i = 0; i < 2; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "ERROR::FRAME BUFFER INIT FAILED!" << endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+}
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
+    // cout<< "width :" << width << ",height : " << height <<endl;
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        // resize
+        envInit();
+    }
     glViewport(0, 0, width, height);
 }
 
 
 void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
-    if (openIMGUI) 
-    {
-        firstMove = true;
-        return;
-    }
+    // if (openIMGUI) 
+    // {
+    //     firstMove = true;
+    //     return;
+    // }
     if (firstMove)
     {
         lastX = (float)xPos;
@@ -577,25 +644,24 @@ void renderQuadSimple()
 {
     if (quadVAO == 0)
     {
-        float quadVertices[] = {
-            // positions        // texture Coords
-            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        };
         // setup plane VAO
         glGenVertexArrays(1, &quadVAO);
         glGenBuffers(1, &quadVBO);
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     }
+    float quadVertices[] = {
+        // positions        // texture Coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+            1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
     glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }

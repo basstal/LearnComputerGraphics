@@ -50,7 +50,7 @@ static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
 static std::shared_ptr<Shader> explodingShader;
-static std::shared_ptr<Model> backpackModel;
+static std::shared_ptr<Model> backpackModel = nullptr;
 
 
 static bool bCursorOff = false;
@@ -93,7 +93,7 @@ void explodingObjects_setup(GLFWwindow *window)
     //     std::cout << "Failed to initialize GLAD" << std::endl;
     //     return -1;
     // }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
     // glfwSetCursorPosCallback(window, mouse_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -102,8 +102,10 @@ void explodingObjects_setup(GLFWwindow *window)
     explodingShader = std::make_shared<Shader>("Shaders/4_9/ExplodingVS.vs", "Shaders/4_9/ExplodingFS.fs", "Shaders/4_9/ExplodingGS.gs");
 
     // explodingShader->use();
-
-    backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
+    if (!backpackModel)
+    {
+        backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
+    }
 
     // while(!glfwWindowShouldClose(window))
     // {

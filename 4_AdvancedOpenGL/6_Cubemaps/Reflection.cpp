@@ -199,7 +199,7 @@ void reflection_setup(GLFWwindow * window)
 //         std::cout << "Failed to initialize GLAD" << std::endl;
 //         return -1;
 //     }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     // glfwSetCursorPosCallback(window, mouse_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetScrollCallback(window, scroll_callback);

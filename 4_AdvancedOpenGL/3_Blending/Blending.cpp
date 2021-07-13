@@ -175,7 +175,7 @@ void blending_setup(GLFWwindow *window)
     //     return -1;
     // }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // glfwSetCursorPosCallback(window, mouse_callback);

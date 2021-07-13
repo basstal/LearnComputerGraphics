@@ -118,7 +118,7 @@ void renderingShadows_setup(GLFWwindow *window)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
     
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
 
     // glfwSetCursorPosCallback(window, cursor_pos_callback);

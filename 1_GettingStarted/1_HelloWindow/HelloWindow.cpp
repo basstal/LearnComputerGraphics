@@ -28,7 +28,7 @@ int main()
         return -1;
     }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);

@@ -155,7 +155,7 @@ void lighting_setup(GLFWwindow * window)
     //     return -1;
     // }
 
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
     // glfwSetCursorPosCallback(window, mouse_callback);
