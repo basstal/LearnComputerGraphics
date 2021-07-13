@@ -51,7 +51,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "NormalMapping", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -72,6 +72,9 @@ int main()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
@@ -80,16 +83,16 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader normalMappingShader = Shader("../../Shaders/5_5/NormalMappingVS.vs", "../../Shaders/5_5/NormalMappingFS.fs", NULL);
-    Shader simpleShader("../../Shaders/2_1/ColorsVertexShader.vs", "../../Shaders/2_1/LightFragmentShader.fs", NULL);
+    Shader normalMappingShader = Shader("Shaders/5_5/NormalMappingVS.vs", "Shaders/5_5/NormalMappingFS.fs", NULL);
+    Shader simpleShader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", NULL);
 
     normalMappingShader.use();
     normalMappingShader.setInt("diffuseTexture", 0);
     normalMappingShader.setInt("normalMapping", 1);
     glm::vec3 lightPos = glm::vec3(0.5f, 1.0f, 0.3f);
     
-    unsigned int diffuseTex = loadImage("brickwall.jpg", "../../Assets/", false);
-    unsigned int normalMappingTex = loadImage("brickwall_normal.jpg", "../../Assets/", false);
+    unsigned int diffuseTex = loadImage("Assets/brickwall.jpg", false);
+    unsigned int normalMappingTex = loadImage("Assets/brickwall_normal.jpg", false);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseTex);
@@ -116,6 +119,11 @@ int main()
         model = glm::rotate(model, (float)glfwGetTime() * -0.2f, glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
         normalMappingShader.setMat4("model", model);
         renderQuad();
+        glFrontFace(GL_CW);
+        model = glm::scale(model, glm::vec3(1.0, 1.0, -1.0f));
+        normalMappingShader.setMat4("model", model);
+        renderQuad();
+        glFrontFace(GL_CCW);
 
         simpleShader.use();
         model = glm::mat4(1.0);

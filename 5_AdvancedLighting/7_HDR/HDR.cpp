@@ -58,7 +58,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "HDR", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -100,10 +100,10 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    unsigned int woodTexture = loadImageGamma("../../Assets/wood.png", true, false);
+    unsigned int woodTexture = loadImageGamma("Assets/wood.png", true, false);
     // 5 HDR
-    Shader HDRObjectShader = Shader("../../Shaders/5_7/HDRObjectVS.vs", "../../Shaders/5_7/HDRObjectFS.fs", NULL);
-    Shader HDRQuadShader = Shader("../../Shaders/5_7/HDRQuadVS.vs", "../../Shaders/5_7/HDRQuadFS.fs", NULL);
+    Shader HDRObjectShader = Shader("Shaders/5_7/HDRObjectVS.vs", "Shaders/5_7/HDRObjectFS.fs", nullptr);
+    Shader HDRQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_7/HDRQuadFS.fs", nullptr);
 
     // 5 HDR
     unsigned int fbo;

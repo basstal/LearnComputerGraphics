@@ -1,3 +1,8 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -11,62 +16,90 @@
 #include <Shader.h>
 #include <Model.h>
 
-bool wireframe = false;
+static bool wireframe = false;
 
 
-const int HEIGHT = 1080;
-const int WIDTH = 1920;
+static const int HEIGHT = 1080;
+static const int WIDTH = 1920;
 
-bool firstMove = true;
-float lastX = 0.0f;
-float lastY = 0.0f;
+static bool firstMove = true;
+static float lastX = 0.0f;
+static float lastY = 0.0f;
 
-float lastFrame = 0.0f;
-float deltaTime = 0.0f;
+static float lastFrame = 0.0f;
+static float deltaTime = 0.0f;
 
-Camera camera = Camera(glm::vec3(0, 0, 3.0));
+static Camera camera = Camera(glm::vec3(0, 0, 3.0));
 
 using namespace std;
 
-void frame_buffer_callback(GLFWwindow *, int , int);
-void cursor_pos_callback(GLFWwindow *, double, double);
-void mouse_scroll_callback(GLFWwindow *, double, double);
-void processInput(GLFWwindow * window);
-void renderCube();
-void renderQuad();
-void renderScene(const Shader &shader, unsigned int planeVAO);
-void renderScene3D(const Shader &shader);
-void renderQuadSimple();
-void renderCubeSimple();
-float lerp(float, float, float);
+static void frame_buffer_callback(GLFWwindow *, int , int);
+static void cursor_pos_callback(GLFWwindow *, double, double);
+static void mouse_scroll_callback(GLFWwindow *, double, double);
+static void processInput(GLFWwindow * window);
+static void renderCube();
+static void renderQuad();
+static void renderScene(const Shader &shader, unsigned int planeVAO);
+static void renderScene3D(const Shader &shader);
+static void renderQuadSimple();
+static void renderCubeSimple();
+static float lerp(float, float, float);
 
-int main()
+static unsigned int diffuseTex;
+static unsigned int normalTex;
+static unsigned int depthTex;
+static std::shared_ptr<Shader> parallaxMappingShader;
+static std::shared_ptr<Shader> simpleLight;
+
+
+static bool bCursorOff = false;
+static bool bPressed;
+static glm::vec3 lightPos(1.5, 0.5, 2.0);
+
+
+static void switch_cursor(GLFWwindow * window)
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
-    if (window == NULL)
+    if (!bCursorOff)
     {
-        cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
-        glfwTerminate();
-        return -1;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
     }
-
-    glfwMakeContextCurrent(window);
-
-    if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
+    else
     {
-        cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
-        glfwTerminate();
-        return -1;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMove = true;
     }
+    bCursorOff = !bCursorOff;
+}
+
+void parallaxMapping1_setup(GLFWwindow *window)
+{
+//     glfwInit();
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+// #ifdef __APPLE__
+//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+// #endif
+
+//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
+//     if (window == NULL)
+//     {
+//         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
+//         glfwTerminate();
+//         return -1;
+//     }
+
+//     glfwMakeContextCurrent(window);
+
+//     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
+//     {
+//         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
+//         glfwTerminate();
+//         return -1;
+//     }
 
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -75,57 +108,94 @@ int main()
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetCursorPosCallback(window, cursor_pos_callback);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader parallaxMappingShader = Shader("../../Shaders/5_6/ParallaxMappingVS.vs", "../../Shaders/5_6/ParallaxMappingFS.fs", NULL);
+    parallaxMappingShader = std::make_shared<Shader>("Shaders/5_6/ParallaxMappingVS.vs", "Shaders/5_6/ParallaxMappingFS.fs", nullptr);
+    simpleLight = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/5_4/SimpleColorFS.fs", nullptr);
 
-    unsigned int diffuseTex = loadImage("bricks2.jpg", "../../Assets/",  false);
-    unsigned int normalTex = loadImage("bricks2_normal.jpg", "../../Assets/",  false);
-    unsigned int depthTex = loadImage("bricks2_disp.jpg", "../../Assets/",  false);
+    diffuseTex = loadImage("Assets/toy_box_diffuse.png",  false);
+    normalTex = loadImage("Assets/toy_box_normal.png",  false);
+    depthTex = loadImage("Assets/toy_box_disp.png",  false);
 
-    glm::vec3 lightPos(1.5, 0.5, 2.0);
-    parallaxMappingShader.use();
-    parallaxMappingShader.setInt("diffuseMap", 0);
-    parallaxMappingShader.setInt("normalMap", 1);
-    parallaxMappingShader.setInt("depthMap", 2);
-    parallaxMappingShader.setVec3("lightPos", lightPos);
+    parallaxMappingShader->use();
+    parallaxMappingShader->setInt("diffuseMap", 0);
+    parallaxMappingShader->setInt("normalMap", 1);
+    parallaxMappingShader->setInt("depthMap", 2);
+    parallaxMappingShader->setVec3("lightPos", lightPos);
 
-    while(!glfwWindowShouldClose(window))
-    {
-        processInput(window);
+    // while(!glfwWindowShouldClose(window))
+    // {
         
-        // render
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        parallaxMappingShader.use();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        parallaxMappingShader.setMat4("projection", projection);
-        parallaxMappingShader.setMat4("view", view);
-        parallaxMappingShader.setMat4("model", model);
-        parallaxMappingShader.setVec3("viewPos", camera.Position);
-        parallaxMappingShader.setFloat("height_scale", 0.1);
+    //     glfwSwapBuffers(window);
+    //     glfwPollEvents();
+    // }
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTex);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, normalTex);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, depthTex);
-        renderQuad();
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-    return 0;
+    // glfwTerminate();
 }
+
+void parallaxMapping1_imgui(GLFWwindow *window)
+{
+    ImGui::Separator();
+    if (bCursorOff)
+    {
+        ImGui::Text("Press P to release control of the camera, and show cursor.");
+    }
+    else
+    {
+        ImGui::Text("Press P or belowd Button to take control of the camera");
+        if(ImGui::Button("Posses camera") && !bCursorOff)
+        {
+            switch_cursor(window);
+        }
+    }
+    glm::vec3 pos = camera.Position;
+    ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+    ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
+}
+
+int parallaxMapping1(GLFWwindow *window)
+{
+    processInput(window);
+        
+    // render
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    parallaxMappingShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    parallaxMappingShader->setMat4("projection", projection);
+    parallaxMappingShader->setMat4("view", view);
+    parallaxMappingShader->setMat4("model", model);
+    parallaxMappingShader->setVec3("viewPos", camera.Position);
+    parallaxMappingShader->setFloat("height_scale", 0.1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normalTex);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    renderQuad();
+
+    simpleLight->use();
+    simpleLight->setMat4("projection", projection);
+    simpleLight->setMat4("view", view);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, lightPos);
+    model = glm::scale(model, glm::vec3(0.1f));
+    simpleLight->setMat4("model", model);
+    renderCubeSimple();
+
+    return 0;
+
+}
+
 
 void processInput(GLFWwindow * window)
 {
@@ -153,6 +223,15 @@ void processInput(GLFWwindow * window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        bPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
+    {
+        bPressed = false;
+        switch_cursor(window);
     }
 }
 
