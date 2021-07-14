@@ -39,20 +39,7 @@ static float lastFrame = 0.0f;
 static float deltaTime = 0.0f;
 
 static Camera camera = Camera(glm::vec3(3.5f, -1.5f, 5), glm::vec3(0, 1, 0), -124, -19);
-static std::shared_ptr<Shader> deferredShader, wireframeShader;
-static std::shared_ptr<Shader> debugQuadShader;
-static std::shared_ptr<Shader> quadShader;
-static std::shared_ptr<Shader> lightShader;
-static std::shared_ptr<Model> backpack = nullptr;
-static unsigned int gBufferFBO;
-static std::vector<glm::vec3> objectPositions;
-static unsigned int gPosition, gNormal, gAlbedoSpec;
-static std::vector<glm::vec3> lightPositions;
-static std::vector<glm::vec3> lightColors;
-static std::vector<float> lightRadius;
-static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
-static const unsigned int NR_LIGHTS = 32;
-static unsigned int ubo;
+
 
 static void frame_buffer_callback(GLFWwindow *, int , int);
 static void cursor_pos_callback(GLFWwindow *, double, double);
@@ -65,7 +52,6 @@ static void renderScene3D(const Shader &shader);
 static void renderQuadSimple();
 static void renderCubeSimple();
 static float lerp(float, float, float);
-static void calculateLightInfo(GLFWwindow * window);
 // static void drawImGuiContent(GLFWwindow * window);
 
 static bool bCursorOff = false;
@@ -89,32 +75,39 @@ static void switch_cursor(GLFWwindow * window)
 
 static void switch_drawMode(GLFWwindow * window)
 {
-    // deferredShader->setInt("drawMode", drawMode);
-    // debugQuadShader->setInt("drawMode", drawMode);
-    // quadShader->setInt("drawMode", drawMode);
-    // lightShader->setInt("drawMode", drawMode);
-    // ** use custom shader
-    // switch(drawMode)
-    // {
-    //     case 0:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //         break;
-    //     case 1:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //         break;
-    //     case 2:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-    //         break;
-    //     default:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //         break;
-    // }
+    switch(drawMode)
+    {
+        case 0:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+        case 1:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+        case 2:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            break;
+        default:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+    }
 
 }
 
 
+static std::shared_ptr<Shader> deferredShader;
+static std::shared_ptr<Shader> debugQuadShader;
+static std::shared_ptr<Shader> quadShader;
+static std::shared_ptr<Shader> lightShader;
+static std::shared_ptr<Model> backpack;
+static unsigned int gBufferFBO;
+static std::vector<glm::vec3> objectPositions;
+static unsigned int gPosition, gNormal, gAlbedoSpec;
+static std::vector<glm::vec3> lightPositions;
+static std::vector<glm::vec3> lightColors;
+static std::vector<float> lightRadius;
+static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
 
-void deferredShading_setup(GLFWwindow * window)
+void lightVolumes_setup(GLFWwindow * window)
 {
 //     glfwInit();
 //     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -125,7 +118,7 @@ void deferredShading_setup(GLFWwindow * window)
 //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 // #endif
 
-//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "DeferredShading", NULL, NULL);
+//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "lightVolumes", NULL, NULL);
 //     if (window == NULL)
 //     {
 //         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -152,15 +145,11 @@ void deferredShading_setup(GLFWwindow * window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 7 Deferred Shading
-    if (!backpack)
-    {
-        backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
-    }
+    backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
 
     
     // 7 Deferred Shading
     deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", nullptr);
-    wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
     // use this shader to debug G-Buffer
     debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
     quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/QuadFS.fs", nullptr);
@@ -223,18 +212,36 @@ void deferredShading_setup(GLFWwindow * window)
     quadShader->setInt("gNormal", 1);
     quadShader->setInt("gAlbedoSpec", 2);
 
-    wireframeShader->use();
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-    
-    unsigned int blockIndex = glGetUniformBlockIndex(wireframeShader->ID, "Matrices");
-    glUniformBlockBinding(wireframeShader->ID, blockIndex, 0);
-    
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 3 * sizeof(glm::mat4));
     // lighting info
     // -------------
-    calculateLightInfo(window);
+    const unsigned int NR_LIGHTS = 32;
+    lightPositions.clear();
+    lightColors.clear();
+    lightRadius.clear();
+    srand(13);
+    
+
+    for (unsigned int i = 0; i < NR_LIGHTS; i++)
+    {
+        // calculate slightly random offsets
+        float xPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+        float yPos = ((rand() % 100) / 100.0) * 6.0 - 4.0;
+        float zPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+        lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+        // also calculate random color
+        float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+        float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+        float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+
+        glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
+        lightColors.push_back(lightColor);
+
+        float lightMax  = std::fmaxf(std::fmaxf(lightColor.r, lightColor.g), lightColor.b);
+        float radius    = 
+        (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
+        / (2 * quadratic);  
+        lightRadius.push_back(radius);
+    }
     // // Setup Dear ImGui context
     // IMGUI_CHECKVERSION();
     // ImGui::CreateContext();
@@ -264,7 +271,7 @@ void deferredShading_setup(GLFWwindow * window)
     // glfwTerminate();
 }
 
-void deferredShading_imgui(GLFWwindow * window)
+void lightVolumes_imgui(GLFWwindow * window)
 {
     // ImGui::Begin("Editor");
     // ImGui::Text("Lights Color & Position");
@@ -274,20 +281,15 @@ void deferredShading_imgui(GLFWwindow * window)
     //     ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
     //     ImGui::Separator();
     // }
-    ImGui::Spacing();
-    ImGui::Text("Light Info");
-    bool bLightInfoChanged = false;
-    bLightInfoChanged |= ImGui::SliderFloat("constant", &constant, 0, 20.f);
-    bLightInfoChanged |= ImGui::SliderFloat("linear", &linear, 0.01f, 5.f);
-    bLightInfoChanged |= ImGui::SliderFloat("quadratic", &quadratic, 0.01f, 3.f);
-    if (bLightInfoChanged)
-    {
-        calculateLightInfo(window);
-    }
+    // ImGui::Spacing();
+    // ImGui::Text("attenuation");
+    // ImGui::SliderFloat("constant", &constant, 0, 256.0f);
+    // ImGui::SliderFloat("linear", &linear, 0, 128.f);
+    // ImGui::SliderFloat("quadratic", &quadratic, 0, 32.f);
     // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
     // ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
     // ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
-    ImGui::Separator();
+    // ImGui::Separator();
     if (bCursorOff)
     {
         ImGui::Text("Press P to release control of the camera, and show cursor.");
@@ -321,90 +323,27 @@ void deferredShading_imgui(GLFWwindow * window)
     // ImGui::End();
 }
 
-int deferredShading(GLFWwindow * window)
+int lightVolumes(GLFWwindow * window)
 {
     processInput(window);
     switch_drawMode(window);
+    // 7 Deferred Shading
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+    glClearColor(0, 0, 0, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    deferredShader->use();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.f);
     glm::mat4 view = camera.GetViewMatrix();
-    // 7 Deferred Shading
-    if (drawMode == 0)
+    deferredShader->setMat4("projection", projection);
+    deferredShader->setMat4("view", view);
+    for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
-        glClearColor(0, 0, 0, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        deferredShader->use();
-        deferredShader->setMat4("projection", projection);
-        deferredShader->setMat4("view", view);
-        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            deferredShader->setMat4("model", model);
-            backpack->Draw(*deferredShader);
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
-        quadShader->use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gPosition);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gNormal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        quadShader->setMat4("model", glm::mat4(1));
-        quadShader->setVec3("viewPos", camera.Position);
-        quadShader->setFloat("shininess", 64);
-        for (unsigned int i = 0 ; i < lightPositions.size(); ++i)
-        {
-            quadShader->setVec3("lights[" + to_string(i) + "].Position", lightPositions[i]);
-            quadShader->setVec3("lights[" + to_string(i) + "].Color", lightColors[i]);
-            quadShader->setFloat("lights[" + to_string(i) + "].Radius", lightRadius[i]);
-            quadShader->setFloat("lights[" + to_string(i) + "].Linear", linear);
-            quadShader->setFloat("lights[" + to_string(i) + "].Quadratic", quadratic);
-        }
-        renderQuadSimple();
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        
-        lightShader->use();
-        lightShader->setMat4("projection", projection);
-        lightShader->setMat4("view", view);
-        for (unsigned int i = 0; i < lightPositions.size(); i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(lightPositions[i]));
-            model = glm::scale(model, glm::vec3(0.1f));
-            lightShader->setMat4("model", model);
-            lightShader->setVec3("lightColor", lightColors[i]);
-            renderCubeSimple();
-        }
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, objectPositions[i]);
+        model = glm::scale(model, glm::vec3(0.5f));
+        deferredShader->setMat4("model", model);
+        backpack->Draw(*deferredShader);
     }
-    else if (drawMode == 1)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
-        wireframeShader->use();
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            backpack->Draw(*wireframeShader);
-        }
-    }
-    else
-    {
-        
-    }
-    
 
     // // debug G-Buffer start
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -445,39 +384,47 @@ int deferredShading(GLFWwindow * window)
     // debugquadShader->setBool("onlyAlpha", false);
     // // debug G-Buffer end
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
+    quadShader->use();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+    quadShader->setMat4("model", glm::mat4(1));
+    quadShader->setVec3("viewPos", camera.Position);
+    quadShader->setFloat("shininess", 64);
+    for (unsigned int i = 0 ; i < lightPositions.size(); ++i)
+    {
+        quadShader->setVec3("lights[" + to_string(i) + "].Position", lightPositions[i]);
+        quadShader->setVec3("lights[" + to_string(i) + "].Color", lightColors[i]);
+        quadShader->setFloat("lights[" + to_string(i) + "].Radius", lightRadius[i]);
+        quadShader->setFloat("lights[" + to_string(i) + "].Linear", linear);
+        quadShader->setFloat("lights[" + to_string(i) + "].Quadratic", quadratic);
+    }
+    renderQuadSimple();
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
+    lightShader->use();
+    lightShader->setMat4("projection", projection);
+    lightShader->setMat4("view", view);
+    for (unsigned int i = 0; i < lightPositions.size(); i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(lightPositions[i]));
+        model = glm::scale(model, glm::vec3(0.1f));
+        lightShader->setMat4("model", model);
+        lightShader->setVec3("lightColor", lightColors[i]);
+        renderCubeSimple();
+    }
     return 0;
 
-}
-
-static void calculateLightInfo(GLFWwindow * window)
-{
-    lightPositions.clear();
-    lightColors.clear();
-    lightRadius.clear();
-    // srand(13);
-
-    for (unsigned int i = 0; i < NR_LIGHTS; i++)
-    {
-        // calculate slightly random offsets
-        float xPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
-        float yPos = ((rand() % 100) / 100.0) * 6.0 - 4.0;
-        float zPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
-        lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
-        // also calculate random color
-        float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-
-        glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
-        lightColors.push_back(lightColor);
-
-        float lightMax  = std::fmaxf(std::fmaxf(lightColor.r, lightColor.g), lightColor.b);
-        float radius    = 
-        (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
-        / (2 * quadratic);  
-        lightRadius.push_back(radius);
-    }
 }
 
 static void processInput(GLFWwindow * window)

@@ -19,6 +19,7 @@ const int NR_LIGHTS = 32;
 uniform Light lights[NR_LIGHTS];
 uniform vec3 viewPos;
 uniform float shininess;
+// uniform int drawMode;
 
 void main()
 {             
@@ -36,8 +37,8 @@ void main()
     for(int i = 0; i < NR_LIGHTS; ++i)
     {
         Light light = lights[i];
-        float distance = length(light.Position - FragPos);
-        if (distance < light.Radius)
+        float light2FragDist = length(light.Position - FragPos);
+        if (light2FragDist < light.Radius)
         {
             // diffuse
             vec3 lightDir = normalize(light.Position - FragPos);
@@ -49,12 +50,19 @@ void main()
             vec3 specular = Specular * spec * light.Color;
 
             // attenuation
-            float attenuation = 1.0 / (1.0 + lights[i].Linear * distance + lights[i].Quadratic * distance * distance);
+            float attenuation = 1.0 / (1.0 + lights[i].Linear * light2FragDist + lights[i].Quadratic * light2FragDist * light2FragDist);
             diffuse *= attenuation;
             specular *= attenuation;
             lighting += diffuse + specular;
         }
     }
     
+    // if (drawMode == 0)
+    // {
     FragColor = vec4(lighting, 1.0);
+    // }
+    // else
+    // {
+    //     FragColor = vec4(1.0f);
+    // }
 }  

@@ -22,7 +22,7 @@ Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ v
 #include <glm/gtc/matrix_transform.hpp>
 
 // #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <others/stb_image.h>
 
 #include <Utils.h>
 

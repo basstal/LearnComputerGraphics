@@ -19,7 +19,7 @@ To specify the filtering method between mipmap levels we can replace the origina
 */
 
 // #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <others/stb_image.h>
 #include <Shader.h>
 
 #include <glad/glad.h>

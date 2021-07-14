@@ -14,9 +14,12 @@ struct Material
 };
 
 uniform Material material;
+uniform int drawMode;
 
 void main()
 {    
+    // if (drawMode == 0)
+    // {
     // store the fragment position vector in the first gbuffer texture
     gPosition = FragPos;
     // also store the per-fragment normals into the gbuffer
@@ -25,4 +28,10 @@ void main()
     gAlbedoSpec.rgb = texture(material.texture_diffuse1, TexCoords).rgb;
     // store specular intensity in gAlbedoSpec's alpha component
     gAlbedoSpec.a = texture(material.texture_specular1, TexCoords).r;
+    // }
+    // else
+    // {
+    //     gAlbedoSpec.rgb = vec3(1.0f, 1.0f, 1.0f);
+    //     gAlbedoSpec.a = 1.0f;
+    // }
 }  

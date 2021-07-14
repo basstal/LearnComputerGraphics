@@ -1,6 +1,6 @@
 // #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "Shader.h"
+#include <others/stb_image.h>
+#include <Shader.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>

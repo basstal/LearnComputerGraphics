@@ -1,4 +1,4 @@
-#include <stb_image.h>
+#include <others/stb_image.h>
 #include <Shader.h>
 
 #include <glad/glad.h>

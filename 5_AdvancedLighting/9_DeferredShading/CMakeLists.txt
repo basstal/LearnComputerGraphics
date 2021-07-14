@@ -7,6 +7,8 @@ get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 
 set(PROJECT_NAME "DeferredShading")
 
+set(CMAKE_CXX_STANDARD 11)
+
 # Project name
 project(${PROJECT_NAME})
 
@@ -16,6 +18,16 @@ add_library(glad
 
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
+
+# lib source glad
+add_library(lcosphere
+    "${ROOT_PATH}/Plugins/others/Icosphere.cpp")
+
+target_include_directories(lcosphere PUBLIC
+    "${ROOT_PATH}/Plugins/others")
+
+target_link_libraries(lcosphere
+    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/OpenGL32.Lib")
 
 # lib source imgui
 add_library(imgui
@@ -33,7 +45,9 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
+    Main.cpp
     DeferredShading.cpp
+    LightVolumes.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"
@@ -46,6 +60,7 @@ target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/zlibstaticd.lib"
     "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/IrrXMLd.lib"
     glad
+    lcosphere
     imgui)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
