@@ -24,7 +24,8 @@ add_library(lcosphere
     "${ROOT_PATH}/Plugins/others/Icosphere.cpp")
 
 target_include_directories(lcosphere PUBLIC
-    "${ROOT_PATH}/Plugins/others")
+    "${ROOT_PATH}/Plugins/others"
+    "${ROOT_PATH}/Plugins/")
 
 target_link_libraries(lcosphere
     "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/OpenGL32.Lib")

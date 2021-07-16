@@ -92,6 +92,11 @@ Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath, std
 	readAndCompileAll(vertexShaderPath.c_str(), fragmentShaderPath.c_str(), geometryShaderPath.c_str());
 }
 
+void Shader::recompileFromSource()
+{
+	readAndCompileAll(vsPath.c_str(), fsPath.c_str(), gsPath.c_str());
+}
+
 std::string Shader::readShaderCode(const GLchar * shaderPath)
 {
 	if (shaderPath && strcmp(shaderPath, "") == 1)
@@ -120,7 +125,6 @@ void Shader::readAndCompileAll(const GLchar * vertexPath, const GLchar * fragmen
 	std::string vShaderCode, fShaderCode, gShaderCode;
 	if(vertexPath && vertexPath[0] != '\0' && std::string(vertexPath).find("LearnOpenGL") == -1)
 	{
-		std::string vsPath;
 		getProjectFilePath(vertexPath, vsPath);
 		vShaderCode = readShaderCode(vsPath.c_str());
 	}
@@ -130,7 +134,6 @@ void Shader::readAndCompileAll(const GLchar * vertexPath, const GLchar * fragmen
 	}
 	if (fragmentPath && fragmentPath[0] != '\0' && std::string(fragmentPath).find("LearnOpenGL") == -1)
 	{
-		std::string fsPath;
 		getProjectFilePath(fragmentPath, fsPath);
 		fShaderCode = readShaderCode(fsPath.c_str());
 
@@ -142,7 +145,6 @@ void Shader::readAndCompileAll(const GLchar * vertexPath, const GLchar * fragmen
 	}
 	if (geometryPath && geometryPath[0] != '\0' && std::string(geometryPath).find("LearnOpenGL") == -1)
 	{
-		std::string gsPath;
 		getProjectFilePath(geometryPath, gsPath);
 		gShaderCode = readShaderCode(gsPath.c_str());
 

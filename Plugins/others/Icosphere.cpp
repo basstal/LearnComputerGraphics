@@ -10,16 +10,16 @@
 // UPDATED: 2019-12-18
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
-#include <windows.h>    // include windows.h to avoid thousands of compile errors even though this class is not depending on Windows
-#endif
+// #ifdef _WIN32
+// #include <windows.h>    // include windows.h to avoid thousands of compile errors even though this class is not depending on Windows
+// #endif
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-// #include <glad/glad.h>
+// #ifdef __APPLE__
+// #include <OpenGL/gl.h>
+// #else
+// #include <GL/gl.h>
+// #endif
+#include <glad/glad.h>
 
 #include <iostream>
 #include <iomanip>
@@ -36,8 +36,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ctor
 ///////////////////////////////////////////////////////////////////////////////
-Icosphere::Icosphere(float radius, int sub, bool smooth) : radius(radius), subdivision(sub), smooth(smooth), interleavedStride(32)
+Icosphere::Icosphere(float radius, int sub, bool smooth) : radius(radius), subdivision(sub), smooth(smooth)
 {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     if(smooth)
         buildVerticesSmooth();
     else
@@ -51,8 +54,11 @@ Icosphere::Icosphere(float radius, int sub, bool smooth) : radius(radius), subdi
 ///////////////////////////////////////////////////////////////////////////////
 void Icosphere::setRadius(float radius)
 {
-    this->radius = radius;
-    updateRadius(); // update vertex positions only
+    if (radius > 0)
+    {
+        this->radius = radius;
+        updateRadius(); // update vertex positions only
+    }
 }
 
 void Icosphere::setSubdivision(int iteration)
@@ -98,68 +104,85 @@ void Icosphere::printSelf() const
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-// draw a icosphere in VertexArray mode
-// OpenGL RC must be set before calling it
-///////////////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////
+// // draw a icosphere in VertexArray mode
+// // OpenGL RC must be set before calling it
+// ///////////////////////////////////////////////////////////////////////////////
+// void Icosphere::draw() const
+// {
+//     // interleaved array
+//     glEnableClientState(GL_VERTEX_ARRAY);
+//     glEnableClientState(GL_NORMAL_ARRAY);
+//     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//     glVertexPointer(3, GL_FLOAT, interleavedStride, &interleavedVertices[0]);
+//     glNormalPointer(GL_FLOAT, interleavedStride, &interleavedVertices[3]);
+//     glTexCoordPointer(2, GL_FLOAT, interleavedStride, &interleavedVertices[6]);
+
+//     glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
+
+//     glDisableClientState(GL_VERTEX_ARRAY);
+//     glDisableClientState(GL_NORMAL_ARRAY);
+//     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+// }
+
 void Icosphere::draw() const
 {
-    // interleaved array
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, interleavedStride, &interleavedVertices[0]);
-    glNormalPointer(GL_FLOAT, interleavedStride, &interleavedVertices[3]);
-    glTexCoordPointer(2, GL_FLOAT, interleavedStride, &interleavedVertices[6]);
-
-    glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, interleavedVertices.size() * sizeof(float), &interleavedVertices[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-// draw lines only
-// the caller must set the line width before call this
-///////////////////////////////////////////////////////////////////////////////
-void Icosphere::drawLines(const float lineColor[4]) const
-{
-    // set line colour
-    glColor4fv(lineColor);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,   lineColor);
+// ///////////////////////////////////////////////////////////////////////////////
+// // draw lines only
+// // the caller must set the line width before call this
+// ///////////////////////////////////////////////////////////////////////////////
+// void Icosphere::drawLines(const float lineColor[4]) const
+// {
+//     // set line colour
+//     glColor4fv(lineColor);
+//     glMaterialfv(GL_FRONT, GL_DIFFUSE,   lineColor);
 
-    // draw lines with VA
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices.data());
+//     // draw lines with VA
+//     glDisable(GL_LIGHTING);
+//     glDisable(GL_TEXTURE_2D);
+//     glEnableClientState(GL_VERTEX_ARRAY);
+//     glVertexPointer(3, GL_FLOAT, 0, vertices.data());
 
-    glDrawElements(GL_LINES, (unsigned int)lineIndices.size(), GL_UNSIGNED_INT, lineIndices.data());
+//     glDrawElements(GL_LINES, (unsigned int)lineIndices.size(), GL_UNSIGNED_INT, lineIndices.data());
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
-}
+//     glDisableClientState(GL_VERTEX_ARRAY);
+//     glEnable(GL_LIGHTING);
+//     glEnable(GL_TEXTURE_2D);
+// }
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-// draw a icosphere surfaces and lines on top of it
-// the caller must set the line width before call this
-///////////////////////////////////////////////////////////////////////////////
-void Icosphere::drawWithLines(const float lineColor[4]) const
-{
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(1.0, 1.0f); // move polygon backward
-    this->draw();
-    glDisable(GL_POLYGON_OFFSET_FILL);
+// ///////////////////////////////////////////////////////////////////////////////
+// // draw a icosphere surfaces and lines on top of it
+// // the caller must set the line width before call this
+// ///////////////////////////////////////////////////////////////////////////////
+// void Icosphere::drawWithLines(const float lineColor[4]) const
+// {
+//     glEnable(GL_POLYGON_OFFSET_FILL);
+//     glPolygonOffset(1.0, 1.0f); // move polygon backward
+//     this->draw();
+//     glDisable(GL_POLYGON_OFFSET_FILL);
 
-    // draw lines with VA
-    drawLines(lineColor);
-}
+//     // draw lines with VA
+//     drawLines(lineColor);
+// }
 
 
 

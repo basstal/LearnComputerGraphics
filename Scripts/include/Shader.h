@@ -22,6 +22,8 @@ public:
 
     void use();
 
+    void recompileFromSource();
+
     void setBool(const std::string & varName, bool val) const;
     void setInt(const std::string & varName, int val) const;
     void setFloat(const std::string & varName, float val) const;
@@ -31,7 +33,11 @@ public:
     void setVec3(const std::string &varName, float x, float y, float z) const;
     void setVec2(const std::string &varName, glm::vec2 val) const;
 
-private:
+protected:
+    std::string vsPath;
+    std::string fsPath;
+    std::string gsPath;
+
     void compileAndLinkShaders(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode);
     void readAndCompileAll(const GLchar * vertexPath, const GLchar * fragmentPath, const GLchar * geometryPath);
     std::string readShaderCode(const char *shaderPath);

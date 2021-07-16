@@ -39,7 +39,7 @@ static float lastFrame = 0.0f;
 static float deltaTime = 0.0f;
 
 static Camera camera = Camera(glm::vec3(3.5f, -1.5f, 5), glm::vec3(0, 1, 0), -124, -19);
-static std::shared_ptr<Shader> deferredShader, wireframeShader;
+static std::shared_ptr<Shader> deferredShader, wireframeShader, pointShader;
 static std::shared_ptr<Shader> debugQuadShader;
 static std::shared_ptr<Shader> quadShader;
 static std::shared_ptr<Shader> lightShader;
@@ -94,21 +94,21 @@ static void switch_drawMode(GLFWwindow * window)
     // quadShader->setInt("drawMode", drawMode);
     // lightShader->setInt("drawMode", drawMode);
     // ** use custom shader
-    // switch(drawMode)
-    // {
-    //     case 0:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //         break;
-    //     case 1:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //         break;
-    //     case 2:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-    //         break;
-    //     default:
-    //         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //         break;
-    // }
+    switch(drawMode)
+    {
+        case 0:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+        case 1:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+        case 2:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            break;
+        default:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            break;
+    }
 
 }
 
@@ -161,6 +161,7 @@ void deferredShading_setup(GLFWwindow * window)
     // 7 Deferred Shading
     deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", nullptr);
     wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
+    pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
     // use this shader to debug G-Buffer
     debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
     quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/QuadFS.fs", nullptr);
@@ -324,7 +325,7 @@ void deferredShading_imgui(GLFWwindow * window)
 int deferredShading(GLFWwindow * window)
 {
     processInput(window);
-    switch_drawMode(window);
+    // switch_drawMode(window);
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.f);
     glm::mat4 view = camera.GetViewMatrix();
     // 7 Deferred Shading
@@ -384,11 +385,13 @@ int deferredShading(GLFWwindow * window)
             renderCubeSimple();
         }
     }
-    else if (drawMode == 1)
+    else 
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
-        wireframeShader->use();
+        std::shared_ptr<Shader> usedShader = drawMode == 1 ? wireframeShader : pointShader;
+        usedShader->use();
+        usedShader->setVec3("color", glm::vec3(0, 0.496, 0.496));
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
         for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
@@ -397,12 +400,16 @@ int deferredShading(GLFWwindow * window)
             model = glm::translate(model, objectPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
             glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            backpack->Draw(*wireframeShader);
+            backpack->Draw(*usedShader);
         }
-    }
-    else
-    {
-        
+        for (unsigned int i = 0; i < lightPositions.size(); i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(lightPositions[i]));
+            model = glm::scale(model, glm::vec3(0.1f));
+            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
+            renderCubeSimple();
+        }
     }
     
 
@@ -561,47 +568,47 @@ static void renderCubeSimple()
     }
     float vertices[] = {
         // back face
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
         -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-            1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
         -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
         -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
         // front face
         -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-            1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
         -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
         // left face
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
         -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
         -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
         -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
         // right face
-            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-            1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-            1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+        1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+        1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+        1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+        1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+        1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+        1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
         // bottom face
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
         -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-            1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
         -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
         -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
         // top face
+        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f, // bottom-left        
+         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-right
+        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
         -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-            1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
     };
     // link vertex attributes
     glBindVertexArray(cubeVAO);

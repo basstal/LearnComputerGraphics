@@ -19,6 +19,7 @@
 class Icosphere
 {
 public:
+    unsigned int VAO, VBO, EBO;
     // ctor/dtor
     Icosphere(float radius=1.0f, int subdivision=1, bool smooth=false);
     ~Icosphere() {}
@@ -54,13 +55,13 @@ public:
     // for interleaved vertices: V/N/T
     unsigned int getInterleavedVertexCount() const  { return getVertexCount(); }    // # of vertices
     unsigned int getInterleavedVertexSize() const   { return (unsigned int)interleavedVertices.size() * sizeof(float); }    // # of bytes
-    int getInterleavedStride() const                { return interleavedStride; }   // should be 32 bytes
+    // int getInterleavedStride() const                { return interleavedStride; }   // should be 32 bytes
     const float* getInterleavedVertices() const     { return interleavedVertices.data(); }
 
     // draw in VertexArray mode
     void draw() const;
-    void drawLines(const float lineColor[4]) const;
-    void drawWithLines(const float lineColor[4]) const;
+    // void drawLines(const float lineColor[4]) const;
+    // void drawWithLines(const float lineColor[4]) const;
 
     // debug
     void printSelf() const;
@@ -109,7 +110,7 @@ private:
 
     // interleaved
     std::vector<float> interleavedVertices;
-    int interleavedStride;                  // # of bytes to hop to the next vertex (should be 32 bytes)
+    // int interleavedStride;                  // # of bytes to hop to the next vertex (should be 32 bytes)
 
 };
 

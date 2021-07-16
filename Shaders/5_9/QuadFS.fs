@@ -30,32 +30,44 @@ void main()
     float Specular = texture(gAlbedoSpec, TexCoords).a;
     
     // then calculate lighting as usual
-    vec3 lighting = Albedo * 0.1; // hard-coded ambient component
-    vec3 viewDir = normalize(viewPos - FragPos);
+    bool subjects = Normal.x != 0 || Normal.y != 0 || Normal.z != 0;
+    vec3 lighting = vec3(0.0f);
+    if (subjects)
+    {
+        vec3 viewDir = normalize(viewPos - FragPos);
+        bool bLightup = false;
+        for(int i = 0; i < NR_LIGHTS; ++i)
+        {
+            Light light = lights[i];
+            float light2FragDist = length(light.Position - FragPos);
+            if (light2FragDist < light.Radius)
+            {
+                bLightup = true;
+                // diffuse
+                vec3 lightDir = normalize(light.Position - FragPos);
+                vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Albedo * light.Color;
+
+                // specular
+                vec3 reflectDir = reflect(-lightDir, Normal);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+                vec3 specular = Specular * spec * light.Color;
+
+                // attenuation
+                float attenuation = 1.0 / (1.0 + lights[i].Linear * light2FragDist + lights[i].Quadratic * light2FragDist * light2FragDist);
+                diffuse *= attenuation;
+                specular *= attenuation;
+                lighting += diffuse + specular;
+                // lighting = vec3(1.f);
+            }
+        }
+        if (bLightup)
+        {
+            lighting += Albedo * 0.1; // hard-coded ambient component
+        }
+
+    }
 
     
-    for(int i = 0; i < NR_LIGHTS; ++i)
-    {
-        Light light = lights[i];
-        float light2FragDist = length(light.Position - FragPos);
-        if (light2FragDist < light.Radius)
-        {
-            // diffuse
-            vec3 lightDir = normalize(light.Position - FragPos);
-            vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Albedo * light.Color;
-
-            // specular
-            vec3 reflectDir = reflect(-lightDir, Normal);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-            vec3 specular = Specular * spec * light.Color;
-
-            // attenuation
-            float attenuation = 1.0 / (1.0 + lights[i].Linear * light2FragDist + lights[i].Quadratic * light2FragDist * light2FragDist);
-            diffuse *= attenuation;
-            specular *= attenuation;
-            lighting += diffuse + specular;
-        }
-    }
     
     // if (drawMode == 0)
     // {

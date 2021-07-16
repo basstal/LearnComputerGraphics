@@ -25,7 +25,7 @@ GL_FRONT_AND_BACK: Culls both the front and back faces.
 
 #include "Utils.h"
 
-bool wireframe = false;
+bool wireframe = true;
 
 float vertices[] = {
     // back face
