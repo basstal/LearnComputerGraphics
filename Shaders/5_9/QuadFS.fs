@@ -19,7 +19,6 @@ const int NR_LIGHTS = 32;
 uniform Light lights[NR_LIGHTS];
 uniform vec3 viewPos;
 uniform float shininess;
-// uniform int drawMode;
 
 void main()
 {             
@@ -57,7 +56,6 @@ void main()
                 diffuse *= attenuation;
                 specular *= attenuation;
                 lighting += diffuse + specular;
-                // lighting = vec3(1.f);
             }
         }
         if (bLightup)
@@ -67,14 +65,5 @@ void main()
 
     }
 
-    
-    
-    // if (drawMode == 0)
-    // {
     FragColor = vec4(lighting, 1.0);
-    // }
-    // else
-    // {
-    //     FragColor = vec4(1.0f);
-    // }
 }  

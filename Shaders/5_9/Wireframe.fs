@@ -18,8 +18,7 @@ void main()
     {
         vec3 viewPosModel = vec3(inverse(fs_in.model) * vec4(viewPos, 1.0));
         vec3 V = normalize(fs_in.Position - viewPosModel);
-        // V = vec3(inverse(fs_in.model) * vec4(V, 1.0));
-        if (dot(V, fs_in.Normal) > 0)
+        if (dot(V, fs_in.Normal) < 0)
         {
             discard;
         }

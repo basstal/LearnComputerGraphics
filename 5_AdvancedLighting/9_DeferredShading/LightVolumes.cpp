@@ -51,7 +51,7 @@ static std::vector<glm::vec3> lightPositions;
 static std::vector<glm::vec3> lightColors;
 static std::vector<float> lightRadius;
 static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
-static const unsigned int NR_LIGHTS = 50;
+static unsigned int NR_LIGHTS = 50;
 static unsigned int ubo;
 static std::shared_ptr<Icosphere> sphere;
 static unsigned int depthRB;
@@ -165,7 +165,7 @@ void lightVolumes_setup(GLFWwindow * window)
     }
 
 
-    sphere = std::make_shared<Icosphere>(1.0f, 3, false);    // radius, subdivision, smooth
+    sphere = std::make_shared<Icosphere>(1.0f, 1, false);    // radius, subdivision, smooth
 
     glGenFramebuffers(1, &gBufferFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
@@ -258,9 +258,11 @@ void lightVolumes_imgui(GLFWwindow * window)
     bLightInfoChanged |= ImGui::SliderFloat("constant", &constant, 0, 42.f);
     bLightInfoChanged |= ImGui::SliderFloat("linear", &linear, 0.01f, 5.f);
     bLightInfoChanged |= ImGui::SliderFloat("quadratic", &quadratic, 0.01f, 3.f);
-    if (bLightInfoChanged)
+    const ImU32   u32_one = 1;
+    bool lightCountChanged = ImGui::InputScalar("Light Count",      ImGuiDataType_U32,     &NR_LIGHTS,  &u32_one, NULL, "%u");
+    if (bLightInfoChanged || lightCountChanged)
     {
-        calculateLightInfo(window, true);
+        calculateLightInfo(window, !lightCountChanged);
     }
     // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
     // ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
@@ -331,8 +333,14 @@ int lightVolumes(GLFWwindow * window)
 
         // draw light volumes sphere
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glDisable(GL_DEPTH_TEST);
         lightVolumesShader->use();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -358,12 +366,8 @@ int lightVolumes(GLFWwindow * window)
             lightVolumesShader->setMat4("model", model);
             sphere->draw();
         }
-
-
-        // glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
-        // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        // glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
         
         // render light position
         lightShader->use();
@@ -656,6 +660,9 @@ static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
             glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
             lightColors.push_back(lightColor);
         }
+        // sort(lightPositions.begin(), lightPositions.end(), [](glm::vec3 a, glm::vec3 b){
+
+        // });
     }
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
     {

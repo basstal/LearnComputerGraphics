@@ -28,8 +28,8 @@ static std::map<int, const char *> drawModeMap = {
     {2, "Point"},
 };
 
-static const int HEIGHT = 1080;
-static const int WIDTH = 1920;
+static int HEIGHT = 1080;
+static int WIDTH = 1920;
 
 static bool firstMove = true;
 static float lastX = 0.0f;
@@ -52,6 +52,7 @@ static std::vector<glm::vec3> lightColors;
 static std::vector<float> lightRadius;
 static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
 static const unsigned int NR_LIGHTS = 32;
+static unsigned int depthRB;
 static unsigned int ubo;
 
 static void frame_buffer_callback(GLFWwindow *, int , int);
@@ -65,7 +66,7 @@ static void renderScene3D(const Shader &shader);
 static void renderQuadSimple();
 static void renderCubeSimple();
 static float lerp(float, float, float);
-static void calculateLightInfo(GLFWwindow * window);
+static void calculateLightInfo(GLFWwindow * window, bool);
 // static void drawImGuiContent(GLFWwindow * window);
 
 static bool bCursorOff = false;
@@ -145,8 +146,9 @@ void deferredShading_setup(GLFWwindow * window)
     
     glEnable(GL_DEPTH_TEST);
     
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
+    glfwGetWindowSize(window, &WIDTH, &HEIGHT);
 
     // glfwSetCursorPosCallback(window, cursor_pos_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -174,38 +176,16 @@ void deferredShading_setup(GLFWwindow * window)
 
     // position color buffer
     glGenTextures(1, &gPosition);
-    glBindTexture(GL_TEXTURE_2D, gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
     // normal color buffer
     glGenTextures(1, &gNormal);
-    glBindTexture(GL_TEXTURE_2D, gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
     // color + specular color buffer
     glGenTextures(1, &gAlbedoSpec);
-    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
 
     unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
     glDrawBuffers(3, attachments);
 
-    unsigned int depthRB;
     glGenRenderbuffers(1, &depthRB);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    frame_buffer_callback(window, WIDTH, HEIGHT);
 
     // 7 Deferred Shading
     objectPositions.clear();
@@ -235,7 +215,7 @@ void deferredShading_setup(GLFWwindow * window)
     glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 3 * sizeof(glm::mat4));
     // lighting info
     // -------------
-    calculateLightInfo(window);
+    calculateLightInfo(window, false);
     // // Setup Dear ImGui context
     // IMGUI_CHECKVERSION();
     // ImGui::CreateContext();
@@ -283,7 +263,7 @@ void deferredShading_imgui(GLFWwindow * window)
     bLightInfoChanged |= ImGui::SliderFloat("quadratic", &quadratic, 0.01f, 3.f);
     if (bLightInfoChanged)
     {
-        calculateLightInfo(window);
+        calculateLightInfo(window, true);
     }
     // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
     // ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
@@ -457,28 +437,35 @@ int deferredShading(GLFWwindow * window)
 
 }
 
-static void calculateLightInfo(GLFWwindow * window)
+static void calculateLightInfo(GLFWwindow * window, bool fixedPosition)
 {
-    lightPositions.clear();
-    lightColors.clear();
     lightRadius.clear();
+    if (!fixedPosition)
+    {
+        lightPositions.clear();
+        lightColors.clear();
+        for (unsigned int i = 0; i < NR_LIGHTS; i++)
+        {
+            // calculate slightly random offsets
+            float xPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+            float yPos = ((rand() % 100) / 100.0) * 6.0 - 4.0;
+            float zPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
+            lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
+            // also calculate random color
+            float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+            float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+            float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
+
+            glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
+            lightColors.push_back(lightColor);
+        }
+    }
     // srand(13);
 
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
     {
-        // calculate slightly random offsets
-        float xPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
-        float yPos = ((rand() % 100) / 100.0) * 6.0 - 4.0;
-        float zPos = ((rand() % 100) / 100.0) * 6.0 - 3.0;
-        lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
-        // also calculate random color
-        float rColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float gColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
-        float bColor = ((rand() % 100) / 200.0f) + 0.5; // between 0.5 and 1.0
 
-        glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
-        lightColors.push_back(lightColor);
-
+        glm::vec3 lightColor = lightColors[i];
         float lightMax  = std::fmaxf(std::fmaxf(lightColor.r, lightColor.g), lightColor.b);
         float radius    = 
         (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
@@ -527,7 +514,38 @@ static void processInput(GLFWwindow * window)
 
 static void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, WIDTH, HEIGHT);
+    }
 }
 
 
