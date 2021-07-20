@@ -38,25 +38,23 @@ static float lastY = 0.0f;
 static float lastFrame = 0.0f;
 static float deltaTime = 0.0f;
 
-static Camera camera = Camera(glm::vec3(3.5f, -1.5f, 5), glm::vec3(0, 1, 0), -124, -19);
-static std::shared_ptr<Shader> deferredShader = nullptr, wireframeShader = nullptr, pointShader = nullptr, simpleShader = nullptr, normalShader = nullptr;
-static std::shared_ptr<Shader> debugQuadShader = nullptr;
-static std::shared_ptr<Shader> lightVolumesShader = nullptr;
-static std::shared_ptr<Shader> lightShader = nullptr;
+static Camera camera = Camera(glm::vec3(0.0, 0.0, 4.0), glm::vec3(0, 1, 0), -124, -19);
+static std::shared_ptr<Shader> deferredShader, wireframeShader, pointShader, shaderSSAO;
+static std::shared_ptr<Shader> debugQuadShader;
+static std::shared_ptr<Shader> quadShader;
+static std::shared_ptr<Shader> lightShader;
 static std::shared_ptr<Model> backpack = nullptr;
 static unsigned int gBufferFBO;
 static std::vector<glm::vec3> objectPositions;
-static unsigned int gPosition, gNormal, gAlbedoSpec;
+static unsigned int gPosition, gNormal, gAlbedoSpec, noiseTexture;
 static std::vector<glm::vec3> lightPositions;
 static std::vector<glm::vec3> lightColors;
+static vector<glm::vec3> ssaoKernel;
 static std::vector<float> lightRadius;
 static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
-static unsigned int NR_LIGHTS = 50;
+static const unsigned int NR_LIGHTS = 32;
+static unsigned int depthRB, ssaoFBO, ssaoColorBuffer, ssaoBlurFBO, ssaoColorBufferBlur;
 static unsigned int ubo;
-static std::shared_ptr<Icosphere> sphere;
-static unsigned int depthRB;
-static bool bDrawNormal = false;
-static bool bShowLightVolumes = true;
 
 static void frame_buffer_callback(GLFWwindow *, int , int);
 static void cursor_pos_callback(GLFWwindow *, double, double);
@@ -70,9 +68,7 @@ static void renderQuadSimple();
 static void renderCubeSimple();
 static float lerp(float, float, float);
 static void calculateLightInfo(GLFWwindow * window, bool);
-static void compile_shaders(GLFWwindow * window);
 // static void drawImGuiContent(GLFWwindow * window);
-static void window_size_callback(GLFWwindow * window, int width, int height);
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -93,34 +89,70 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-static void switch_drawMode(GLFWwindow * window)
+static void RecompileShaders(GLFWwindow * window)
 {
-    // deferredShader->setInt("drawMode", drawMode);
-    // debugQuadShader->setInt("drawMode", drawMode);
-    // lightVolumesShader->setInt("drawMode", drawMode);
-    // lightShader->setInt("drawMode", drawMode);
-    // ** use custom shader
-    switch(drawMode)
-    {
-        case 0:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-        case 1:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            break;
-        case 2:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-            break;
-        default:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-    }
+    deferredShader->recompileFromSource();
+    wireframeShader->recompileFromSource();
+    pointShader->recompileFromSource();
+    debugQuadShader->recompileFromSource();
+    quadShader->recompileFromSource();
+    lightShader->recompileFromSource();
+    shaderSSAO->recompileFromSource();
 
+    shaderSSAO->use();
+    shaderSSAO->setInt("gPosition", 0);
+    shaderSSAO->setInt("gNormal", 1);
+    shaderSSAO->setInt("texNoise", 2);
+
+    quadShader->use();
+    quadShader->setInt("gPosition", 0);
+    quadShader->setInt("gNormal", 1);
+    quadShader->setInt("gAlbedoSpec", 2);
+    quadShader->setInt("ssaoColorBuffer", 3);
+
+    wireframeShader->use();
+    unsigned int blockIndex = glGetUniformBlockIndex(wireframeShader->ID, "Matrices");
+    glUniformBlockBinding(wireframeShader->ID, blockIndex, 0);
 }
 
+static void SendKernelSamplesToShader()
+{
+    shaderSSAO->setFloat("radius", 0.5);
+    shaderSSAO->setFloat("bias", 0.025);
+
+    for (unsigned int i = 0 ; i < 64 ; ++ i)
+    {
+        shaderSSAO->setVec3("samples[" + to_string(i) + "]", ssaoKernel[i]);
+    }
+}
+// static void switch_drawMode(GLFWwindow * window)
+// {
+//     // deferredShader->setInt("drawMode", drawMode);
+//     // debugQuadShader->setInt("drawMode", drawMode);
+//     // quadShader->setInt("drawMode", drawMode);
+//     // lightShader->setInt("drawMode", drawMode);
+//     // ** use custom shader
+//     switch(drawMode)
+//     {
+//         case 0:
+//             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//             break;
+//         case 1:
+//             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//             break;
+//         case 2:
+//             glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+//             break;
+//         default:
+//             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//             break;
+//     }
+
+// }
 
 
-void lightVolumes_setup(GLFWwindow * window)
+
+void SSAO_setup(GLFWwindow * window)
 {
 //     glfwInit();
 //     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -131,7 +163,7 @@ void lightVolumes_setup(GLFWwindow * window)
 //     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 // #endif
 
-//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "lightVolumes", NULL, NULL);
+//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "DeferredShading", NULL, NULL);
 //     if (window == NULL)
 //     {
 //         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
@@ -151,67 +183,117 @@ void lightVolumes_setup(GLFWwindow * window)
     
     glEnable(GL_DEPTH_TEST);
     
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-    glfwSetWindowSizeCallback(window, window_size_callback);
     glfwGetWindowSize(window, &WIDTH, &HEIGHT);
+
     // glfwSetCursorPosCallback(window, cursor_pos_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    
     if (!backpack)
     {
         backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
     }
 
+    
+    
+    deferredShader = std::make_shared<Shader>("Shaders/5_10/GBufferVS.vs", "Shaders/5_10/GBufferFS.fs", nullptr);
+    wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
+    pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
+    // use this shader to debug G-Buffer
+    debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
+    quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_10/QuadFS.fs", nullptr);
+    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
+    shaderSSAO = std::make_shared<Shader>("Shaders/5_10/SSAO.vs", "Shaders/5_10/SSAO.fs", nullptr);
 
-    sphere = std::make_shared<Icosphere>(1.0f, 1, false);    // radius, subdivision, smooth
+    Icosphere sphere(1.0f, 3, false);    // radius, subdivision, smooth
 
     glGenFramebuffers(1, &gBufferFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+    glGenFramebuffers(1, &ssaoFBO);
 
     // position color buffer
     glGenTextures(1, &gPosition);
-    
     // normal color buffer
     glGenTextures(1, &gNormal);
-    
     // color + specular color buffer
     glGenTextures(1, &gAlbedoSpec);
-    
 
-    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
-    glDrawBuffers(3, attachments);
+    glGenTextures(1, &noiseTexture);
+    glGenTextures(1, &ssaoColorBuffer);
+
+    
 
     glGenRenderbuffers(1, &depthRB);
-    window_size_callback(window, WIDTH, HEIGHT);
+
+    glGenFramebuffers(1, &ssaoBlurFBO);
+    glGenTextures(1, &ssaoColorBufferBlur);
+    frame_buffer_callback(window, WIDTH, HEIGHT);
+
+
 
     
-    objectPositions.clear();
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
+    // objectPositions.clear();
+    // objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
+    // objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
+    // objectPositions.push_back(glm::vec3( 3.0,  -3.0, -3.0));
+    // objectPositions.push_back(glm::vec3(-3.0,  -3.0,  0.0));
+    // objectPositions.push_back(glm::vec3( 0.0,  -3.0,  0.0));
+    // objectPositions.push_back(glm::vec3( 3.0,  -3.0,  0.0));
+    // objectPositions.push_back(glm::vec3(-3.0,  -3.0,  3.0));
+    // objectPositions.push_back(glm::vec3( 0.0,  -3.0,  3.0));
+    // objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
+
+    ssaoKernel.clear();
+    uniform_real_distribution<float> randomFloats(0.0, 1.0);
+    default_random_engine generator;
+    for(unsigned int i = 0; i < 64; ++i)
+    {
+        glm::vec3 sample(
+            randomFloats(generator) * 2.0 - 1.0,
+            randomFloats(generator) * 2.0 - 1.0,
+            randomFloats(generator)
+        );
+        sample = glm::normalize(sample);
+        sample *= randomFloats(generator);
+
+        float scale = (float) i / 64.0;
+        scale = lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+
+        ssaoKernel.push_back(sample);
+
+    }
+
+    vector<glm::vec3> ssaoNoise;
+    for(unsigned int i = 0; i < 16; ++i)
+    {
+        glm::vec3 noise(
+            randomFloats(generator) * 2.0 - 1.0,
+            randomFloats(generator) * 2.0 - 1.0,
+            0.0f
+        );
+        ssaoNoise.push_back(noise);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     
 
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-    
-    
-    
     glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 3 * sizeof(glm::mat4));
-
-    compile_shaders(window);
-
+    
+    
+    
     // lighting info
     // -------------
+    RecompileShaders(window);
     calculateLightInfo(window, false);
     // // Setup Dear ImGui context
     // IMGUI_CHECKVERSION();
@@ -242,7 +324,7 @@ void lightVolumes_setup(GLFWwindow * window)
     // glfwTerminate();
 }
 
-void lightVolumes_imgui(GLFWwindow * window)
+void SSAO_imgui(GLFWwindow * window)
 {
     // ImGui::Begin("Editor");
     // ImGui::Text("Lights Color & Position");
@@ -255,14 +337,12 @@ void lightVolumes_imgui(GLFWwindow * window)
     ImGui::Spacing();
     ImGui::Text("Light Info");
     bool bLightInfoChanged = false;
-    bLightInfoChanged |= ImGui::SliderFloat("constant", &constant, 0, 42.f);
+    bLightInfoChanged |= ImGui::SliderFloat("constant", &constant, 0, 20.f);
     bLightInfoChanged |= ImGui::SliderFloat("linear", &linear, 0.01f, 5.f);
     bLightInfoChanged |= ImGui::SliderFloat("quadratic", &quadratic, 0.01f, 3.f);
-    const ImU32   u32_one = 1;
-    bool lightCountChanged = ImGui::InputScalar("Light Count",      ImGuiDataType_U32,     &NR_LIGHTS,  &u32_one, NULL, "%u");
-    if (bLightInfoChanged || lightCountChanged)
+    if (bLightInfoChanged)
     {
-        calculateLightInfo(window, !lightCountChanged);
+        calculateLightInfo(window, true);
     }
     // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
     // ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
@@ -280,9 +360,9 @@ void lightVolumes_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-    if(ImGui::Button("Compile Shader"))
+    if (ImGui::Button("Recompile Shaders"))
     {
-        compile_shaders(window);
+        RecompileShaders(window);
     }
     ImGui::Separator();
     ImGui::Text("Current Draw Mode : %s", drawModeMap[drawMode]);
@@ -297,8 +377,6 @@ void lightVolumes_imgui(GLFWwindow * window)
             }
         }
     }
-    ImGui::Checkbox("DrawNormal", &bDrawNormal);
-    ImGui::Checkbox("ShowLightVolumes", &bShowLightVolumes);
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
 
@@ -307,7 +385,7 @@ void lightVolumes_imgui(GLFWwindow * window)
     // ImGui::End();
 }
 
-int lightVolumes(GLFWwindow * window)
+int SSAO(GLFWwindow * window)
 {
     processInput(window);
     // switch_drawMode(window);
@@ -322,54 +400,60 @@ int lightVolumes(GLFWwindow * window)
         deferredShader->use();
         deferredShader->setMat4("projection", projection);
         deferredShader->setMat4("view", view);
-        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            deferredShader->setMat4("model", model);
-            backpack->Draw(*deferredShader);
-        }
+        // for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
+        // {
+        glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, objectPositions[i]);
+        // model = glm::scale(model, glm::vec3(0.5f));
+        deferredShader->setMat4("model", model);
+        backpack->Draw(*deferredShader);
+        model = glm::scale(model, glm::vec3(8));
+        deferredShader->setMat4("model", model);
+        // }
 
-        // draw light volumes sphere
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, noiseTexture);
+        shaderSSAO->use();
+        SendKernelSamplesToShader();
+        shaderSSAO->setMat4("projection", projection);
+        renderQuadSimple();
+
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        glDisable(GL_DEPTH_TEST);
-        lightVolumesShader->use();
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
+        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
+        quadShader->use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, gNormal);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        lightVolumesShader->setMat4("projection", projection);
-        lightVolumesShader->setMat4("view", view);
-        lightVolumesShader->setVec3("viewPos", camera.Position);
-        lightVolumesShader->setVec2("windowSize", glm::vec2(WIDTH, HEIGHT));
-        lightVolumesShader->setFloat("shininess", 64);
-        for (unsigned int i = 0; i < lightPositions.size(); i++)
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+        quadShader->setMat4("model", glm::mat4(1));
+        quadShader->setVec3("viewPos", camera.Position);
+        quadShader->setFloat("shininess", 64);
+        for (unsigned int i = 0 ; i < lightPositions.size(); ++i)
         {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(lightPositions[i]));
-            // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-            sphere->setRadius(lightRadius[i]);
-            lightVolumesShader->setVec3("light.Position", lightPositions[i]);
-            lightVolumesShader->setVec3("light.Color", lightColors[i]);
-            lightVolumesShader->setFloat("light.Linear", linear);
-            lightVolumesShader->setFloat("light.Quadratic", quadratic);
-            lightVolumesShader->setFloat("light.Radius", lightRadius[i]);
-            lightVolumesShader->setMat4("model", model);
-            sphere->draw();
+            quadShader->setVec3("lights[" + to_string(i) + "].Position", lightPositions[i]);
+            quadShader->setVec3("lights[" + to_string(i) + "].Color", lightColors[i]);
+            quadShader->setFloat("lights[" + to_string(i) + "].Radius", lightRadius[i]);
+            quadShader->setFloat("lights[" + to_string(i) + "].Linear", linear);
+            quadShader->setFloat("lights[" + to_string(i) + "].Quadratic", quadratic);
         }
-        glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
+        renderQuadSimple();
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gBufferFBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         
-        // render light position
         lightShader->use();
         lightShader->setMat4("projection", projection);
         lightShader->setMat4("view", view);
@@ -385,91 +469,30 @@ int lightVolumes(GLFWwindow * window)
     }
     else 
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
-        // ** use simple shader - white color
-        // simpleShader->use();
-        // simpleShader->setMat4("projection", projection);
-        // simpleShader->setMat4("view", view);
-        // glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::scale(model, glm::vec3(2.0f));
-        // simpleShader->setMat4("model", model);
-
-
-        std::shared_ptr<Shader> usedShader = drawMode == 1 ? wireframeShader : pointShader;
-        usedShader->use();
-        usedShader->setVec3("viewPos", camera.Position);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-
-        if (bShowLightVolumes)
-        {
-            usedShader->setBool("backFaceCull", true);
-            usedShader->setVec3("color", glm::vec3(0.86, 0.62, 0.01));
-            for (unsigned int i = 0; i < lightPositions.size(); i++)
-            {
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model, glm::vec3(lightPositions[i]));
-                // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-                sphere->setRadius(lightRadius[i]);
-                glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-                sphere->draw();
-            }
-            usedShader->setBool("backFaceCull", false);
-        }
-
-        usedShader->setVec3("color", glm::vec3(0, 0.496, 0.496));
-        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            backpack->Draw(*usedShader);
-        }
-        for (unsigned int i = 0; i < lightPositions.size(); i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(lightPositions[i]));
-            model = glm::scale(model, glm::vec3(0.1f));
-            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            renderCubeSimple();
-        }
-    }
-    if (bDrawNormal)
-    {
-        normalShader->use();
-        normalShader->setVec3("color", glm::vec3(0.92, 0.496, 0));
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-        if (bShowLightVolumes && drawMode != 0)
-        {
-            for (unsigned int i = 0; i < lightPositions.size(); i++)
-            {
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model, glm::vec3(lightPositions[i]));
-                // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-                sphere->setRadius(lightRadius[i]);
-                glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-                sphere->draw();
-            }
-        }
-        for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(0.5f));
-            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            backpack->Draw(*normalShader);
-        }
-        for (unsigned int i = 0; i < lightPositions.size(); i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(lightPositions[i]));
-            model = glm::scale(model, glm::vec3(0.1f));
-            glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            renderCubeSimple();
-        }
+        // ** TODO
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
+        // std::shared_ptr<Shader> usedShader = drawMode == 1 ? wireframeShader : pointShader;
+        // usedShader->use();
+        // usedShader->setVec3("color", glm::vec3(0, 0.496, 0.496));
+        // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+        // glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        // for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
+        // {
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, objectPositions[i]);
+        //     model = glm::scale(model, glm::vec3(0.5f));
+        //     glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
+        //     backpack->Draw(*usedShader);
+        // }
+        // for (unsigned int i = 0; i < lightPositions.size(); i++)
+        // {
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, glm::vec3(lightPositions[i]));
+        //     model = glm::scale(model, glm::vec3(0.1f));
+        //     glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
+        //     renderCubeSimple();
+        // }
     }
     
 
@@ -517,131 +540,10 @@ int lightVolumes(GLFWwindow * window)
 
 }
 
-static void window_size_callback(GLFWwindow * window, int width, int height)
-{
-    if (width > 0 && height > 0)
-    {
-        WIDTH = width;
-        HEIGHT = height;
-        glBindTexture(GL_TEXTURE_2D, gPosition);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-
-        glBindTexture(GL_TEXTURE_2D, gNormal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
-
-        glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
-
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glViewport(0, 0, WIDTH, HEIGHT);
-    }
-}
-
-static void compile_shaders(GLFWwindow * window)
-{
-    if (!simpleShader)
-    {
-        simpleShader = std::make_shared<Shader>("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", nullptr);
-    }
-    else
-    {
-        simpleShader->recompileFromSource();
-    }
-    if (!normalShader)
-    {
-        normalShader = std::make_shared<Shader>("Shaders/5_9/DrawNormalVectorVS.vs", "Shaders/5_9/DrawNormalVectorFS.fs", "Shaders/5_9/DrawNormalVectorGS.gs");
-    }
-    else
-    {
-        normalShader->recompileFromSource();
-    }
-    
-    if (!deferredShader)
-    {
-        deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", nullptr);
-    }
-    else
-    {
-        deferredShader->recompileFromSource();
-    }
-    if (!wireframeShader)
-    {
-        wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
-
-    }
-    else
-    {
-        wireframeShader->recompileFromSource();
-    }
-    wireframeShader->use();
-    unsigned int blockIndex = glGetUniformBlockIndex(wireframeShader->ID, "Matrices");
-    glUniformBlockBinding(wireframeShader->ID, blockIndex, 0);
-    if (!pointShader)
-    {
-        pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
-
-    }
-    else
-    {
-        pointShader->recompileFromSource();
-    }
-    
-    // use this shader to debug G-Buffer
-    if (!debugQuadShader)
-    {
-        debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
-
-    }
-    else
-    {
-        debugQuadShader->recompileFromSource();
-    }
-    if (!lightVolumesShader)
-    {
-        lightVolumesShader = std::make_shared<Shader>("Shaders/5_9/LightVolumes.vs", "Shaders/5_9/LightVolumes.fs", nullptr);
-
-    }
-    else
-    {
-        lightVolumesShader->recompileFromSource();
-    }
-    lightVolumesShader->use();
-    lightVolumesShader->setInt("gPosition", 0);
-    lightVolumesShader->setInt("gNormal", 1);
-    lightVolumesShader->setInt("gAlbedoSpec", 2);
-    if (!lightShader)
-    {
-        lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
-
-    }
-    else
-    {
-        lightShader->recompileFromSource();
-    }
-    
-}
-
-static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
+static void calculateLightInfo(GLFWwindow * window, bool fixedPosition)
 {
     lightRadius.clear();
-    // srand(13);
-    if (!bFixedPosition)
+    if (!fixedPosition)
     {
         lightPositions.clear();
         lightColors.clear();
@@ -660,13 +562,12 @@ static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
             glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
             lightColors.push_back(lightColor);
         }
-        // sort(lightPositions.begin(), lightPositions.end(), [](glm::vec3 a, glm::vec3 b){
-
-        // });
     }
+    // srand(13);
+
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
     {
-        
+
         glm::vec3 lightColor = lightColors[i];
         float lightMax  = std::fmaxf(std::fmaxf(lightColor.r, lightColor.g), lightColor.b);
         float radius    = 
@@ -716,7 +617,59 @@ static void processInput(GLFWwindow * window)
 
 static void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+        glBindTexture(GL_TEXTURE_2D, gPosition);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+
+        glBindTexture(GL_TEXTURE_2D, gNormal);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
+        unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
+        glDrawBuffers(3, attachments);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+        glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WIDTH, HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, WIDTH, HEIGHT);
+    }
 }
 
 
@@ -895,25 +848,24 @@ static void renderQuadSimple()
 {
     if (quadVAO == 0)
     {
-        float quadVertices[] = {
-            // positions        // texture Coords
-            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        };
         // setup plane VAO
         glGenVertexArrays(1, &quadVAO);
         glGenBuffers(1, &quadVBO);
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     }
+    float quadVertices[] = {
+        // positions        // texture Coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
     glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }

@@ -173,7 +173,7 @@ void depthMap_imgui(GLFWwindow * window)
     // }
     // else
     // {
-    //     ImGui::Text("Press P or belowd Button to take control of the camera");
+    //     ImGui::Text("Press P or Button follows to take control of the camera");
     //     if(ImGui::Button("Posses camera") && !bCursorOff)
     //     {
     //         switch_cursor(window);

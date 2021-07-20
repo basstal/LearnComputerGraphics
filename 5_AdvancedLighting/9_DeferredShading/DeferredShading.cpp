@@ -153,14 +153,14 @@ void deferredShading_setup(GLFWwindow * window)
     // glfwSetCursorPosCallback(window, cursor_pos_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // 7 Deferred Shading
+    
     if (!backpack)
     {
         backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
     }
 
     
-    // 7 Deferred Shading
+    
     deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", nullptr);
     wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
     pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
@@ -187,7 +187,7 @@ void deferredShading_setup(GLFWwindow * window)
     glGenRenderbuffers(1, &depthRB);
     frame_buffer_callback(window, WIDTH, HEIGHT);
 
-    // 7 Deferred Shading
+    
     objectPositions.clear();
     objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
     objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
@@ -275,7 +275,7 @@ void deferredShading_imgui(GLFWwindow * window)
     }
     else
     {
-        ImGui::Text("Press P or belowd Button to take control of the camera");
+        ImGui::Text("Press P or Button follows to take control of the camera");
         if(ImGui::Button("Posses camera") && !bCursorOff)
         {
             switch_cursor(window);
@@ -308,7 +308,7 @@ int deferredShading(GLFWwindow * window)
     // switch_drawMode(window);
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.f);
     glm::mat4 view = camera.GetViewMatrix();
-    // 7 Deferred Shading
+    
     if (drawMode == 0)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
