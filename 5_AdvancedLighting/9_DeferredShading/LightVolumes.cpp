@@ -53,7 +53,7 @@ static std::vector<float> lightRadius;
 static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
 static unsigned int NR_LIGHTS = 50;
 static unsigned int ubo;
-static std::shared_ptr<Icosphere> sphere;
+static vector<std::shared_ptr<Icosphere>> spheres;
 static unsigned int depthRB;
 static bool bDrawNormal = false;
 static bool bShowLightVolumes = true;
@@ -118,7 +118,15 @@ static void switch_drawMode(GLFWwindow * window)
 
 }
 
-
+static void InitSpheres(GLFWwindow * window)
+{
+    spheres.clear();
+    for (unsigned int i = 0; i < NR_LIGHTS; ++i)
+    {
+        std::shared_ptr<Icosphere> sphere = std::make_shared<Icosphere>(1.0f, 3, false);    // radius, subdivision, smooth
+        spheres.push_back(sphere);
+    }
+}
 
 void lightVolumes_setup(GLFWwindow * window)
 {
@@ -164,9 +172,8 @@ void lightVolumes_setup(GLFWwindow * window)
         backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
     }
 
-
-    sphere = std::make_shared<Icosphere>(1.0f, 1, false);    // radius, subdivision, smooth
-
+    InitSpheres(window);
+    
     glGenFramebuffers(1, &gBufferFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
 
@@ -262,6 +269,10 @@ void lightVolumes_imgui(GLFWwindow * window)
     bool lightCountChanged = ImGui::InputScalar("Light Count",      ImGuiDataType_U32,     &NR_LIGHTS,  &u32_one, NULL, "%u");
     if (bLightInfoChanged || lightCountChanged)
     {
+        if (lightCountChanged)
+        {
+            InitSpheres(window);
+        }
         calculateLightInfo(window, !lightCountChanged);
     }
     // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
@@ -357,14 +368,15 @@ int lightVolumes(GLFWwindow * window)
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(lightPositions[i]));
             // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-            sphere->setRadius(lightRadius[i]);
             lightVolumesShader->setVec3("light.Position", lightPositions[i]);
             lightVolumesShader->setVec3("light.Color", lightColors[i]);
             lightVolumesShader->setFloat("light.Linear", linear);
             lightVolumesShader->setFloat("light.Quadratic", quadratic);
             lightVolumesShader->setFloat("light.Radius", lightRadius[i]);
             lightVolumesShader->setMat4("model", model);
-            sphere->draw();
+            spheres[i]->draw();
+            // sphere->setRadius(lightRadius[i]);
+            // sphere->draw();
         }
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
@@ -411,9 +423,9 @@ int lightVolumes(GLFWwindow * window)
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(lightPositions[i]));
                 // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-                sphere->setRadius(lightRadius[i]);
                 glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-                sphere->draw();
+                spheres[i]->draw();
+                // spheres[i]->setRadius(lightRadius[i]);
             }
             usedShader->setBool("backFaceCull", false);
         }
@@ -449,9 +461,9 @@ int lightVolumes(GLFWwindow * window)
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(lightPositions[i]));
                 // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-                sphere->setRadius(lightRadius[i]);
+                // sphere->setRadius(lightRadius[i]);
                 glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-                sphere->draw();
+                spheres[i]->draw();
             }
         }
         for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
@@ -673,6 +685,7 @@ static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
         (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
         / (2 * quadratic);  
         lightRadius.push_back(radius);
+        spheres[i]->setRadius(radius);
     }
 }
 
