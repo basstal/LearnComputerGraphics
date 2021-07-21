@@ -2,7 +2,6 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <others/stb_image.h>
@@ -11,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <Shader.h>
+#include <shader.h>
 #include <Camera.h>
 #include <Model.h>
 
@@ -37,23 +36,24 @@ static bool firstMouse = true;
 // timing
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
-static std::shared_ptr<Shader> shader;
-static std::shared_ptr<Shader> lightShader;
 static glm::vec3 lightPositions[] = {
-    glm::vec3(-10.0f,  10.0f, 10.0f),
-    glm::vec3( 10.0f,  10.0f, 10.0f),
-    glm::vec3(-10.0f, -10.0f, 10.0f),
-    glm::vec3( 10.0f, -10.0f, 10.0f),
+    glm::vec3(0.0f, 0.0f, 10.0f),
 };
 static glm::vec3 lightColors[] = {
-    glm::vec3(300.0f, 300.0f, 300.0f),
-    glm::vec3(300.0f, 300.0f, 300.0f),
-    glm::vec3(300.0f, 300.0f, 300.0f),
-    glm::vec3(300.0f, 300.0f, 300.0f)
+    glm::vec3(550.0f, 550.0f, 550.0f),
 };
-static int nrRows    = 7;
+static int nrRows = 7;
 static int nrColumns = 7;
 static float spacing = 2.5;
+static std::shared_ptr<Shader> shader;
+static std::shared_ptr<Shader> lightShader;
+
+static unsigned int albedo;
+static unsigned int normal;
+static unsigned int metallic;
+static unsigned int roughness;
+static unsigned int ao;
+
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -74,15 +74,21 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-
 static void RecompileShaders(GLFWwindow * window)
 {
     shader->recompileFromSource();
     lightShader->recompileFromSource();
 
+    shader->use();
+    shader->setInt("albedoMap", 0);
+    shader->setInt("normalMap", 1);
+    shader->setInt("metallicMap", 2);
+    shader->setInt("roughnessMap", 3);
+    shader->setInt("aoMap", 4);
+
 }
 
-void lighting_setup(GLFWwindow * window)
+void PBRTex_setup(GLFWwindow * window)
 {
 //     // glfw: initialize and configure
 //     // ------------------------------
@@ -98,7 +104,7 @@ void lighting_setup(GLFWwindow * window)
 
 //     // glfw window creation
 //     // --------------------
-//     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Lighting", NULL, NULL);
+//     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 //     glfwMakeContextCurrent(window);
 //     if (window == NULL)
 //     {
@@ -107,15 +113,16 @@ void lighting_setup(GLFWwindow * window)
 //         return -1;
 //     }
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetScrollCallback(window, scroll_callback);
     // glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
     glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
 
-    // tell GLFW to capture our mouse
+    // // tell GLFW to capture our mouse
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
+    // // glad: load all OpenGL function pointers
+    // // ---------------------------------------
     // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     // {
     //     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -125,18 +132,29 @@ void lighting_setup(GLFWwindow * window)
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // build and compile shaders
     // -------------------------
-    shader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_2/PBR.fs", nullptr);
+    shader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_2/PBRTex.fs", nullptr);
     lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
 
+    
+    // load PBR material textures
+    // --------------------------
+    albedo    = loadTexture("Assets/pbr/rusted_iron/albedo.png");
+    // normal    = loadTexture("Assets/pbr/rusted_iron/normal.png");
+    metallic  = loadTexture("Assets/pbr/rusted_iron/metallic.png");
+    roughness = loadTexture("Assets/pbr/rusted_iron/roughness.png");
+    ao        = loadTexture("Assets/pbr/rusted_iron/ao.png");
+
+    framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
+    RecompileShaders(window);
     // lights
     // ------
     
 
-    framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
+    // initialize static shader uniforms before rendering
+    // --------------------------------------------------
     
 
     // // render loop
@@ -156,9 +174,10 @@ void lighting_setup(GLFWwindow * window)
     // glfwTerminate();
 }
 
-void lighting_imgui(GLFWwindow * window)
+void PBRTex_imgui(GLFWwindow * window)
 {
     ImGui::Spacing();
+    ImGui::InputFloat3("lightColor", glm::value_ptr(lightColors[0]));
     ImGui::Separator();
     if (bCursorOff)
     {
@@ -177,23 +196,9 @@ void lighting_imgui(GLFWwindow * window)
         RecompileShaders(window);
     }
     ImGui::Separator();
-    // ImGui::Text("Current Draw Mode : %s", drawModeMap[drawMode]);
-    // if (ImGui::CollapsingHeader("Draw Mode Selection"))
-    // {
-    //     for (int i = 0; i < 3; ++i)
-    //     {
-    //         ImGui::RadioButton(drawModeMap[i], &drawMode, i);
-    //         if (i < 2)
-    //         {
-    //             ImGui::SameLine();
-    //         }
-    //     }
-    // }
-    glm::vec3 pos = camera.Position;
-    ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
 }
 
-int lighting(GLFWwindow * window)
+int PBRTex(GLFWwindow * window)
 {
     // per-frame time logic
     // --------------------
@@ -210,12 +215,23 @@ int lighting(GLFWwindow * window)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader->use();
-    glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    shader->use();
     shader->setMat4("projection", projection);
+    glm::mat4 view = camera.GetViewMatrix();
     shader->setMat4("view", view);
     shader->setVec3("camPos", camera.Position);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, albedo);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, metallic);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, roughness);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, ao);
 
     for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
     {
@@ -224,29 +240,25 @@ int lighting(GLFWwindow * window)
         shader->setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
         shader->setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
     }
-    shader->setVec3("albedo", 0.5f, 0.0f, 0.0f);
-    shader->setFloat("ao", 1.0f);
-    // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
-    // glm::mat4 model = glm::mat4(1.0f);
-    for (int row = 0; row < nrRows; ++row) 
+
+    // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
+    glm::mat4 model = glm::mat4(1.0f);
+    for (int row = 0; row < nrRows; ++row)
     {
-        shader->setFloat("metallic", (float)row / (float)nrRows);
-        for (int col = 0; col < nrColumns; ++col) 
+        for (int col = 0; col < nrColumns; ++col)
         {
-            // we clamp the roughness to 0.025 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-            // on direct lighting.
-            shader->setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
-            
-            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(
-                (col - (nrColumns / 2)) * spacing, 
-                (row - (nrRows / 2)) * spacing, 
+                (float)(col - (nrColumns / 2)) * spacing,
+                (float)(row - (nrRows / 2)) * spacing,
                 0.0f
             ));
             shader->setMat4("model", model);
             renderSphere();
         }
     }
+
+    
 
     lightShader->use();
     lightShader->setMat4("projection", projection);
@@ -260,9 +272,12 @@ int lighting(GLFWwindow * window)
         lightShader->setMat4("model", model);
         renderSphere();
     }
+    renderSphere();
+    
     return 0;
 
 }
+
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -365,11 +380,9 @@ static void renderSphere()
                 float yPos = std::cos(ySegment * PI);
                 float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
-                glm::vec3 point(xPos, yPos, zPos);
-                positions.push_back(point);
-                
+                positions.push_back(glm::vec3(xPos, yPos, zPos));
                 uv.push_back(glm::vec2(xSegment, ySegment));
-                normals.push_back(point);
+                normals.push_back(glm::vec3(xPos, yPos, zPos));
             }
         }
 
@@ -436,11 +449,14 @@ static void renderSphere()
 // ---------------------------------------------------
 static unsigned int loadTexture(char const * path)
 {
+    std::string filePath;
+    getProjectFilePath(path, filePath);
+
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    unsigned char *data = stbi_load(filePath.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
         GLenum format;
@@ -464,7 +480,7 @@ static unsigned int loadTexture(char const * path)
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
+        std::cout << "Texture failed to load at path: " << filePath.c_str() << std::endl;
         stbi_image_free(data);
     }
 

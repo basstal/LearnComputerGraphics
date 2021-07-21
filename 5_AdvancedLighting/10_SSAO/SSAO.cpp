@@ -469,7 +469,7 @@ int SSAO(GLFWwindow * window)
     }
     else 
     {
-        // ** TODO
+        // ** TODO:
         // glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
         // std::shared_ptr<Shader> usedShader = drawMode == 1 ? wireframeShader : pointShader;
