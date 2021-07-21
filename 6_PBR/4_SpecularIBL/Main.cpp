@@ -16,23 +16,23 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int diffuseIrradiance(GLFWwindow *);
-extern int cubemapConvolution(GLFWwindow * window);
+// extern int diffuseIrradiance(GLFWwindow *);
+extern int specularIBL(GLFWwindow * window);
 // extern int geometryShader(GLFWwindow * window);
 // extern int zoom(GLFWwindow * window);
 
-extern void diffuseIrradiance_setup(GLFWwindow *);
-extern void cubemapConvolution_setup(GLFWwindow *);
+// extern void diffuseIrradiance_setup(GLFWwindow *);
+extern void specularIBL_setup(GLFWwindow *);
 // extern void geometryShader_setup(GLFWwindow *);
 // extern void zoom_setup(GLFWwindow *);
 
-extern void diffuseIrradiance_imgui(GLFWwindow *);
-extern void cubemapConvolution_imgui(GLFWwindow * );
+// extern void diffuseIrradiance_imgui(GLFWwindow *);
+extern void specularIBL_imgui(GLFWwindow * );
 // extern void geometryShader_imgui(GLFWwindow * );
 
 std::map<std::string, FuncSet> maps{
-    {"diffuseIrradiance", FuncSet(diffuseIrradiance_setup, diffuseIrradiance, diffuseIrradiance_imgui)},
-    {"cubemapConvolution", FuncSet(cubemapConvolution_setup, cubemapConvolution, cubemapConvolution_imgui)},
+    // {"diffuseIrradiance", FuncSet(diffuseIrradiance_setup, diffuseIrradiance, diffuseIrradiance_imgui)},
+    {"specularIBL", FuncSet(specularIBL_setup, specularIBL, specularIBL_imgui)},
     // {"geometryShader", FuncSet(geometryShader_setup, geometryShader, geometryShader_imgui)},
     // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
@@ -54,7 +54,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "DiffuseIrradiance", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "SpecularIBL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;

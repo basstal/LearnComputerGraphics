@@ -23,7 +23,7 @@ static void processInput(GLFWwindow *window);
 static void renderSphere();
 static void renderCube();
 static void loadHDRImage(const char *);
-
+static void renderQuad();
 
 // settings
 static int SCR_WIDTH = 1920;
@@ -37,10 +37,11 @@ static bool firstMouse = true;
 // timing
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
+static float lod = 1.2;
 
 static std::shared_ptr<Shader> pbrShader;
 static std::shared_ptr<Shader> equirectangularToCubemapShader;
-static std::shared_ptr<Shader> backgroundShader, lightShader, convolutionShader;
+static std::shared_ptr<Shader> backgroundShader, lightShader, convolutionShader, prefilterShader, brdfShader;
 static unsigned int hdrTexture;
 // lights
 // ------
@@ -60,7 +61,7 @@ static int nrRows = 7;
 static int nrColumns = 7;
 static float spacing = 2.5;
 static unsigned int envCubemap;
-static unsigned int irradianceMap;
+static unsigned int irradianceMap, prefilterMap, brdfLUTTexture, quadVAO, quadVBO;
 
 
 static bool bCursorOff = false;
@@ -89,21 +90,30 @@ static void RecompileShaders(GLFWwindow * window)
     lightShader->recompileFromSource();
     equirectangularToCubemapShader->recompileFromSource();
     backgroundShader->recompileFromSource();
+    prefilterShader->recompileFromSource();
+    brdfShader->recompileFromSource();
 
 
     pbrShader->use();
     pbrShader->setVec3("albedo", 0.5f, 0.0f, 0.0f);
     pbrShader->setFloat("ao", 1.0f);
     pbrShader->setInt("irradianceMap", 0);
+    pbrShader->setInt("prefilterMap", 1);
+    pbrShader->setInt("brdfLUT", 2);
 
     equirectangularToCubemapShader->use();
     equirectangularToCubemapShader->setInt("equirectangularMap", 0);
     backgroundShader->use();
     backgroundShader->setInt("environmentMap", 0);
+    prefilterShader->use();
+    prefilterShader->setInt("environmentMap", 0);
+    convolutionShader->use();
+    convolutionShader->setInt("environmentMap", 0);
+
 }
 
 
-void cubemapConvolution_setup(GLFWwindow * window)
+void specularIBL_setup(GLFWwindow * window)
 {
 //     // glfw: initialize and configure
 //     // ------------------------------
@@ -146,18 +156,20 @@ void cubemapConvolution_setup(GLFWwindow * window)
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // build and compile shaders
     // -------------------------
-    pbrShader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_3/PBRIrradiance.fs", nullptr);
+    pbrShader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_4/PBRWithIBL.fs", nullptr);
     equirectangularToCubemapShader = std::make_shared<Shader>("Shaders/6_3/EquirectangularMap.vs", "Shaders/6_3/EquirectangularMap.fs", nullptr);
     lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
-    backgroundShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_3/SimpleCubemap.fs", nullptr);
+    backgroundShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_4/SimpleCubemap.fs", nullptr);
     convolutionShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_3/CubemapConvolution.fs", nullptr);
-
+    prefilterShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_4/PrefilterConvolution.fs", nullptr);
+    brdfShader = std::make_shared<Shader>("Shaders/6_4/PrecomputingBRDF.vs", "Shaders/6_4/PrecomputingBRDF.fs", nullptr);
 
     
-
+    RecompileShaders(window);
     framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
 
     
@@ -239,7 +251,6 @@ void cubemapConvolution_setup(GLFWwindow * window)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 
     convolutionShader->use();
-    convolutionShader->setInt("environmentMap", 0);
     convolutionShader->setMat4("projection", captureProjection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -254,7 +265,68 @@ void cubemapConvolution_setup(GLFWwindow * window)
         renderCube();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+
+    glGenTextures(1, &prefilterMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    prefilterShader->use();
+    prefilterShader->setMat4("projection", captureProjection);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    unsigned int maxMipLevels = 5;
+    for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+    {
+        // resize framebuffer according to mip-level size.
+        unsigned int mipWidth = 128 * std::pow(0.5, mip);
+        unsigned int mipHeight = 128 * std::pow(0.5, mip);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+        glViewport(0, 0, mipWidth, mipHeight);
+
+        float roughness = (float)mip / (float)(maxMipLevels - 1);
+        prefilterShader->setFloat("roughness", roughness);
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            prefilterShader->setMat4("view", captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            renderCube();
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenTextures(1, &brdfLUTTexture);
+    // pre-allocate enough memory for the LUT texture.
+    glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
+    glViewport(0, 0, 512, 512);
+    brdfShader->use();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderQuad();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
     // then before rendering, configure the viewport to the original framebuffer's screen dimensions
     // int scrWidth, scrHeight;
@@ -279,7 +351,7 @@ void cubemapConvolution_setup(GLFWwindow * window)
     // glfwTerminate();
 }
 
-void cubemapConvolution_imgui(GLFWwindow * window)
+void specularIBL_imgui(GLFWwindow * window)
 {
     ImGui::Spacing();
     ImGui::Separator();
@@ -299,6 +371,7 @@ void cubemapConvolution_imgui(GLFWwindow * window)
     {
         RecompileShaders(window);
     }
+    ImGui::SliderFloat("lod", &lod, 0, 4);
     ImGui::Separator();
     // ImGui::Text("Current Draw Mode : %s", drawModeMap[drawMode]);
     // if (ImGui::CollapsingHeader("Draw Mode Selection"))
@@ -316,7 +389,7 @@ void cubemapConvolution_imgui(GLFWwindow * window)
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
 }
 
-int cubemapConvolution(GLFWwindow * window)
+int specularIBL(GLFWwindow * window)
 {
     // per-frame time logic
     // --------------------
@@ -353,6 +426,10 @@ int cubemapConvolution(GLFWwindow * window)
     // glm::mat4 model = glm::mat4(1.0f);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
     for (int row = 0; row < nrRows; ++row)
     {
         pbrShader->setFloat("metallic", (float)row / (float)nrRows);
@@ -389,6 +466,7 @@ int cubemapConvolution(GLFWwindow * window)
 
     // render skybox (render as last to prevent overdraw)
     backgroundShader->use();
+    backgroundShader->setFloat("lod", lod);
     backgroundShader->setMat4("projection", projection);
     backgroundShader->setMat4("view", view);
     glActiveTexture(GL_TEXTURE0);
@@ -667,4 +745,96 @@ static void loadHDRImage(const char * path)
     {
         std::cout << "Failed to load HDR image." << std::endl;
     }
+}
+
+static void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+
+         // positions
+        glm::vec3 pos1(-1.0f,  1.0f, 0.0f);
+        glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+        glm::vec3 pos3( 1.0f, -1.0f, 0.0f);
+        glm::vec3 pos4( 1.0f,  1.0f, 0.0f);
+        // texture coordinates
+        glm::vec2 uv1(0.0f, 1.0f);
+        glm::vec2 uv2(0.0f, 0.0f);
+        glm::vec2 uv3(1.0f, 0.0f);  
+        glm::vec2 uv4(1.0f, 1.0f);
+        // normal vector
+        glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        
+        glm::vec3 tangent1;
+        tangent1.x = f * (edge1.x * deltaUV2.y - edge2.x * deltaUV1.y);
+        tangent1.y = f * (edge1.y * deltaUV2.y - edge2.y * deltaUV1.y);
+        tangent1.z = f * (edge1.z * deltaUV2.y - edge2.z * deltaUV1.y);
+        tangent1 = glm::normalize(tangent1);
+
+        glm::vec3 bitangent1;
+        bitangent1.x = f * (edge2.x * deltaUV1.x - edge1.x * deltaUV2.x);
+        bitangent1.y = f * (edge2.y * deltaUV1.x - edge1.y * deltaUV2.x);
+        bitangent1.z = f * (edge2.z * deltaUV1.x - edge1.z * deltaUV2.x);
+        bitangent1 = glm::normalize(bitangent1);
+
+        edge1 = pos3 - pos1;
+        edge2 = pos4 - pos1;
+
+        deltaUV1 = uv3 - uv1;
+        deltaUV2 = uv4 - uv1;
+
+        f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        glm::vec3 tangent2;
+        tangent2.x = f * (edge1.x * deltaUV2.y - edge2.x * deltaUV1.y);
+        tangent2.y = f * (edge1.y * deltaUV2.y - edge2.y * deltaUV1.y);
+        tangent2.z = f * (edge1.z * deltaUV2.y - edge2.z * deltaUV1.y);
+        tangent2 = glm::normalize(tangent2);
+
+        glm::vec3 bitangent2;
+        bitangent2.x = f * (edge2.x * deltaUV1.x - edge1.x * deltaUV2.x);
+        bitangent2.y = f * (edge2.y * deltaUV1.x - edge1.y * deltaUV2.x);
+        bitangent2.z = f * (edge2.z * deltaUV1.x - edge1.z * deltaUV2.x);
+        bitangent2 = glm::normalize(bitangent2);
+
+        float quadVertices[] = {
+            // positions        // texture Coords  // normal      // tangent                       //bitangent
+            pos1.x, pos1.y, pos1.z, uv1.x, uv1.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos2.x, pos2.y, pos2.z, uv2.x, uv2.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos3.x, pos3.y, pos3.z, uv3.x, uv3.y,   nm.x, nm.y, nm.z,  tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+
+            pos1.x, pos1.y, pos1.z, uv1.x, uv1.y,   nm.x, nm.y, nm.z,  tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos3.x, pos3.y, pos3.z, uv3.x, uv3.y,   nm.x, nm.y, nm.z,  tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos4.x, pos4.y, pos4.z, uv4.x, uv4.y,   nm.x, nm.y, nm.z,  tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void *)(5 * sizeof(float)));
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void *)(8 * sizeof(float)));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void *)(11 * sizeof(float)));
+
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }
