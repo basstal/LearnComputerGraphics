@@ -20,13 +20,13 @@ unsigned int loadTexture(const char *path);
 void renderSphere();
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+static int SCR_WIDTH = 1920;
+static int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = 800.0f / 2.0;
-float lastY = 600.0 / 2.0;
+float lastX = 0;
+float lastY = 0;
 bool firstMouse = true;
 
 // timing
@@ -49,7 +49,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Lighting", NULL, NULL);
     glfwMakeContextCurrent(window);
     if (window == NULL)
     {
@@ -60,6 +60,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -75,14 +76,12 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // build and compile shaders
     // -------------------------
-    Shader shader("VertexShaderPBR.glsl", "FragmentShaderPBR.glsl", "");
-
-    shader.use();
-    shader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
-    shader.setFloat("ao", 1.0f);
+    Shader shader("Shaders/6_2/PBR.vs", "Shaders/6_2/PBR.fs", nullptr);
+    Shader lightShader("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
 
     // lights
     // ------
@@ -102,11 +101,8 @@ int main()
     int nrColumns = 7;
     float spacing = 2.5;
 
-    // initialize static shader uniforms before rendering
-    // --------------------------------------------------
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shader.use();
-    shader.setMat4("projection", projection);
+    framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
+    
 
     // render loop
     // -----------
@@ -129,11 +125,22 @@ int main()
 
         shader.use();
         glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        shader.setMat4("projection", projection);
         shader.setMat4("view", view);
         shader.setVec3("camPos", camera.Position);
 
+        for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
+        {
+            // glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+            // newPos = lightPositions[i];
+            shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
+            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
+        }
+        shader.setVec3("albedo", 0.5f, 0.0f, 0.0f);
+        shader.setFloat("ao", 1.0f);
         // render rows*column number of spheres with varying metallic/roughness values scaled by rows and columns respectively
-        glm::mat4 model = glm::mat4(1.0f);
+        // glm::mat4 model = glm::mat4(1.0f);
         for (int row = 0; row < nrRows; ++row) 
         {
             shader.setFloat("metallic", (float)row / (float)nrRows);
@@ -143,7 +150,7 @@ int main()
                 // on direct lighting.
                 shader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
                 
-                model = glm::mat4(1.0f);
+                glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(
                     (col - (nrColumns / 2)) * spacing, 
                     (row - (nrRows / 2)) * spacing, 
@@ -154,20 +161,16 @@ int main()
             }
         }
 
-        // render light source (simply re-render sphere at light positions)
-        // this looks a bit off as we use the same shader, but it'll make their positions obvious and 
-        // keeps the codeprint small.
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        lightShader.setVec3("lightColor", glm::vec3(1.0));
         for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
         {
-            glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
-            newPos = lightPositions[i];
-            shader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
-            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
-
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, newPos);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPositions[i]);
             model = glm::scale(model, glm::vec3(0.5f));
-            shader.setMat4("model", model);
+            lightShader.setMat4("model", model);
             renderSphere();
         }
 
@@ -205,9 +208,14 @@ void processInput(GLFWwindow *window)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        // make sure the viewport matches the new window dimensions; note that width and 
+        // height will be significantly larger than specified on retina displays.
+        glViewport(0, 0, width, height);
+    }
 }
 
 
@@ -270,9 +278,11 @@ void renderSphere()
                 float yPos = std::cos(ySegment * PI);
                 float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
-                positions.push_back(glm::vec3(xPos, yPos, zPos));
+                glm::vec3 point(xPos, yPos, zPos);
+                positions.push_back(point);
+                
                 uv.push_back(glm::vec2(xSegment, ySegment));
-                normals.push_back(glm::vec3(xPos, yPos, zPos));
+                normals.push_back(point);
             }
         }
 
@@ -305,16 +315,16 @@ void renderSphere()
             data.push_back(positions[i].x);
             data.push_back(positions[i].y);
             data.push_back(positions[i].z);
-            if (uv.size() > 0)
-            {
-                data.push_back(uv[i].x);
-                data.push_back(uv[i].y);
-            }
             if (normals.size() > 0)
             {
                 data.push_back(normals[i].x);
                 data.push_back(normals[i].y);
                 data.push_back(normals[i].z);
+            }
+            if (uv.size() > 0)
+            {
+                data.push_back(uv[i].x);
+                data.push_back(uv[i].y);
             }
         }
         glBindVertexArray(sphereVAO);
@@ -326,9 +336,9 @@ void renderSphere()
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     }
 
     glBindVertexArray(sphereVAO);

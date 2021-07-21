@@ -5,8 +5,13 @@ in vec2 TexCoords;
 in vec3 WorldPos;
 in vec3 Normal;
 
+//lights
+uniform vec3 lightPositions[4];
+uniform vec3 lightColors[4];
+
 uniform vec3 camPos;
 
+//material parameters
 uniform vec3 albedo;
 uniform float metallic;
 uniform float roughness;
@@ -63,19 +68,20 @@ void main()
     vec3 Lo = vec3(0.0);
     for (int i = 0 ; i < 4 ; ++i)
     {
+        // calculate per-light radiance
         vec3 L = normalize(lightPositions[i] - WorldPos);
         vec3 H = normalize(V + L);
-
         float dist = length(lightPositions[i] - WorldPos);
         float attenuation = 1.0 / (dist * dist);
         vec3 radiance = lightColors[i] * attenuation;
 
         vec3 F0 = vec3(0.04);
         F0 = mix(F0, albedo, metallic);
-        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
+        
+        // cook-torrance brdf
         float NDF = DistributionGGX(N, H, roughness);
         float G = GeometrySmith(N, V, L, roughness);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
         vec3 numerator = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
@@ -85,7 +91,8 @@ void main()
         vec3 kD = vec3(1.0) - kS;
 
         kD *= 1.0 - metallic;
-
+        
+        // add to outgoing radiance Lo
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
@@ -95,4 +102,6 @@ void main()
 
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
+
+    FragColor = vec4(color, 1.0);
 }

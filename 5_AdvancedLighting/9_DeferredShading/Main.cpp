@@ -18,22 +18,22 @@ static void processInput(GLFWwindow *window)
 
 extern int lightVolumes(GLFWwindow *);
 extern int deferredShading(GLFWwindow * window);
-// extern int geometryShader(GLFWwindow * window);
+extern int lightVolumesInstancing(GLFWwindow * window);
 // extern int zoom(GLFWwindow * window);
 
 extern void lightVolumes_setup(GLFWwindow *);
 extern void deferredShading_setup(GLFWwindow *);
-// extern void geometryShader_setup(GLFWwindow *);
+extern void lightVolumesInstancing_setup(GLFWwindow *);
 // extern void zoom_setup(GLFWwindow *);
 
 extern void deferredShading_imgui(GLFWwindow * );
-// extern void geometryShader_imgui(GLFWwindow * );
+extern void lightVolumesInstancing_imgui(GLFWwindow * );
 extern void lightVolumes_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"lightVolumes", FuncSet(lightVolumes_setup, lightVolumes, lightVolumes_imgui)},
     {"deferredShading", FuncSet(deferredShading_setup, deferredShading, deferredShading_imgui)},
-    // {"geometryShader", FuncSet(geometryShader_setup, geometryShader, geometryShader_imgui)},
+    {"lightVolumesInstancing", FuncSet(lightVolumesInstancing_setup, lightVolumesInstancing, lightVolumesInstancing_imgui)},
     // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 

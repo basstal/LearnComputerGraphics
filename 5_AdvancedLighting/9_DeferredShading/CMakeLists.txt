@@ -49,6 +49,7 @@ add_executable(${PROJECT_NAME}
     Main.cpp
     DeferredShading.cpp
     LightVolumes.cpp
+    LightVolumesInstancing.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"
