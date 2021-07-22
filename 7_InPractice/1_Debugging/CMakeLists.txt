@@ -14,7 +14,7 @@ project(${PROJECT_NAME})
 
 # lib source glad
 add_library(glad
-    "${ROOT_PATH}/Plugins/glad/glad.c")
+    "${ROOT_PATH}/Plugins/glad43/glad.c")
 
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")

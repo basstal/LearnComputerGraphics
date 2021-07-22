@@ -1,6 +1,6 @@
 #include <glad43/glad.h>
 #include <GLFW/glfw3.h>
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <others/stb_image.h>
 
 #include <glm/glm.hpp>
@@ -10,6 +10,7 @@
 #include <Shader.h>
 
 #include <iostream>
+#include <Utils.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -141,7 +142,7 @@ int main()
     glEnable(GL_CULL_FACE);
  
     // OpenGL initial state
-    Shader shader("../../Shaders/1_4/VertexShader14.vs", "../../Shaders/1_4/FragmentShader14.fs", NULL);
+    Shader shader("Shaders/1_4/VertexShader14.vs", "Shaders/1_4/FragmentShader14.fs", nullptr);
 
     // configure 3D cube
     unsigned int cubeVAO, cubeVBO;
@@ -208,7 +209,9 @@ int main()
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     int width, height, nrComponents;
-    unsigned char *data = stbi_load("../../Assets/wood.png", &width, &height, &nrComponents, 0);
+    std::string path;
+    getProjectFilePath("Assets/wood.png", path);
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
