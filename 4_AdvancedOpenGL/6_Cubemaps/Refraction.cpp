@@ -236,12 +236,12 @@ void refraction_setup(GLFWwindow * window)
     glBindVertexArray(0);
 
     std::vector<std::string> skyboxTexs = {
-        "Assets/skybox/default/right.jpg",
-        "Assets/skybox/default/left.jpg",
-        "Assets/skybox/default/top.jpg",
-        "Assets/skybox/default/bottom.jpg",
-        "Assets/skybox/default/front.jpg",
-        "Assets/skybox/default/back.jpg",
+        "Assets/skybox/right.jpg",
+        "Assets/skybox/left.jpg",
+        "Assets/skybox/top.jpg",
+        "Assets/skybox/bottom.jpg",
+        "Assets/skybox/front.jpg",
+        "Assets/skybox/back.jpg",
     };
     skyboxTextures = LoadSkyboxTex(skyboxTexs);
 
