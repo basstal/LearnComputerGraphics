@@ -24,21 +24,24 @@ unsigned int indices[] = {
     1, 2, 3
 };
 
-const char *vertexShaderSource = "#version 330 core\n"
+const char *vertexShaderSource = 
+"#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "void main()\n"
 "{\n"
 " gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\n";
 
-const char *fragmentShaderSource ="#version 330 core\n"
+const char *fragmentShaderSource =
+"#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 " FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\n";
 
-const char *yellowFragmentShaderSource ="#version 330 core\n"
+const char *yellowFragmentShaderSource =
+"#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -50,6 +53,9 @@ static bool wireframe = false;
 
 static int key_state_left_control = GLFW_RELEASE;
 static int key_state_f = GLFW_RELEASE;
+
+static int SCR_WIDTH = 1920;
+static int SCR_HEIGHT = 1080;
 
 void processInputWireframe(GLFWwindow * window)
 {
@@ -82,7 +88,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "HelloTriangle", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "HelloTriangle", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -97,7 +103,7 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     /* Compile Vertex Shader */
     unsigned int vertexShader;
@@ -203,9 +209,8 @@ int main()
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // ** if not use EBO
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
 
+        // ** VAO1 did not use element_array_buffer
         glUseProgram(yellowShaderProgram);
         glBindVertexArray(VAO1);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -243,7 +248,12 @@ void checkShaderCompileStatus(unsigned int shaderId)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 void processInput(GLFWwindow *window)

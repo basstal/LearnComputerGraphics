@@ -5,7 +5,7 @@ set(ROOT_PATH
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 
 
-set(PROJECT_NAME "Lighting")
+set(PROJECT_NAME "Debugging")
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -46,9 +46,7 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Lighting.cpp
-    Main.cpp
-    PBRTex.cpp
+    Debugging.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"

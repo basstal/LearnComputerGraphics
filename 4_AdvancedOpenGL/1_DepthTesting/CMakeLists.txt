@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(ROOT_PATH 
     "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
-# message("${ROOT_PATH}")
+
 
 set(PROJECT_NAME "DepthTesting")
 
