@@ -311,3 +311,4 @@ _deps
 !**/Assets/**/*.obj
 
 .vscode
+*.a

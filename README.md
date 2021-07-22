@@ -4,6 +4,8 @@ Follow https://learnopengl.com/
 
 Use cmake for make & build project in each section
 
+Only test & build on windows
+
 ```shell
 cd 1_GettingStarted/1_HelloWindow
 cmake .
