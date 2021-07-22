@@ -104,7 +104,7 @@ void exercise1_setup(GLFWwindow * window)
     }
     
     
-    shaderProgram = std::make_shared<Shader>("../../Shaders/1_4/VertexShader14.vs", "../../Shaders/1_4/FragmentShader14.fs", nullptr);
+    shaderProgram = std::make_shared<Shader>("Shaders/1_4/VertexShader14.vs", "Shaders/1_4/FragmentShader14.fs", nullptr);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
