@@ -54,7 +54,7 @@ static bool wireFrame = false;
 static unsigned int VAO, VBO, EBO;
 static std::shared_ptr<Shader> shaderProgram;
 
-void exercise1_setup(GLFWwindow* window)
+void exercise4_setup(GLFWwindow* window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -139,7 +139,7 @@ void exercise1_setup(GLFWwindow* window)
 }
 
 
-void exercise1_imgui(GLFWwindow * window)
+void exercise4_imgui(GLFWwindow * window)
 {
     ImGui::Spacing();
 
@@ -156,7 +156,7 @@ void exercise1_imgui(GLFWwindow * window)
     
 }
 
-int exercise1(GLFWwindow* window)
+int exercise4(GLFWwindow* window)
 {
     shaderProgram->setFloat("mixParam", mixParam);
     glBindVertexArray(VAO);

@@ -32,7 +32,7 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Exercise2.cpp
+    Transformations.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp")
