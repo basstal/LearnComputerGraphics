@@ -35,7 +35,6 @@ target_include_directories(imgui PUBLIC
 add_executable(${PROJECT_NAME} 
     Main.cpp
     Materials.cpp
-    Exercise1.cpp
     Exercise2.cpp
     "${ROOT_PATH}/Scripts/STBImage.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
