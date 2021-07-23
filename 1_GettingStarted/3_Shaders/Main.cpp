@@ -20,13 +20,17 @@ extern int maxVertexAttributes(GLFWwindow *);
 extern int moreAttributes(GLFWwindow *);
 extern int sendColor(GLFWwindow *);
 extern int uniform(GLFWwindow *window);
-extern int exercise(GLFWwindow * window);
+extern int exercise3(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
+extern int exercise1(GLFWwindow * window);
 
 extern void maxVertexAttributes_setup(GLFWwindow *);
 extern void moreAttributes_setup(GLFWwindow *);
 extern void sendColor_setup(GLFWwindow *);
 extern void uniform_setup(GLFWwindow *);
-extern void exercise_setup(GLFWwindow *);
+extern void exercise3_setup(GLFWwindow *);
+extern void exercise2_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
 
 extern void maxVertexAttributes_imgui(GLFWwindow *);
 
@@ -35,7 +39,9 @@ std::map<std::string, FuncSet> maps{
     {"moreAttributes", FuncSet(moreAttributes_setup, moreAttributes)},
     {"sendColor", FuncSet(sendColor_setup, sendColor)},
     {"uniform", FuncSet(uniform_setup, uniform)},
-    {"exercise", FuncSet(exercise_setup, exercise)},
+    {"exercise3", FuncSet(exercise3_setup, exercise3)},
+    {"exercise2", FuncSet(exercise2_setup, exercise2)},
+    {"exercise1", FuncSet(exercise1_setup, exercise1)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -75,7 +81,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -84,8 +90,15 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
-    int (*current_draw)(GLFWwindow *) = nullptr;
-    void (*current_imgui)(GLFWwindow *) = nullptr;
+    auto firstEntry = maps.begin();
+    FuncSet funcSet = firstEntry->second;
+    int (*current_draw)(GLFWwindow *) = funcSet.draw;
+    void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    if (funcSet.setup)
+    {
+        funcSet.setup(window);
+    }
+    
 
     while(!glfwWindowShouldClose(window))
     {
@@ -97,7 +110,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Draw Functions");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))

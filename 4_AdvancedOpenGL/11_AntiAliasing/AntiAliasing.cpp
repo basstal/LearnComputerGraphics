@@ -178,7 +178,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -189,11 +189,11 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    Shader shader("Shaders/3_3/ModelVS33.vs", "Shaders/4_2/SimpleFragmentShader.fs", nullptr);
-    Shader backpackShader("Shaders/3_3/ModelVS33.vs", "Shaders/4_3/WindowFragmentShader.fs", nullptr);
-    Shader framebufferShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/FramebufferFS.fs", nullptr);
-    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/PostProcessing.fs", nullptr);
-    Shader customAntiAliasingShader("Shaders/4_11/CustomAAVS.vs", "Shaders/4_11/CustomAAFS.fs", nullptr);
+    Shader shader("Shaders/3_3/ModelVS33.vert", "Shaders/4_2/SimpleFragmentShader.frag", nullptr);
+    Shader backpackShader("Shaders/3_3/ModelVS33.vert", "Shaders/4_3/WindowFragmentShader.frag", nullptr);
+    Shader framebufferShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/FramebufferFS.frag", nullptr);
+    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessing.frag", nullptr);
+    Shader customAntiAliasingShader("Shaders/4_11/CustomAAVS.vert", "Shaders/4_11/CustomAAFS.frag", nullptr);
     // backpack
     Model backpack("Assets/backpack/backpack.obj", true);
 
@@ -228,7 +228,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Editor");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Editor");                          
             ImGui::Separator();
             if (bCursorOff)
             {

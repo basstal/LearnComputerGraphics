@@ -34,7 +34,7 @@ target_include_directories(imgui PUBLIC
 # project source
 add_executable(${PROJECT_NAME} 
     Main.cpp
-    Exercise.cpp
+    Exercise3.cpp
     More3D.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"

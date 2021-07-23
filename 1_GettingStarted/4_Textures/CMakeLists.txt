@@ -33,8 +33,10 @@ target_include_directories(imgui PUBLIC
 # project source
 add_executable(${PROJECT_NAME} 
     Main.cpp
-    Exercise.cpp
     Exercise1.cpp
+    Exercise2.cpp
+    Exercise3.cpp
+    Exercise4.cpp
     TextureWrapping.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"

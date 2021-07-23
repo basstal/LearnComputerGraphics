@@ -67,7 +67,6 @@ float lastY = 0.0f;
 float lastTime = (float)glfwGetTime();
 bool moveMouse = true;
 
-void frame_buffer_callback(GLFWwindow * window, int , int );
 void scroll_callback(GLFWwindow *, double , double);
 void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
@@ -96,8 +95,6 @@ int main()
         std::cout << "ERROR::LOAD GL LOADER::FAILED!" << std::endl;
         return -1;
     }
-
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -131,11 +128,11 @@ int main()
     glEnableVertexAttribArray(0);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/ColorsFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/ColorsFragmentShader.frag", fsPath);
     Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
-    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_1/ColorsVertexShader.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     Shader shaderProgramForLight = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
 
     shaderProgram.use();
@@ -178,11 +175,6 @@ int main()
     }
     glfwTerminate();
     return 0;
-}
-
-void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 void processInput(GLFWwindow * window)

@@ -119,8 +119,8 @@ void asteroidField_setup(GLFWwindow * window)
     }
 
 
-    shaderProgram = std::make_shared<Shader>("Shaders/4_10/AsteroidFieldVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", nullptr);
-    instanceAsteroidShader = std::make_shared<Shader>("Shaders/4_10/InstanceAsteroidVS.vs", "Shaders/4_10/AsteroidFieldFS.fs", nullptr);
+    shaderProgram = std::make_shared<Shader>("Shaders/4_10/AsteroidFieldVS.vert", "Shaders/4_10/AsteroidFieldFS.frag", nullptr);
+    instanceAsteroidShader = std::make_shared<Shader>("Shaders/4_10/InstanceAsteroidVS.vert", "Shaders/4_10/AsteroidFieldFS.frag", nullptr);
     planet = std::make_shared<Model>("Assets/planet/planet.obj", false);
     rock = std::make_shared<Model>("Assets/rock/rock.obj", false);
 

@@ -76,9 +76,7 @@ static float vertices[] = {
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
-static const float width = 1920;
-static const float height = 1080;
-static float lastX = height/2, lastY = width /2;
+static float lastX = 0, lastY = 0;
 static float yaw = -90.0f;
 static float pitch = 0.0f;
 static bool firstMouse = true;
@@ -211,32 +209,9 @@ void zoom_imgui(GLFWwindow * window)
         ImGui::SliderFloat("camera zoom sensitivity", (float *)&cameraRotatorSensitivity, 0.0, 1.0);
         ImGui::SliderFloat("camera zoom factor", (float *)&cameraZoomFactor, 0.5, 2.0f);
     }
-    // ImGui::SetWindowSize(ImVec2(345, 200));
 }
 void zoom_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetScrollCallback(window, scrollCallback);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -290,8 +265,8 @@ void zoom_setup(GLFWwindow * window)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/1_6/VertexShader16.vs", vsPath);
-    getProjectFilePath("Shaders/1_6/FragmentShader16.fs", fsPath);
+    getProjectFilePath("Shaders/1_6/VertexShader16.vert", vsPath);
+    getProjectFilePath("Shaders/1_6/FragmentShader16.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     shaderProgram->use();
 
@@ -303,18 +278,6 @@ void zoom_setup(GLFWwindow * window)
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     glEnable(GL_DEPTH_TEST);
-
-    // const float radius = 10.0f;
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
-    // return 0;
 }
 
 int zoom(GLFWwindow * window)

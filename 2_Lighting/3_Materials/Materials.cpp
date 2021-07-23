@@ -98,7 +98,6 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int , int );
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -132,36 +131,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void materials_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-
-    // GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-
-    // glfwMakeContextCurrent(window);
-
-    // if ( !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-    // {
-    //     std::cout << "ERROR::LOAD GL LOADER::FAILED!" << std::endl;
-    //     return -1;
-    // }
-
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-
     glfwSetScrollCallback(window, scroll_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
     glGenVertexArrays(1, &VAO);
 
     glGenBuffers(1, &VBO);
@@ -187,11 +157,11 @@ void materials_setup(GLFWwindow * window)
     glEnableVertexAttribArray(0);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_3/MaterialsVS23.vs", vsPath);
-    getProjectFilePath("Shaders/2_3/MaterialsFS23.fs", fsPath);
+    getProjectFilePath("Shaders/2_3/MaterialsVS23.vert", vsPath);
+    getProjectFilePath("Shaders/2_3/MaterialsFS23.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
-    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -200,16 +170,6 @@ void materials_setup(GLFWwindow * window)
     model = glm::scale(model, glm::vec3(0.2));
 
     glEnable(GL_DEPTH_TEST);
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-    // glfwTerminate();
 }
 
 int materials(GLFWwindow * window)
@@ -271,11 +231,6 @@ void materials_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-}
-
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 static void processInput(GLFWwindow * window)

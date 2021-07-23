@@ -1,6 +1,6 @@
 #include <glad43/glad.h>
 #include <GLFW/glfw3.h>
-// #define STB_IMAGE_IMPLEMENTATION
+
 #include <others/stb_image.h>
 
 #include <glm/glm.hpp>
@@ -142,7 +142,7 @@ int main()
     glEnable(GL_CULL_FACE);
  
     // OpenGL initial state
-    Shader shader("Shaders/1_4/VertexShader14.vs", "Shaders/1_4/FragmentShader14.fs", nullptr);
+    Shader shader("Shaders/1_4/VertexShader14.vert", "Shaders/1_4/FragmentShader14.frag", nullptr);
 
     // configure 3D cube
     unsigned int cubeVAO, cubeVBO;

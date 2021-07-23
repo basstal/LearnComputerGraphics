@@ -59,7 +59,7 @@ void instancing_setup(GLFWwindow * window)
     //     std::cout << "Failed to initialize GLAD" << std::endl;
     //     return -1;
     // }
-    shaderProgram = std::make_shared<Shader>("Shaders/4_10/InstancingVS.vs", "Shaders/4_10/InstancingFS.fs", nullptr);
+    shaderProgram = std::make_shared<Shader>("Shaders/4_10/InstancingVS.vert", "Shaders/4_10/InstancingFS.frag", nullptr);
 
     glm::vec2 translations[100];
     int index = 0;

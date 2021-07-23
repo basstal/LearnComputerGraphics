@@ -83,8 +83,8 @@ int main()
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader normalMappingShader = Shader("Shaders/5_5/NormalMappingVS.vs", "Shaders/5_5/NormalMappingFS.fs", NULL);
-    Shader simpleShader("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", NULL);
+    Shader normalMappingShader = Shader("Shaders/5_5/NormalMappingVS.vert", "Shaders/5_5/NormalMappingFS.frag", NULL);
+    Shader simpleShader("Shaders/2_1/ColorsVertexShader.vert", "Shaders/2_1/LightFragmentShader.frag", NULL);
 
     normalMappingShader.use();
     normalMappingShader.setInt("diffuseTexture", 0);

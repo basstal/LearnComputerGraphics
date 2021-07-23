@@ -112,9 +112,9 @@ int main()
         cout << "ERROR:: FRAME BUFFER INIT FAILED! " << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vs", "Shaders/5_4/PointShadowFS.fs", "Shaders/5_4/PointShadowGS.gs");
-    Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vs", "Shaders/5_4/RenderingShadowFS.fs", NULL);
-    Shader lightShader("Shaders/5_4/RenderingShadowVS.vs", "Shaders/5_4/SimpleColorFS.fs", NULL);
+    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vert", "Shaders/5_4/PointShadowFS.frag", "Shaders/5_4/PointShadowGS.gs");
+    Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vert", "Shaders/5_4/RenderingShadowFS.frag", NULL);
+    Shader lightShader("Shaders/5_4/RenderingShadowVS.vert", "Shaders/5_4/SimpleColorFS.frag", NULL);
 
     unsigned int woodTexture = loadImage("Assets/wood.png", false);
     vec3 sampleOffsetDirections[20] = {

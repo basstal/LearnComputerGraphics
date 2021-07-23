@@ -17,7 +17,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// #define STB_IMAGE_IMPLEMENTATION
+
 #include <others/stb_image.h>
 #include <Utils.h>
 
@@ -163,23 +163,18 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-
     glfwSetScrollCallback(window, scroll_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     unsigned int diffuseTexture, specularTexture;
     std::string path;
@@ -216,11 +211,11 @@ int main()
 
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_6/MultipleLightsVS26.vs", vsPath);
-    getProjectFilePath("Shaders/2_6/MultipleLightsFS26.fs", fsPath);
+    getProjectFilePath("Shaders/2_6/MultipleLightsVS26.vert", vsPath);
+    getProjectFilePath("Shaders/2_6/MultipleLightsFS26.frag", fsPath);
     Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
-    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
-    getProjectFilePath("Shaders/2_6/LightFS26.fs", fsPath);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_6/LightFS26.frag", fsPath);
     Shader lampShader = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     glEnable(GL_DEPTH_TEST);

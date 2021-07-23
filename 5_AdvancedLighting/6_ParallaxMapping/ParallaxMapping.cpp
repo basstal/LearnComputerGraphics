@@ -111,8 +111,8 @@ void parallaxMapping_setup(GLFWwindow *window)
     // glfwSetCursorPosCallback(window, cursor_pos_callback);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    parallaxMappingShader = std::make_shared<Shader>("Shaders/5_6/ParallaxMappingVS.vs", "Shaders/5_6/ParallaxMappingFS.fs", nullptr);
-    simpleLight = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/5_4/SimpleColorFS.fs", nullptr);
+    parallaxMappingShader = std::make_shared<Shader>("Shaders/5_6/ParallaxMappingVS.vert", "Shaders/5_6/ParallaxMappingFS.frag", nullptr);
+    simpleLight = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/5_4/SimpleColorFS.frag", nullptr);
 
     diffuseTex = loadImage("Assets/bricks2.jpg",  false);
     normalTex = loadImage("Assets/bricks2_normal.jpg", false);

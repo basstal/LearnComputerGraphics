@@ -173,10 +173,10 @@ int main()
     floorTexture = loadImage("Assets/metal.png", false);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/4_1/VertexShader.vs", vsPath);
-    getProjectFilePath("/Shaders/4_1/FragmentShader.fs", fsPath);
-    Shader simpleShader(std::string("Shaders/4_1/VertexShader.vs"), std::string("Shaders/4_1/FragmentShader.fs"), std::string(""));
-    Shader outlineShader(std::string("Shaders/4_1/VertexShader.vs"), std::string("Shaders/4_2/SimpleFragmentShader.fs"), std::string(""));
+    getProjectFilePath("Shaders/4_1/VertexShader.vert", vsPath);
+    getProjectFilePath("/Shaders/4_1/FragmentShader.frag", fsPath);
+    Shader simpleShader(std::string("Shaders/4_1/VertexShader.vert"), std::string("Shaders/4_1/FragmentShader.frag"), std::string(""));
+    Shader outlineShader(std::string("Shaders/4_1/VertexShader.vert"), std::string("Shaders/4_2/SimpleFragmentShader.frag"), std::string(""));
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

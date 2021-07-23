@@ -195,28 +195,6 @@ void lookAround_imgui(GLFWwindow * window)
 
 void lookAround_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // glfwSetCursorPosCallback(window, mouseCallback);
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
@@ -269,8 +247,8 @@ void lookAround_setup(GLFWwindow * window)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/1_6/VertexShader16.vs", vsPath);
-    getProjectFilePath("Shaders/1_6/FragmentShader16.fs", fsPath);
+    getProjectFilePath("Shaders/1_6/VertexShader16.vert", vsPath);
+    getProjectFilePath("Shaders/1_6/FragmentShader16.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     shaderProgram->use();
 
@@ -285,16 +263,6 @@ void lookAround_setup(GLFWwindow * window)
     shaderProgram->setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
 
-    // const float radius = 10.0f;
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
 }
 
 int lookAround(GLFWwindow * window)

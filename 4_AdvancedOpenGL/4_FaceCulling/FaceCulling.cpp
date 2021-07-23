@@ -155,7 +155,7 @@ int main()
     cubeTexture  = loadImage("Assets/marble.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
 
-    Shader simpleShader("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", nullptr);
+    Shader simpleShader("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

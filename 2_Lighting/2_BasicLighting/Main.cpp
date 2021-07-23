@@ -16,25 +16,22 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int exerciseGouraud(GLFWwindow *);
-extern int exercise(GLFWwindow * window);
+extern int exercise4(GLFWwindow *);
+extern int exercise1(GLFWwindow * window);
 extern int lighting(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
 
-extern void exerciseGouraud_setup(GLFWwindow *);
-extern void exercise_setup(GLFWwindow *);
+extern void exercise4_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
 extern void lighting_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
 
-extern void exercise_imgui(GLFWwindow * );
+extern void exercise4_imgui(GLFWwindow *);
+extern void exercise1_imgui(GLFWwindow * );
 extern void lighting_imgui(GLFWwindow * );
-extern void exerciseGouraud_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"exerciseGouraud", FuncSet(exerciseGouraud_setup, exerciseGouraud, exerciseGouraud_imgui)},
-    {"exercise", FuncSet(exercise_setup, exercise, exercise_imgui)},
+    {"exercise4", FuncSet(exercise4_setup, exercise4, exercise4_imgui)},
+    {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
     {"lighting", FuncSet(lighting_setup, lighting, lighting_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -74,7 +71,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -83,8 +80,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
-    int (*current_draw)(GLFWwindow *) = nullptr;
-    void (*current_imgui)(GLFWwindow *) = nullptr;
+    auto firstEntry = maps.begin();
+    FuncSet funcSet = firstEntry->second;
+    int (*current_draw)(GLFWwindow *) = funcSet.draw;
+    void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    if (funcSet.setup)
+    {
+        funcSet.setup(window);
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -96,7 +99,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Draw Functions");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))

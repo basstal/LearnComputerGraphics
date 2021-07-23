@@ -149,11 +149,11 @@ void cubemapConvolution_setup(GLFWwindow * window)
 
     // build and compile shaders
     // -------------------------
-    pbrShader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_3/PBRIrradiance.fs", nullptr);
-    equirectangularToCubemapShader = std::make_shared<Shader>("Shaders/6_3/EquirectangularMap.vs", "Shaders/6_3/EquirectangularMap.fs", nullptr);
-    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
-    backgroundShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_3/SimpleCubemap.fs", nullptr);
-    convolutionShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vs", "Shaders/6_3/CubemapConvolution.fs", nullptr);
+    pbrShader = std::make_shared<Shader>("Shaders/6_2/PBR.vert", "Shaders/6_3/PBRIrradiance.frag", nullptr);
+    equirectangularToCubemapShader = std::make_shared<Shader>("Shaders/6_3/EquirectangularMap.vert", "Shaders/6_3/EquirectangularMap.frag", nullptr);
+    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vert", "Shaders/2_3/ExerciseLight23.frag", nullptr);
+    backgroundShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vert", "Shaders/6_3/SimpleCubemap.frag", nullptr);
+    convolutionShader = std::make_shared<Shader>("Shaders/6_3/SimpleCubemap.vert", "Shaders/6_3/CubemapConvolution.frag", nullptr);
 
 
     

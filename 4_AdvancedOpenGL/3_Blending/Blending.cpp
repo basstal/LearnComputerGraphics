@@ -188,8 +188,8 @@ void blending_setup(GLFWwindow *window)
     floorTexture = loadImage("Assets/metal.png", false);
     grassTexture = loadImage("Assets/grass.png", false);
 
-    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", nullptr);
-    vegetationShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_3/VegetationFragmentShader.fs", nullptr);
+    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
+    vegetationShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_3/VegetationFragmentShader.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

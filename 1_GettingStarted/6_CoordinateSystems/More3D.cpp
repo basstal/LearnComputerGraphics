@@ -70,36 +70,9 @@ static float vertices[] = {
 
 static unsigned int VAO, VBO;
 static std::shared_ptr<Shader> shaderProgram;
-// void processInput(GLFWwindow *window)
-// {
-//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-//     {
-//         glfwSetWindowShouldClose(window, true);
-//     }
-// }
 
 void more3D_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
@@ -152,8 +125,8 @@ void more3D_setup(GLFWwindow * window)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/1_6/VertexShader16.vs", vsPath);
-    getProjectFilePath("Shaders/1_6/FragmentShader16.fs", fsPath);
+    getProjectFilePath("Shaders/1_6/VertexShader16.vert", vsPath);
+    getProjectFilePath("Shaders/1_6/FragmentShader16.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     shaderProgram->use();
 
@@ -171,16 +144,6 @@ void more3D_setup(GLFWwindow * window)
     shaderProgram->setMat4("view", view);
     shaderProgram->setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
 }
 
 int more3D(GLFWwindow * window)

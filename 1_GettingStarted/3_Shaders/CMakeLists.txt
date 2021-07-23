@@ -37,7 +37,9 @@ add_executable(${PROJECT_NAME}
     MoreAttributes.cpp
     SendColor.cpp
     Uniform.cpp
-    Exercise.cpp
+    Exercise1.cpp
+    Exercise2.cpp
+    Exercise3.cpp
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp"
     "${ROOT_PATH}/Scripts/Shader.cpp")

@@ -21,7 +21,7 @@ Theta θ: the angle between the LightDir vector and the SpotDir vector. The θ v
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// #define STB_IMAGE_IMPLEMENTATION
+
 #include <others/stb_image.h>
 
 #include <Utils.h>
@@ -140,8 +140,6 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
@@ -181,11 +179,11 @@ int main()
     glEnableVertexAttribArray(0);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_5/LightVS25.vs", vsPath);
-    getProjectFilePath("Shaders/2_5/LightFS25.fs", fsPath);
+    getProjectFilePath("Shaders/2_5/LightVS25.vert", vsPath);
+    getProjectFilePath("Shaders/2_5/LightFS25.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
-    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     glm::vec3 lightPos = glm::vec3(0.5, 0.5f, 1.0f);
@@ -204,15 +202,15 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
     
         // ** Point Light
-        // glm::mat4 model = glm::mat4(1.0);
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(0.2));
-        // lampShader.use();
-        // lampShader.setMat4("model", model);
-        // lampShader.setMat4("view", view);
-        // lampShader.setMat4("projection", projection);
-        // glBindVertexArray(lightVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        glm::mat4 model = glm::mat4(1.0);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2));
+        lampShader->use();
+        lampShader->setMat4("model", model);
+        lampShader->setMat4("view", view);
+        lampShader->setMat4("projection", projection);
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         shaderProgram->use();
 
@@ -226,19 +224,24 @@ int main()
         shaderProgram->setFloat("material.shininess", 32.0f);
 
         shaderProgram->setVec3("viewPos", camera.Position);
-        shaderProgram->setVec3("light.position", camera.Position);
-        shaderProgram->setVec3("light.direction", camera.Front);
-        shaderProgram->setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
-        shaderProgram->setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+        shaderProgram->setVec3("spotLight.position", camera.Position);
+        shaderProgram->setVec3("spotLight.direction", camera.Front);
+        shaderProgram->setFloat("spotLight.cutOff",   glm::cos(glm::radians(12.5f)));
+        shaderProgram->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
 
-        shaderProgram->setVec3("light.ambient", glm::vec3(0.2));
-        shaderProgram->setVec3("light.diffuse", glm::vec3(0.5));
-        shaderProgram->setVec3("light.specular", glm::vec3(1));
+        shaderProgram->setVec3("spotLight.ambient", glm::vec3(0.2));
+        shaderProgram->setVec3("spotLight.diffuse", glm::vec3(0.5));
+        shaderProgram->setVec3("spotLight.specular", glm::vec3(1));
 
+        shaderProgram->setVec3("pointLight.ambient", glm::vec3(0.2));
+        shaderProgram->setVec3("pointLight.diffuse", glm::vec3(0.5));
+        shaderProgram->setVec3("pointLight.specular", glm::vec3(1));
+
+        shaderProgram->setVec3("pointLight.position", lightPos);
         // ** Point Light
-        // shaderProgram->setFloat("light.constant",  1.0f);
-        // shaderProgram->setFloat("light.linear",    0.09f);
-        // shaderProgram->setFloat("light.quadratic", 0.032f);	
+        shaderProgram->setFloat("pointLight.constant",  1.0f);
+        shaderProgram->setFloat("pointLight.linear",    0.09f);
+        shaderProgram->setFloat("pointLight.quadratic", 0.032f);
 
         shaderProgram->setMat4("view", view);
         shaderProgram->setMat4("projection", projection);

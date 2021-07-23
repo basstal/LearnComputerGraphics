@@ -205,8 +205,8 @@ void refraction_setup(GLFWwindow * window)
 
     // build and compile shaders
     // -------------------------
-    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vs", "Shaders/4_6/CubemapsFS.fs", nullptr);
-    refractionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vs", "Shaders/4_6/RefractionFS.fs", nullptr);
+    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vert", "Shaders/4_6/CubemapsFS.frag", nullptr);
+    refractionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vert", "Shaders/4_6/RefractionFS.frag", nullptr);
 
     backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", false);
 

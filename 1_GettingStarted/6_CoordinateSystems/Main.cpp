@@ -7,6 +7,7 @@
 #include <iostream>
 #include <map>
 
+#include <FuncSet.h>
 
 static void processInput(GLFWwindow *window)
 {
@@ -17,29 +18,14 @@ static void processInput(GLFWwindow *window)
 }
 
 extern int more3D(GLFWwindow *);
-extern int exercise(GLFWwindow * window);
+extern int exercise3(GLFWwindow * window);
 
 extern void more3D_setup(GLFWwindow *);
-extern void exercise_setup(GLFWwindow *);
-
-
-class FuncSet
-{
-public:
-    int (*draw)(GLFWwindow *);
-    void (*setup)(GLFWwindow *);
-    void (*imgui)(GLFWwindow*);
-    FuncSet(void (*in_setup)(GLFWwindow *), int (*in_draw)(GLFWwindow *), void (*in_imgui)(GLFWwindow*) = nullptr)
-    {
-        draw = in_draw;
-        setup = in_setup;
-        imgui = in_imgui;
-    }
-};
+extern void exercise3_setup(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"more3D", FuncSet(more3D_setup, more3D)},
-    {"exercise", FuncSet(exercise_setup, exercise)},
+    {"exercise3", FuncSet(exercise3_setup, exercise3)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -79,7 +65,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -88,8 +74,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
-    int (*current_draw)(GLFWwindow *) = nullptr;
-    void (*current_imgui)(GLFWwindow *) = nullptr;
+    auto firstEntry = maps.begin();
+    FuncSet funcSet = firstEntry->second;
+    int (*current_draw)(GLFWwindow *) = funcSet.draw;
+    void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    if (funcSet.setup)
+    {
+        funcSet.setup(window);
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -101,7 +93,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Draw Functions");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))

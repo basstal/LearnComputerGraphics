@@ -116,12 +116,12 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -131,10 +131,10 @@ int main()
     unsigned int container = loadImageGamma("Assets/diffuse_map.png", true, false);
 
     // 6 Bloom
-    Shader bloomShader = Shader("Shaders/5_8/ColorThresholdVS.vs", "Shaders/5_8/ColorThresholdFS.fs", nullptr);
-    Shader gaussianBlurShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/GaussianBlurFS.fs", nullptr);
-    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_8/HDRQuadWithBlurFS.fs", nullptr);
-    Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vs", "Shaders/5_8/LightThresholdFS.fs", nullptr);
+    Shader bloomShader = Shader("Shaders/5_8/ColorThresholdVS.vert", "Shaders/5_8/ColorThresholdFS.frag", nullptr);
+    Shader gaussianBlurShader = Shader("Shaders/5_7/HDRQuadVS.vert", "Shaders/5_8/GaussianBlurFS.frag", nullptr);
+    Shader bloomQuadShader = Shader("Shaders/5_7/HDRQuadVS.vert", "Shaders/5_8/HDRQuadWithBlurFS.frag", nullptr);
+    Shader lightShader = Shader("Shaders/2_3/MaterialsVS23.vert", "Shaders/5_8/LightThresholdFS.frag", nullptr);
 
     // 6 Bloom
     envInit();

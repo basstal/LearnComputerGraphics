@@ -197,14 +197,14 @@ void SSAO_setup(GLFWwindow * window)
 
     
     
-    deferredShader = std::make_shared<Shader>("Shaders/5_10/GBufferVS.vs", "Shaders/5_10/GBufferFS.fs", nullptr);
-    wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
-    pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
+    deferredShader = std::make_shared<Shader>("Shaders/5_10/GBufferVS.vert", "Shaders/5_10/GBufferFS.frag", nullptr);
+    wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Wireframe.gs");
+    pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Point.gs");
     // use this shader to debug G-Buffer
-    debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
-    quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_10/QuadFS.fs", nullptr);
-    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
-    shaderSSAO = std::make_shared<Shader>("Shaders/5_10/SSAO.vs", "Shaders/5_10/SSAO.fs", nullptr);
+    debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_9/DebugQuadFS.frag", nullptr);
+    quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_10/QuadFS.frag", nullptr);
+    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vert", "Shaders/2_3/ExerciseLight23.frag", nullptr);
+    shaderSSAO = std::make_shared<Shader>("Shaders/5_10/SSAO.vert", "Shaders/5_10/SSAO.frag", nullptr);
 
     Icosphere sphere(1.0f, 3, false);    // radius, subdivision, smooth
 
@@ -299,12 +299,12 @@ void SSAO_setup(GLFWwindow * window)
     // IMGUI_CHECKVERSION();
     // ImGui::CreateContext();
     // ImGuiIO& io = ImGui::GetIO(); (void)io;
-    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    // 
 
     // // Setup Dear ImGui style
     // ImGui::StyleColorsDark();
-    // //ImGui::StyleColorsClassic();
+    
 
     // // Setup Platform/Renderer bindings
     // ImGui_ImplGlfw_InitForOpenGL(window, true);

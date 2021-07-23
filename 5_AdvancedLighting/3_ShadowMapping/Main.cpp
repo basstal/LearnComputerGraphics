@@ -74,7 +74,7 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -83,8 +83,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
     
-    int (*current_draw)(GLFWwindow *) = nullptr;
-    void (*current_imgui)(GLFWwindow *) = nullptr;
+    auto firstEntry = maps.begin();
+    FuncSet funcSet = firstEntry->second;
+    int (*current_draw)(GLFWwindow *) = funcSet.draw;
+    void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    if (funcSet.setup)
+    {
+        funcSet.setup(window);
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -96,7 +102,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Draw Functions");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))

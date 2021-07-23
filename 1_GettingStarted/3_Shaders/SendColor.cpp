@@ -25,13 +25,6 @@ static float vertices[] = {
     -0.5f, -0.5f, 0.0f
 };
 
-// void processInput(GLFWwindow *window)
-// {
-//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-//     {
-//         glfwSetWindowShouldClose(window, true);
-//     }
-// }
 static unsigned int vertexShader, fragmentShader;
 static unsigned int shaderProgram;
 static unsigned int VAO, VBO;
@@ -66,39 +59,8 @@ void sendColor_setup(GLFWwindow * window)
 
 int sendColor(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    
-    
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
-
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);        
     return 0;
 }

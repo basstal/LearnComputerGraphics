@@ -131,7 +131,7 @@ int main()
     unsigned int floorTexture = loadImageGamma("Assets/wood.png", false, false);
     unsigned int floorTextureGammaCorrected = loadImageGamma("Assets/wood.png", true, false);
 
-    Shader shader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_2/GammaCorrectionFS.fs", NULL);
+    Shader shader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_2/GammaCorrectionFS.frag", NULL);
 
 
     while(!glfwWindowShouldClose(window))

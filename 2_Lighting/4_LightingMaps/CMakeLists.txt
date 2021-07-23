@@ -33,7 +33,10 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Exercise.cpp
+    Exercise1.cpp
+    Exercise2.cpp
+    Exercise3.cpp
+    Exercise4.cpp
     DiffuseMap.cpp
     SpecularMap.cpp
     Main.cpp
@@ -59,6 +62,8 @@ if(MSVC)
         "${CMAKE_CXX_FLAGS} /wd4244") # Suppress 'warning C4244: 'conversion' conversion from 'type1' to 'type2', possible loss of data'
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} /wd4305") # Suppress 'warning C4244: 'argument': truncation from 'double' to 'float''
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} /wd4101")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG
         "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT.LIB")
     set(CMAKE_CXX_FLAGS_RELEASE "/MT")

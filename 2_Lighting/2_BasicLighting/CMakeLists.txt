@@ -33,8 +33,8 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Exercise.cpp
-    ExerciseGouraud.cpp
+    Exercise1.cpp
+    Exercise4.cpp
     Lighting.cpp
     Main.cpp
     "${ROOT_PATH}/Scripts/STBImage.cpp"

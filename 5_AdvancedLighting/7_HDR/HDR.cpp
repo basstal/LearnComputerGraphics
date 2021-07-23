@@ -114,12 +114,12 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -127,9 +127,9 @@ int main()
 
     unsigned int woodTexture = loadImageGamma("Assets/wood.png", true, false);
     // 5 HDR
-    Shader HDRObjectShader = Shader("Shaders/5_7/HDRObjectVS.vs", "Shaders/5_7/HDRObjectFS.fs", nullptr);
-    Shader HDRQuadShader = Shader("Shaders/5_7/HDRQuadVS.vs", "Shaders/5_7/HDRQuadFS.fs", nullptr);
-    Shader simpleLight = Shader("Shaders/4_1/VertexShader.vs", "Shaders/5_7/SimpleInputColorFS.fs", nullptr);
+    Shader HDRObjectShader = Shader("Shaders/5_7/HDRObjectVS.vert", "Shaders/5_7/HDRObjectFS.frag", nullptr);
+    Shader HDRQuadShader = Shader("Shaders/5_7/HDRQuadVS.vert", "Shaders/5_7/HDRQuadFS.frag", nullptr);
+    Shader simpleLight = Shader("Shaders/4_1/VertexShader.vert", "Shaders/5_7/SimpleInputColorFS.frag", nullptr);
 
     // 5 HDR
     envInit();

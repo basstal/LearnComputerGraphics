@@ -206,8 +206,8 @@ void reflection_setup(GLFWwindow * window)
 
     // build and compile shaders
     // -------------------------
-    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vs", "Shaders/4_6/CubemapsFS.fs", nullptr);
-    reflectionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vs", "Shaders/4_6/ReflectionFS.fs", nullptr);
+    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vert", "Shaders/4_6/CubemapsFS.frag", nullptr);
+    reflectionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vert", "Shaders/4_6/ReflectionFS.frag", nullptr);
 
     backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", false);
 

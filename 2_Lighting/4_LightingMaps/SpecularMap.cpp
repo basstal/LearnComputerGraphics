@@ -15,7 +15,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// #define STB_IMAGE_IMPLEMENTATION
+
 #include <others/stb_image.h>
 
 #include <Utils.h>
@@ -136,36 +136,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void specularMap_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-
-    // GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-
-    // glfwMakeContextCurrent(window);
-
-    // if ( !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-    // {
-    //     std::cout << "ERROR::LOAD GL LOADER::FAILED!" << std::endl;
-    //     return -1;
-    // }
-
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-
     glfwSetScrollCallback(window, scroll_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
     getProjectFilePath("Assets/diffuse_map.png", path);
@@ -232,11 +203,11 @@ void specularMap_setup(GLFWwindow * window)
 
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vs", vsPath);
-    getProjectFilePath("Shaders/2_4/SpecularMapFS24.fs", fsPath);
+    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vert", vsPath);
+    getProjectFilePath("Shaders/2_4/SpecularMapFS24.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
-    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -245,16 +216,6 @@ void specularMap_setup(GLFWwindow * window)
     model = glm::scale(model, glm::vec3(0.2));
 
     glEnable(GL_DEPTH_TEST);
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-    // glfwTerminate();
 }
 
 int specularMap(GLFWwindow * window)

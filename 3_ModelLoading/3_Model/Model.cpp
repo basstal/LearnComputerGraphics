@@ -85,12 +85,12 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -102,8 +102,8 @@ int main()
     getProjectFilePath("Assets/backpack/backpack.obj", path);
 
     Model backpack = Model(path.c_str(), true);
-    getProjectFilePath("Shaders/3_3/ModelVS33.vs", vsPath);
-    getProjectFilePath("Shaders/3_3/ModelFS33.fs", fsPath);
+    getProjectFilePath("Shaders/3_3/ModelVS33.vert", vsPath);
+    getProjectFilePath("Shaders/3_3/ModelFS33.frag", fsPath);
     Shader shader = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
     float materialShininess = 32.0f;
     glm::vec3 pointLightPosition = glm::vec3(1.2f, 1.0f, 1.0f);

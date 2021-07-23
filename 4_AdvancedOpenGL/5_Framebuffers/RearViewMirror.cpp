@@ -191,8 +191,8 @@ void rearViewMirror_setup(GLFWwindow * window)
     cubeTexture  = loadImage("Assets/container.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
 
-    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", nullptr);
-    framebufferShader = std::make_shared<Shader>("Shaders/4_5/FramebufferVS.vs", "Shaders/4_5/FramebufferFS.fs", nullptr);
+    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
+    framebufferShader = std::make_shared<Shader>("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/FramebufferFS.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

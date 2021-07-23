@@ -101,10 +101,10 @@ int main()
         return -1;
     }
     
-    Shader redShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS1.fs", nullptr);
-    Shader greenShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS2.fs", nullptr);
-    Shader blueShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS3.fs", nullptr);
-    Shader yellowShader("Shaders/4_8/UniformBufferObjectVS.vs", "Shaders/4_8/UniformBufferObjectFS4.fs", nullptr);
+    Shader redShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS1.frag", nullptr);
+    Shader greenShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS2.frag", nullptr);
+    Shader blueShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS3.frag", nullptr);
+    Shader yellowShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS4.frag", nullptr);
 
     unsigned int redUniformBlockIndex = glGetUniformBlockIndex(redShader.ID, "Matrices");
     unsigned int greenUniformBlockIndex = glGetUniformBlockIndex(greenShader.ID, "Matrices");

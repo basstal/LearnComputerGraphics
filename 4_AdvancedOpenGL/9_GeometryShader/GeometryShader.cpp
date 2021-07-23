@@ -66,7 +66,7 @@ void geometryShader_setup(GLFWwindow * window)
     //     return -1;
     // }
 
-    geometryShaderProgram = std::make_shared<Shader>("Shaders/4_9/SimpleGeometryVS.vs", "Shaders/4_9/SimpleGeometryFS.fs", "Shaders/4_9/SimpleGeometryGS.gs");
+    geometryShaderProgram = std::make_shared<Shader>("Shaders/4_9/SimpleGeometryVS.vert", "Shaders/4_9/SimpleGeometryFS.frag", "Shaders/4_9/SimpleGeometryGS.gs");
 
 
     glGenVertexArrays(1, &vao);

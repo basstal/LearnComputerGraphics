@@ -203,8 +203,8 @@ void semiTransparent_setup(GLFWwindow * window)
     floorTexture = loadImage("Assets/metal.png", false);
     windowTexture = loadImage("Assets/window.png", false);
 
-    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", nullptr);
-    windowShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_3/WindowFragmentShader.fs", nullptr);
+    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
+    windowShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_3/WindowFragmentShader.frag", nullptr);
 
     // cube VAO
     // if (cubeVAO <= 0)

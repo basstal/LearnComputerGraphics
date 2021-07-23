@@ -16,7 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// #define STB_IMAGE_IMPLEMENTATION
+
 #include <others/stb_image.h>
 
 #include <Utils.h>
@@ -214,11 +214,11 @@ void diffuseMap_setup(GLFWwindow * window)
     glEnableVertexAttribArray(0);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_4/DiffuseMapVS24.vs", vsPath);
-    getProjectFilePath("Shaders/2_4/DiffuseMapFS24.fs", fsPath);
+    getProjectFilePath("Shaders/2_4/DiffuseMapVS24.vert", vsPath);
+    getProjectFilePath("Shaders/2_4/DiffuseMapFS24.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
-    getProjectFilePath("Shaders/2_2/VertexShader22.vs", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);

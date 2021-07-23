@@ -125,8 +125,8 @@ void renderingShadows_setup(GLFWwindow *window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 2 shadow mapping
-    simpleShadowShader = std::make_shared<Shader>("Shaders/5_3/SimpleShadowVS.vs", "Shaders/5_3/SimpleShadowFS.fs", nullptr);
-    renderingShadowShader = std::make_shared<Shader>("Shaders/5_3/RenderingShadowVS.vs", "Shaders/5_3/RenderingShadowFS.fs", nullptr);
+    simpleShadowShader = std::make_shared<Shader>("Shaders/5_3/SimpleShadowVS.vert", "Shaders/5_3/SimpleShadowFS.frag", nullptr);
+    renderingShadowShader = std::make_shared<Shader>("Shaders/5_3/RenderingShadowVS.vert", "Shaders/5_3/RenderingShadowFS.frag", nullptr);
 
     woodTexture = loadImage("Assets/wood.png", false);
     // plane VAO

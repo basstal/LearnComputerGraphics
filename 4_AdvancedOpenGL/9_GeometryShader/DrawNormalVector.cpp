@@ -100,8 +100,8 @@ void drawNormalVector_setup(GLFWwindow *window)
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    shader = std::make_shared<Shader>("Shaders/4_9/DrawModelVS.vs", "Shaders/4_9/DrawModelFS.fs", nullptr);
-    normalVectorShader = std::make_shared<Shader>("Shaders/4_9/DrawNormalVectorVS.vs", "Shaders/4_9/DrawNormalVectorFS.fs", "Shaders/4_9/DrawNormalVectorGS.gs");
+    shader = std::make_shared<Shader>("Shaders/4_9/DrawModelVS.vert", "Shaders/4_9/DrawModelFS.frag", nullptr);
+    normalVectorShader = std::make_shared<Shader>("Shaders/4_9/DrawNormalVectorVS.vert", "Shaders/4_9/DrawNormalVectorFS.frag", "Shaders/4_9/DrawNormalVectorGS.gs");
 
     if (!backpackModel)
     {

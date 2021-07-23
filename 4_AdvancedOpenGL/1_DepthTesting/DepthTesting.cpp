@@ -163,8 +163,8 @@ int main(int args, void *argv[])
     floorTexture = loadImage("Assets/metal.png", false);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/4_1/VertexShader.vs", vsPath);
-    getProjectFilePath("/Shaders/4_1/FragmentShader.fs", fsPath);
+    getProjectFilePath("Shaders/4_1/VertexShader.vert", vsPath);
+    getProjectFilePath("/Shaders/4_1/FragmentShader.frag", fsPath);
     Shader simpleShader(vsPath.c_str(), fsPath.c_str(), NULL);
 
     // cube VAO

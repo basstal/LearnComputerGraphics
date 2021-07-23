@@ -129,8 +129,8 @@ void lighting_setup(GLFWwindow * window)
 
     // build and compile shaders
     // -------------------------
-    shader = std::make_shared<Shader>("Shaders/6_2/PBR.vs", "Shaders/6_2/PBR.fs", nullptr);
-    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
+    shader = std::make_shared<Shader>("Shaders/6_2/PBR.vert", "Shaders/6_2/PBR.frag", nullptr);
+    lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vert", "Shaders/2_3/ExerciseLight23.frag", nullptr);
 
     // lights
     // ------

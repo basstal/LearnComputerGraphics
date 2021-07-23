@@ -208,8 +208,8 @@ void cubemaps_setup(GLFWwindow * window)
 
     // build and compile shaders
     // -------------------------
-    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vs", "Shaders/4_6/CubemapsFS.fs", nullptr);
-    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vs", "Shaders/4_1/FragmentShader.fs", nullptr);
+    shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vert", "Shaders/4_6/CubemapsFS.frag", nullptr);
+    simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);

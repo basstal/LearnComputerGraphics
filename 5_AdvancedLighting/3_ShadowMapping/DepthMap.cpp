@@ -125,8 +125,8 @@ void depthMap_setup(GLFWwindow * window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 2 shadow mapping
-    simpleShadowShader = std::make_shared<Shader>("Shaders/5_3/SimpleShadowVS.vs", "Shaders/5_3/SimpleShadowFS.fs", nullptr);
-    visualDebugShader = std::make_shared<Shader>("Shaders/4_5/FramebufferVS.vs", "Shaders/5_3/DebugDepthMapFS.fs", nullptr);
+    simpleShadowShader = std::make_shared<Shader>("Shaders/5_3/SimpleShadowVS.vert", "Shaders/5_3/SimpleShadowFS.frag", nullptr);
+    visualDebugShader = std::make_shared<Shader>("Shaders/4_5/FramebufferVS.vert", "Shaders/5_3/DebugDepthMapFS.frag", nullptr);
 
     // plane VAO
     glGenVertexArrays(1, &planeVAO);

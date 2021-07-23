@@ -98,7 +98,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // 1-blinn phong
-    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vs", "Shaders/5_1/BlinnPhongFS.fs", NULL);
+    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_1/BlinnPhongFS.frag", NULL);
 
     // planeVAO
     unsigned int planeVAO, planeVBO;

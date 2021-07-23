@@ -99,7 +99,7 @@ void explodingObjects_setup(GLFWwindow *window)
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
-    explodingShader = std::make_shared<Shader>("Shaders/4_9/ExplodingVS.vs", "Shaders/4_9/ExplodingFS.fs", "Shaders/4_9/ExplodingGS.gs");
+    explodingShader = std::make_shared<Shader>("Shaders/4_9/ExplodingVS.vert", "Shaders/4_9/ExplodingFS.frag", "Shaders/4_9/ExplodingGS.gs");
 
     // explodingShader->use();
     if (!backpackModel)

@@ -1,3 +1,6 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 #include <others/stb_image.h>
 
 #include <glm/glm.hpp>
@@ -68,6 +71,7 @@ static float vertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
+static float radius = 7.0f, rotateSpeed = 0.1f;
 
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
@@ -100,28 +104,14 @@ static void processInput(GLFWwindow *window)
 
 }
 
+void lookAtMatrix_imgui(GLFWwindow * window)
+{
+    ImGui::DragFloat("rotate speed", &rotateSpeed, 0.02f, 0.0f, 1.0f);
+    ImGui::DragFloat("radius", &radius, 0.1f, 1.0f, 15.0f);
+}
+
 void lookAtMatrix_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
@@ -174,8 +164,8 @@ void lookAtMatrix_setup(GLFWwindow * window)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/1_6/VertexShader16.vs", vsPath);
-    getProjectFilePath("Shaders/1_6/FragmentShader16.fs", fsPath);
+    getProjectFilePath("Shaders/1_6/VertexShader16.vert", vsPath);
+    getProjectFilePath("Shaders/1_6/FragmentShader16.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     shaderProgram->use();
 
@@ -190,16 +180,6 @@ void lookAtMatrix_setup(GLFWwindow * window)
     shaderProgram->setMat4("projection", projection);
     glEnable(GL_DEPTH_TEST);
 
-    // const float radius = 10.0f;
-    // while(!glfwWindowShouldClose(window))
-    // {
-    //     processInput(window);
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
 }
 
 int lookAtMatrix(GLFWwindow * window)
@@ -209,12 +189,11 @@ int lookAtMatrix(GLFWwindow * window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // ** this lookAt matrix make camera move at the orbit of xz plane
-    // float time = glfwGetTime();
-    // float camX = sin(time) * radius;
-    // float camZ = cos(time) * radius;
-    // glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+    float time = rotateSpeed * glfwGetTime();
+    float camX = sin(time) * radius;
+    float camZ = cos(time) * radius;
+    glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shaderProgram->setMat4("view", view);
 
     glBindVertexArray(VAO);

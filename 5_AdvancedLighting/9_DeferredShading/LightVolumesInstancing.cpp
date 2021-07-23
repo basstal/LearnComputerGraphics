@@ -376,12 +376,12 @@ void lightVolumesInstancing_setup(GLFWwindow * window)
     // IMGUI_CHECKVERSION();
     // ImGui::CreateContext();
     // ImGuiIO& io = ImGui::GetIO(); (void)io;
-    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
+    // 
 
     // // Setup Dear ImGui style
     // ImGui::StyleColorsDark();
-    // //ImGui::StyleColorsClassic();
+    
 
     // // Setup Platform/Renderer bindings
     // ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -725,7 +725,7 @@ static void compile_shaders(GLFWwindow * window)
 {
     if (!simpleShader)
     {
-        simpleShader = std::make_shared<Shader>("Shaders/2_1/ColorsVertexShader.vs", "Shaders/2_1/LightFragmentShader.fs", nullptr);
+        simpleShader = std::make_shared<Shader>("Shaders/2_1/ColorsVertexShader.vert", "Shaders/2_1/LightFragmentShader.frag", nullptr);
     }
     else
     {
@@ -733,7 +733,7 @@ static void compile_shaders(GLFWwindow * window)
     }
     if (!normalShader)
     {
-        normalShader = std::make_shared<Shader>("Shaders/5_9/DrawNormalVectorVS.vs", "Shaders/5_9/DrawNormalVectorFS.fs", "Shaders/5_9/DrawNormalVectorGS.gs");
+        normalShader = std::make_shared<Shader>("Shaders/5_9/DrawNormalVectorVS.vert", "Shaders/5_9/DrawNormalVectorFS.frag", "Shaders/5_9/DrawNormalVectorGS.gs");
     }
     else
     {
@@ -742,7 +742,7 @@ static void compile_shaders(GLFWwindow * window)
     
     if (!deferredShader)
     {
-        deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vs", "Shaders/5_9/GBufferFS.fs", nullptr);
+        deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vert", "Shaders/5_9/GBufferFS.frag", nullptr);
     }
     else
     {
@@ -750,7 +750,7 @@ static void compile_shaders(GLFWwindow * window)
     }
     if (!wireframeShader)
     {
-        wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Wireframe.gs");
+        wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Wireframe.gs");
 
     }
     else
@@ -762,7 +762,7 @@ static void compile_shaders(GLFWwindow * window)
     glUniformBlockBinding(wireframeShader->ID, blockIndex, 0);
     if (!pointShader)
     {
-        pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vs", "Shaders/5_9/Wireframe.fs", "Shaders/5_9/Point.gs");
+        pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Point.gs");
 
     }
     else
@@ -773,7 +773,7 @@ static void compile_shaders(GLFWwindow * window)
     // use this shader to debug G-Buffer
     if (!debugQuadShader)
     {
-        debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vs", "Shaders/5_9/DebugQuadFS.fs", nullptr);
+        debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_9/DebugQuadFS.frag", nullptr);
 
     }
     else
@@ -782,7 +782,7 @@ static void compile_shaders(GLFWwindow * window)
     }
     if (!lightVolumesShader)
     {
-        lightVolumesShader = std::make_shared<Shader>("Shaders/5_9/LightVolumesInst.vs", "Shaders/5_9/LightVolumesInst.fs", nullptr);
+        lightVolumesShader = std::make_shared<Shader>("Shaders/5_9/LightVolumesInst.vert", "Shaders/5_9/LightVolumesInst.frag", nullptr);
 
     }
     else
@@ -795,7 +795,7 @@ static void compile_shaders(GLFWwindow * window)
     lightVolumesShader->setInt("gAlbedoSpec", 2);
     if (!lightShader)
     {
-        lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vs", "Shaders/2_3/ExerciseLight23.fs", nullptr);
+        lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vert", "Shaders/2_3/ExerciseLight23.frag", nullptr);
 
     }
     else
