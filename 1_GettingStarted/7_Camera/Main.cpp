@@ -17,18 +17,15 @@ static void processInput(GLFWwindow *window)
 }
 
 extern int lookAround(GLFWwindow *);
-extern int exercise1(GLFWwindow * window);
 extern int exercise2(GLFWwindow * window);
 extern int lookAtMatrix(GLFWwindow * window);
 extern int zoom(GLFWwindow * window);
 
 extern void lookAround_setup(GLFWwindow *);
-extern void exercise1_setup(GLFWwindow *);
 extern void exercise2_setup(GLFWwindow *);
 extern void lookAtMatrix_setup(GLFWwindow *);
 extern void zoom_setup(GLFWwindow *);
 
-extern void exercise1_imgui(GLFWwindow * );
 extern void exercise2_imgui(GLFWwindow * );
 extern void zoom_imgui(GLFWwindow * );
 extern void lookAround_imgui(GLFWwindow *);
@@ -36,7 +33,6 @@ extern void lookAtMatrix_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"lookAround", FuncSet(lookAround_setup, lookAround, lookAround_imgui)},
-    {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
     {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
     {"lookAtMatrix", FuncSet(lookAtMatrix_setup, lookAtMatrix, lookAtMatrix_imgui)},
     {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
