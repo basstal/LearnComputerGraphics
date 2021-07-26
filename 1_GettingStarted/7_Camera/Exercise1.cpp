@@ -118,14 +118,15 @@ static void processInput(GLFWwindow *window)
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     float deltaSpeed = cameraSpeed * deltaTime;
+    glm::vec3 moveFront = glm::vec3(cameraFront.x, 0.0f, cameraFront.z);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += deltaSpeed * cameraFront;
+        cameraPos += deltaSpeed * moveFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= deltaSpeed * cameraFront;
+        cameraPos -= deltaSpeed * moveFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+        cameraPos -= glm::normalize(glm::cross(moveFront, glm::vec3(0.0f, 1.0f, 0.0f))) * deltaSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+        cameraPos += glm::normalize(glm::cross(moveFront, glm::vec3(0.0f, 1.0f, 0.0f))) * deltaSpeed;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
     {
         bPressed = true;
@@ -180,7 +181,7 @@ static glm::mat4 LookAtMat4(glm::vec3 cameraPos, glm::vec3 targetPos, glm::vec3 
     return cameraMat4A * cameraMat4B;
 }
 
-void exercise2_imgui(GLFWwindow * window)
+void exercise1_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     if (bCursorOff)
@@ -198,7 +199,7 @@ void exercise2_imgui(GLFWwindow * window)
     ImGui::SliderFloat("camera speed", (float *)&cameraSpeed, 0.0, 5.0);
     ImGui::SliderFloat("camera rotator sensitivity", (float *)&cameraRotatorSensitivity, 0.0, 1.0);
 }
-void exercise2_setup(GLFWwindow *window)
+void exercise1_setup(GLFWwindow *window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -269,7 +270,7 @@ void exercise2_setup(GLFWwindow *window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int exercise2(GLFWwindow *window)
+int exercise1(GLFWwindow *window)
 {
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.4f, 1.0f);

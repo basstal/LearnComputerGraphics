@@ -199,12 +199,9 @@ void zoom_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-    if(ImGui::CollapsingHeader("Params"))
-    {
-        ImGui::SliderFloat("camera speed", (float *)&cameraSpeed, 0.0, 5.0);
-        ImGui::SliderFloat("camera zoom sensitivity", (float *)&cameraRotatorSensitivity, 0.0, 1.0);
-        ImGui::SliderFloat("camera zoom factor", (float *)&cameraZoomFactor, 0.5, 2.0f);
-    }
+    ImGui::SliderFloat("camera speed", (float *)&cameraSpeed, 0.0, 5.0);
+    ImGui::SliderFloat("camera rotator sensitivity", (float *)&cameraRotatorSensitivity, 0.0, 1.0);
+    ImGui::SliderFloat("camera zoom factor", (float *)&cameraZoomFactor, 0.5, 2.0f);
 }
 void zoom_setup(GLFWwindow * window)
 {

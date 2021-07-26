@@ -73,7 +73,7 @@ static float vertices[] = {
 };
 static float radius = 7.0f, rotateSpeed = 0.1f;
 
-static float deltaTime = 0.0f;
+static float deltaTime = 0.0f, rotateAngle = 0.0f;
 static float lastFrame = 0.0f;
 
 static glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
@@ -88,6 +88,8 @@ static void processInput(GLFWwindow *window)
     float currentFrame = (float)glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    float delta = rotateSpeed * deltaTime;
+    rotateAngle += delta;
     float cameraSpeed = 2.5f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
@@ -185,9 +187,8 @@ int lookAtMatrix(GLFWwindow * window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // ** this lookAt matrix make camera move at the orbit of xz plane
-    float time = rotateSpeed * glfwGetTime();
-    float camX = sin(time) * radius;
-    float camZ = cos(time) * radius;
+    float camX = sin(rotateAngle) * radius;
+    float camZ = cos(rotateAngle) * radius;
     glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
     shaderProgram->setMat4("view", view);

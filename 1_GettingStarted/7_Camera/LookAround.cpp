@@ -76,9 +76,7 @@ static float vertices[] = {
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
-static const float width = 1920;
-static const float height = 1080;
-static float lastX = height/2, lastY = width /2;
+static float lastX = 0, lastY = 0;
 static float yaw = -90.0f;
 static float pitch = 0.0f;
 static bool firstMouse = true;
