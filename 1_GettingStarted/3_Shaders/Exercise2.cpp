@@ -6,11 +6,12 @@
 static const char *vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos; // the position variable has attribute position 0\n"
 "layout (location = 1) in vec3 aColor; // specify a color output to the fragment shader\n"
+"uniform float horizontalOffset;\n"
 "out vec3 ourColor;\n"
 "void main()\n"
 "{\n"
-    "gl_Position = vec4(aPos.x, aPos.y, 0, 1.0); // see how we directly give a vec3 to vec4's constructor\n"
-    "ourColor = aPos; // set the output variable to a dark-red color\n"
+    "gl_Position = vec4(aPos.x + horizontalOffset, aPos.y, 0, 1.0); // see how we directly give a vec3 to vec4's constructor\n"
+    "ourColor = aColor; // set the output variable to a dark-red color\n"
 "}\n";
 
 static const char *fragmentShaderSource = "#version 330 core\n"
@@ -31,7 +32,7 @@ static float vertices[] = {
 static std::shared_ptr<Shader> shaderProgram;
 static unsigned int VAO, VBO;
 
-void exercise3_setup(GLFWwindow* window)
+void exercise2_setup(GLFWwindow* window)
 {
     shaderProgram = std::make_shared<Shader>(vertexShaderSource, fragmentShaderSource, nullptr, true);
     shaderProgram->use();
@@ -47,9 +48,12 @@ void exercise3_setup(GLFWwindow* window)
     glEnableVertexAttribArray(1);
 }
 
-int exercise3(GLFWwindow * window)
+int exercise2(GLFWwindow * window)
 {
     glClear(GL_COLOR_BUFFER_BIT);
+    float timeValue = (float)glfwGetTime();
+    float offset = (sin(timeValue) / 2.0f) + 0.5f;
+    shaderProgram->setFloat("horizontalOffset", offset);
     /*
     The image may not be exactly what you would expect, since we only supplied 3 colors, not the huge color palette we're seeing right now. This is all the result of something called fragment interpolation in the fragment shader. When rendering a triangle the rasterization stage usually results in a lot more fragments than vertices originally specified. The rasterizer then determines the positions of each of those fragments based on where they reside on the triangle shape.
     

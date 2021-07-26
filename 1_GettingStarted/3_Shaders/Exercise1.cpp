@@ -9,8 +9,8 @@ static const char *vertexShaderSource = "#version 330 core\n"
 "out vec3 ourColor;\n"
 "void main()\n"
 "{\n"
-    "gl_Position = vec4(aPos.x, aPos.y, 0, 1.0); // see how we directly give a vec3 to vec4's constructor\n"
-    "ourColor = aPos; // set the output variable to a dark-red color\n"
+    "gl_Position = vec4(aPos.x, - aPos.y, 0, 1.0); // see how we directly give a vec3 to vec4's constructor\n"
+    "ourColor = aColor;\n"
 "}\n";
 
 static const char *fragmentShaderSource = "#version 330 core\n"
@@ -31,11 +31,10 @@ static float vertices[] = {
 static std::shared_ptr<Shader> shaderProgram;
 static unsigned int VAO, VBO;
 
-void exercise3_setup(GLFWwindow* window)
+void exercise1_setup(GLFWwindow* window)
 {
     shaderProgram = std::make_shared<Shader>(vertexShaderSource, fragmentShaderSource, nullptr, true);
     shaderProgram->use();
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
@@ -47,7 +46,7 @@ void exercise3_setup(GLFWwindow* window)
     glEnableVertexAttribArray(1);
 }
 
-int exercise3(GLFWwindow * window)
+int exercise1(GLFWwindow * window)
 {
     glClear(GL_COLOR_BUFFER_BIT);
     /*
