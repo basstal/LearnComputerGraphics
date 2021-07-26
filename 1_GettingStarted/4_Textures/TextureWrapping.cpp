@@ -124,6 +124,7 @@ void textureWrapping_setup(GLFWwindow* window)
 
     stbi_image_free(data);
     stbi_image_free(data1);
+
     Shader shaderProgram = Shader(vertexShaderSource, fragmentShaderSource, NULL, true);
     
     glGenVertexArrays(1, &VAO);

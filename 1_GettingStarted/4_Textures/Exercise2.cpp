@@ -13,10 +13,10 @@
 
 static float vertices[] = {
     // positions          // colors           // texture coords
-     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,   // top right
+     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,   // bottom right
     -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f    // top left 
 };
 
 static int indices[] = {
@@ -39,21 +39,19 @@ static const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
   
 "in vec2 TexCoord;\n"
-"uniform float mixParam;\n"
 "uniform sampler2D texture1;\n"
 "uniform sampler2D texture2;\n"
 
 "void main()\n"
 "{\n"
-    "FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), mixParam);\n"
+    "FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.5);\n"
 "}\n";
 
-static float mixParam = 0.5f;
 static bool wireFrame = false;
 static unsigned int VAO, VBO, EBO;
 static std::shared_ptr<Shader> shaderProgram;
 
-void exercise4_setup(GLFWwindow* window)
+void exercise2_setup(GLFWwindow* window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -66,10 +64,11 @@ void exercise4_setup(GLFWwindow* window)
     unsigned int texture, texture1;
     glGenTextures(1, &texture);
     glGenTextures(1, &texture1);
+
     glBindTexture(GL_TEXTURE_2D, texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     /*
@@ -138,11 +137,10 @@ void exercise4_setup(GLFWwindow* window)
 }
 
 
-void exercise4_imgui(GLFWwindow * window)
+void exercise2_imgui(GLFWwindow * window)
 {
     ImGui::Spacing();
 
-    ImGui::SliderFloat("mixParam", (float*)&mixParam, 0.0f, 1.0f);
     ImGui::Checkbox("Wire frame", &wireFrame);
     if (wireFrame)
     {
@@ -155,9 +153,8 @@ void exercise4_imgui(GLFWwindow * window)
     
 }
 
-int exercise4(GLFWwindow* window)
+int exercise2(GLFWwindow* window)
 {
-    shaderProgram->setFloat("mixParam", mixParam);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     return 0;

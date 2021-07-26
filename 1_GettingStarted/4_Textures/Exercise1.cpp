@@ -39,21 +39,20 @@ static const char *fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
   
 "in vec2 TexCoord;\n"
-"uniform float mixParam;\n"
 "uniform sampler2D texture1;\n"
 "uniform sampler2D texture2;\n"
 
 "void main()\n"
 "{\n"
-    "FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), mixParam);\n"
+    "vec2 tex2Coord = vec2(1.0 - TexCoord.x, TexCoord.y);\n"
+    "FragColor = mix(texture(texture1, TexCoord), texture(texture2, tex2Coord), 0.2);\n"
 "}\n";
 
-static float mixParam = 0.5f;
 static bool wireFrame = false;
 static unsigned int VAO, VBO, EBO;
 static std::shared_ptr<Shader> shaderProgram;
 
-void exercise4_setup(GLFWwindow* window)
+void exercise1_setup(GLFWwindow* window)
 {
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
@@ -138,11 +137,10 @@ void exercise4_setup(GLFWwindow* window)
 }
 
 
-void exercise4_imgui(GLFWwindow * window)
+void exercise1_imgui(GLFWwindow * window)
 {
     ImGui::Spacing();
 
-    ImGui::SliderFloat("mixParam", (float*)&mixParam, 0.0f, 1.0f);
     ImGui::Checkbox("Wire frame", &wireFrame);
     if (wireFrame)
     {
@@ -155,9 +153,8 @@ void exercise4_imgui(GLFWwindow * window)
     
 }
 
-int exercise4(GLFWwindow* window)
+int exercise1(GLFWwindow* window)
 {
-    shaderProgram->setFloat("mixParam", mixParam);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     return 0;
