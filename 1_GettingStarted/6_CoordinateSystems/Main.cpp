@@ -19,13 +19,22 @@ static void processInput(GLFWwindow *window)
 
 extern int more3D(GLFWwindow *);
 extern int exercise3(GLFWwindow * window);
+extern int exercise1(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
 
 extern void more3D_setup(GLFWwindow *);
 extern void exercise3_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
+extern void exercise2_setup(GLFWwindow *);
+
+extern void exercise1_imgui(GLFWwindow *);
+extern void exercise2_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"more3D", FuncSet(more3D_setup, more3D)},
     {"exercise3", FuncSet(exercise3_setup, exercise3)},
+    {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
+    {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)

@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <others/stb_image.h>
 
 #include <glm/glm.hpp>
@@ -73,8 +77,9 @@ static float vertices[] = {
 static unsigned int VAO, VBO;
 static std::shared_ptr<Shader> shaderProgram;
 static glm::mat4 view;
+static float fov = 45.0f, aspectRatio = 16.0f/9.0f;
 
-void exercise3_setup(GLFWwindow * window)
+void exercise2_setup(GLFWwindow * window)
 {
     view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
     stbi_set_flip_vertically_on_load(true);
@@ -144,13 +149,18 @@ void exercise3_setup(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int exercise3(GLFWwindow * window)
+void exercise2_imgui(GLFWwindow * window)
+{
+    ImGui::SliderFloat("FOV", &fov, 0.0f, 180.0f);
+    ImGui::SliderFloat("Aspect Ratio", &aspectRatio, 0.1f, 3.0f);
+}
+
+int exercise2(GLFWwindow * window)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(VAO);
-    float time = (float)glfwGetTime();
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)16.0f/9.0f, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
     shaderProgram->setMat4("projection", projection);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
@@ -175,14 +185,7 @@ int exercise3(GLFWwindow * window)
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, cubePositions[i]);
-        auto degree = glm::radians(80.0f);
-        if (i % 3 == 0)
-        {
-            degree = time * degree;
-        }
-        model = glm::rotate(model, degree, glm::vec3(0.5f, 1.0f, 0.0f));
         shaderProgram->setMat4("model", model);
-
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
     return 0;
