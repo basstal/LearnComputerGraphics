@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
+
 #include <FuncSet.h>
 
 static void processInput(GLFWwindow *window)
@@ -16,20 +17,18 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int exercise1(GLFWwindow *);
-extern int exercise2(GLFWwindow *);
-extern int exercise3(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
+extern int exercise1(GLFWwindow * window);
 
-extern void exercise1_setup(GLFWwindow *);
 extern void exercise2_setup(GLFWwindow *);
-extern void exercise3_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
 
-extern void exercise1_imgui(GLFWwindow *);
+extern void exercise2_imgui(GLFWwindow*);
+extern void exercise1_imgui(GLFWwindow*);
 
 std::map<std::string, FuncSet> maps{
+    {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
     {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
-    {"exercise2", FuncSet(exercise2_setup, exercise2)},
-    {"exercise3", FuncSet(exercise3_setup, exercise3)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -49,7 +48,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "HelloTriangle", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Transformations", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -86,7 +85,6 @@ int main()
     {
         funcSet.setup(window);
     }
-    
 
     while(!glfwWindowShouldClose(window))
     {
@@ -103,16 +101,20 @@ int main()
             {
                 if (ImGui::Button(entry.first.c_str()))
                 {
-                    if(entry.second.setup)
+                    FuncSet funcSet = entry.second;
+                    if(funcSet.setup)
                     {
-                        entry.second.setup(window);
+                        funcSet.setup(window);
                     }
-                    current_draw = entry.second.draw;
-                    current_imgui = entry.second.imgui;
+                    current_draw = funcSet.draw;
+                    current_imgui = funcSet.imgui;
                 }
             }
             if (current_imgui)
             {
+                // Exceptionally add an extra assert here for people confused about initial Dear ImGui setup
+                // Most ImGui functions would normally just crash if the context is missing.
+                IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
                 current_imgui(window);
             }
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -124,6 +126,7 @@ int main()
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (current_draw)

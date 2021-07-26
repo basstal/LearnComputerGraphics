@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <others/stb_image.h>
 
 #include <glm/glm.hpp>
@@ -10,7 +14,7 @@
 #include <GLFW/glfw3.h>
 #include <Utils.h>
 
-float vertices[] = {
+static float vertices[] = {
     // positions           // texture coords
      0.5f,  0.5f, 0.0f,     1.0f, 1.0f,   // top right
      0.5f, -0.5f, 0.0f,     1.0f, 0.0f,   // bottom right
@@ -18,41 +22,17 @@ float vertices[] = {
     -0.5f,  0.5f, 0.0f,     0.0f, 1.0f    // top left 
 };
 
-unsigned int indices[] = {
+static unsigned int indices[] = {
     0,1,3,
     2,3,1
 };
 
-void processInput(GLFWwindow *window)
+static std::shared_ptr<Shader> shaderProgram;
+static unsigned int VAO, VBO, EBO;
+static bool bRotateBeforeTranslate = false;
+
+void exercise1_setup(GLFWwindow * window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
-int main()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Transformations", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
@@ -94,13 +74,8 @@ int main()
     stbi_image_free(data);
     stbi_image_free(data1);
 
-    std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/1_5/VertexShader15.vert", vsPath);
-    getProjectFilePath("Shaders/1_5/FragmentShader15.frag", fsPath);
+    shaderProgram = std::make_shared<Shader>("Shaders/1_5/VertexShader15.vert", "Shaders/1_5/FragmentShader15.frag", nullptr);
 
-    Shader shaderProgram = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
-
-    unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -114,43 +89,41 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
 
-    shaderProgram.use();
-    shaderProgram.setInt("texture0", 0);
-    shaderProgram.setInt("texture1", 1);
+    shaderProgram->use();
+    shaderProgram->setInt("texture0", 0);
+    shaderProgram->setInt("texture1", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
+}
 
+void exercise1_imgui(GLFWwindow * window)
+{
+    ImGui::Checkbox("Rotating before translating", &bRotateBeforeTranslate);
+}
 
-    while(!glfwWindowShouldClose(window))
+int exercise1(GLFWwindow * window)
+{
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glm::mat4 trans = glm::mat4(1.0f);
+    if (bRotateBeforeTranslate)
     {
-        processInput(window);
-
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        
-        glm::mat4 trans = glm::mat4(1.0f);
         trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
         trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-
-        shaderProgram.setMat4("transform", trans);
-
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-        float scale = abs(sin((float)glfwGetTime()));
-        trans = glm::scale(trans, glm::vec3(scale, scale, 1.0f));
-        
-        shaderProgram.setMat4("transform", trans);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();    
     }
-    glfwTerminate();
+    else
+    {
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    
+    shaderProgram->setMat4("transform", trans);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     return 0;
+
 }
