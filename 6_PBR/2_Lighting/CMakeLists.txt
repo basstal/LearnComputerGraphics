@@ -19,7 +19,7 @@ add_library(glad
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
 
-# lib source glad
+# lib source lcosphere
 add_library(lcosphere
     "${ROOT_PATH}/Plugins/others/Icosphere.cpp")
 

@@ -9,7 +9,7 @@ set(PROJECT_NAME "HelloWindow")
 # Project name
 project(${PROJECT_NAME})
 
-# lib source
+# lib source glad
 add_library(glad
     "${ROOT_PATH}/Plugins/glad/glad.c")
 

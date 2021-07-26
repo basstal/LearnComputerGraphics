@@ -10,7 +10,21 @@ set(PROJECT_NAME "HelloTriangle")
 # Project name
 project(${PROJECT_NAME})
 
-# lib source
+# lib source imgui
+add_library(imgui
+    "${ROOT_PATH}/Plugins/imgui/imgui.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_widgets.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_draw.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_demo.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_impl_glfw.cpp"
+    "${ROOT_PATH}/Plugins/imgui/imgui_impl_opengl3.cpp")
+
+target_include_directories(imgui PUBLIC
+    "${ROOT_PATH}/Plugins/imgui/"
+    "${ROOT_PATH}/Plugins/glfw-3.3.4/include"
+    "${ROOT_PATH}/Plugins")
+
+# lib source glad
 add_library(glad
     "${ROOT_PATH}/Plugins/glad/glad.c")
 
@@ -19,14 +33,19 @@ target_include_directories(glad PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    HelloTriangle.cpp)
+    Main.cpp
+    Exercise1.cpp
+    Exercise2.cpp
+    Exercise3.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/glfw-3.3.4/lib-vc2019/glfw3_mt.lib"
+    imgui
     glad)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
     "${ROOT_PATH}/Plugins/glfw-3.3.4/include"
+    "${ROOT_PATH}/Scripts/include"
     "${ROOT_PATH}/Plugins")
 
 if(MSVC)

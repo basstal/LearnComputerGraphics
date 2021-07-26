@@ -10,13 +10,14 @@ set(PROJECT_NAME "Shaders")
 # Project name
 project(${PROJECT_NAME})
 
-# lib source
+# lib source glad
 add_library(glad
     "${ROOT_PATH}/Plugins/glad/glad.c")
 
 target_include_directories(glad PUBLIC
     "${ROOT_PATH}/Plugins")
 
+# lib source imgui
 add_library(imgui
     "${ROOT_PATH}/Plugins/imgui/imgui.cpp"
     "${ROOT_PATH}/Plugins/imgui/imgui_widgets.cpp"
