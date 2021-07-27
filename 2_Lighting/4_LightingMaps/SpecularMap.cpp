@@ -92,8 +92,8 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-static const int WIDTH = 1920;
-static const int HEIGHT = 1080;
+static int WIDTH = 1920;
+static int HEIGHT = 1080;
 
 static Camera camera = Camera(glm::vec3(-2.0, -0.5, 2.5), glm::vec3(0, 1, 0), -35.0f, 14.0f);
 static float lastX = 0.0f;

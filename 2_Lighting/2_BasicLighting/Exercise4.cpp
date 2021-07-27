@@ -88,8 +88,8 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-static const int WIDTH = 1920;
-static const int HEIGHT = 1080;
+static int WIDTH = 1920;
+static int HEIGHT = 1080;
 
 static Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 static float lastX = 0.0f;
@@ -97,7 +97,15 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int , int );
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -130,6 +138,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void exercise4_setup(GLFWwindow * window)
 {
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
     
     glGenVertexArrays(1, &VAO);
@@ -179,7 +188,8 @@ int exercise4(GLFWwindow * window)
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
 
     float time = glfwGetTime();
-    glm::vec3 lightPos = glm::vec3(sin(time) * 1.2, 0.2f, cos(time) * 2.0f);
+    float sinTime = sin(time);
+    glm::vec3 lightPos = glm::vec3(sinTime * 1.2, sinTime * 0.5f, cos(time) * 2.0f);
     glm::mat4 model = glm::mat4(1.0);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f));
@@ -221,11 +231,6 @@ void exercise4_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-}
-
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 static void processInput(GLFWwindow * window)

@@ -58,8 +58,8 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
 
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+static int WIDTH = 1920;
+static int HEIGHT = 1080;
 
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
@@ -70,7 +70,15 @@ bool moveMouse = true;
 void scroll_callback(GLFWwindow *, double , double);
 void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 void processInput(GLFWwindow *);
-
+void frame_buffer_size_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 
 int main()
 {
@@ -96,6 +104,7 @@ int main()
         return -1;
     }
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 

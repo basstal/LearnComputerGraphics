@@ -14,6 +14,7 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include <Utils.h>
 
 static float vertices[] = {
@@ -74,7 +75,7 @@ static glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)  
 };
 
-glm::vec3 pointLightPositions[] = {
+static glm::vec3 pointLightPositions[] = {
     glm::vec3( 0.7f,  2.2f,  2.0f),
     glm::vec3( 2.3f, -3.3f, -4.0f),
     glm::vec3(-4.0f,  2.0f, -12.0f),
@@ -97,18 +98,27 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
 
+static unsigned int VAO, VBO;
+static unsigned int lightVAO;
 static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> lampShader;
-
-static unsigned int VAO, VBO;
-static glm::vec3 lightPos;
-static glm::mat4 model;
-static unsigned int lightVAO;
-
+static float ambientStrength = 0.6f;
+static float specularStrength = 0.2f;
+static float diffuseStrength = 1.0f;
+static int shininess = 256;
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -129,9 +139,11 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void lighting_setup(GLFWwindow * window)
+void exercise2_setup(GLFWwindow * window)
 {
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    
     glGenVertexArrays(1, &VAO);
 
     glGenBuffers(1, &VBO);
@@ -157,29 +169,32 @@ void lighting_setup(GLFWwindow * window)
     glEnableVertexAttribArray(0);
 
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
-    getProjectFilePath("Shaders/2_2/FragmentShader22.frag", fsPath);
+    getProjectFilePath("Shaders/2_2/ExerciseVertexShader22.vert", vsPath);
+    getProjectFilePath("Shaders/2_2/Exercise2.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
     getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
-    lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
-    model = glm::mat4(1.0);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2f));
+    
 
     glEnable(GL_DEPTH_TEST);
 }
 
-int lighting(GLFWwindow * window)
+int exercise2(GLFWwindow * window)
 {
+
     processInput(window);
         
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), ((float)WIDTH)/HEIGHT, 0.01f, 100.0f);
+
+    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 2.0f);
+    glm::mat4 model = glm::mat4(1.0);
+    model = glm::translate(model, lightPos);
+    model = glm::scale(model, glm::vec3(0.2f));
 
     lampShader->use();
     lampShader->setMat4("view", view);
@@ -189,22 +204,28 @@ int lighting(GLFWwindow * window)
     glDrawArrays(GL_TRIANGLES, 0, 36);
     
     shaderProgram->use();
-    shaderProgram->setVec3("lightPos", lightPos);
-    shaderProgram->setVec3("viewPos", camera.Position);
+    model = glm::mat4(1.0f);
+    shaderProgram->setFloat("ambientStrength", ambientStrength);
+    shaderProgram->setFloat("specularStrength", specularStrength);
+    shaderProgram->setFloat("diffuseStrength", diffuseStrength);
+    shaderProgram->setInt("shininess", shininess);
+    shaderProgram->setVec3("lightPos", glm::vec3(view * glm::vec4(lightPos, 1.0)));
     shaderProgram->setVec3("objectColor", glm::vec3(0.2, 0.3, 0.4));
     shaderProgram->setVec3("lightColor", glm::vec3(1.0));
     shaderProgram->setMat4("view", view);
     shaderProgram->setMat4("projection", projection);
-    shaderProgram->setMat4("model", glm::mat4(1.0f));
+    shaderProgram->setMat4("model", model);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     return 0;
-
 }
 
-
-void lighting_imgui(GLFWwindow * window)
+void exercise2_imgui(GLFWwindow * window)
 {
+    ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.1f, 1.0f);
+    ImGui::SliderFloat("Specular Strength", &specularStrength, 0.1f, 1.0f);
+    ImGui::SliderFloat("Diffuse Strength", &diffuseStrength, 0.1f, 2.0f);
+    ImGui::SliderInt("Shininess", &shininess, 128, 512);
     ImGui::Separator();
     if (bCursorOff)
     {
@@ -218,8 +239,6 @@ void lighting_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-    ImGui::SliderFloat("camera speed", (float *)&camera.MovementSpeed, 0.0, 5.0);
-    ImGui::SliderFloat("camera sensitivity", (float *)&camera.MouseSensitivity, 0.0, 1.0);
 }
 
 static void processInput(GLFWwindow * window)

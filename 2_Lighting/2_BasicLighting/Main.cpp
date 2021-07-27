@@ -16,21 +16,29 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-extern int exercise4(GLFWwindow *);
 extern int exercise1(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
+extern int exercise3(GLFWwindow * window);
+extern int exercise4(GLFWwindow *);
 extern int lighting(GLFWwindow * window);
 
-extern void exercise4_setup(GLFWwindow *);
 extern void exercise1_setup(GLFWwindow *);
+extern void exercise2_setup(GLFWwindow *);
+extern void exercise3_setup(GLFWwindow *);
+extern void exercise4_setup(GLFWwindow *);
 extern void lighting_setup(GLFWwindow *);
 
-extern void exercise4_imgui(GLFWwindow *);
 extern void exercise1_imgui(GLFWwindow * );
+extern void exercise2_imgui(GLFWwindow * );
+extern void exercise3_imgui(GLFWwindow * );
+extern void exercise4_imgui(GLFWwindow *);
 extern void lighting_imgui(GLFWwindow * );
 
 std::map<std::string, FuncSet> maps{
-    {"exercise4", FuncSet(exercise4_setup, exercise4, exercise4_imgui)},
     {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
+    {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
+    {"exercise3", FuncSet(exercise3_setup, exercise3, exercise3_imgui)},
+    {"exercise4", FuncSet(exercise4_setup, exercise4, exercise4_imgui)},
     {"lighting", FuncSet(lighting_setup, lighting, lighting_imgui)},
 };
 

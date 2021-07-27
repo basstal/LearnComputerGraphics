@@ -34,6 +34,8 @@ target_include_directories(imgui PUBLIC
 # project source
 add_executable(${PROJECT_NAME} 
     Exercise1.cpp
+    Exercise2.cpp
+    Exercise3.cpp
     Exercise4.cpp
     Lighting.cpp
     Main.cpp
