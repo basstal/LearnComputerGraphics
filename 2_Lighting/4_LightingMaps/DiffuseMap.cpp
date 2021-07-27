@@ -102,7 +102,15 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int , int );
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -137,35 +145,8 @@ static void switch_cursor(GLFWwindow * window)
 
 void diffuseMap_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-
-    // GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Chapter2", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "ERROR::CREATWINDOW::FAILED!" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-
-    // glfwMakeContextCurrent(window);
-
-    // if ( !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-    // {
-    //     std::cout << "ERROR::LOAD GL LOADER::FAILED!" << std::endl;
-    //     return -1;
-    // }
-
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
     int width, height, nrChannels;
     std::string path;
@@ -227,16 +208,6 @@ void diffuseMap_setup(GLFWwindow * window)
     model = glm::scale(model, glm::vec3(0.2));
 
     glEnable(GL_DEPTH_TEST);
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-    // glfwTerminate();
 }
 
 int diffuseMap(GLFWwindow * window)
@@ -299,11 +270,6 @@ void diffuseMap_imgui(GLFWwindow * window)
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
     ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
-}
-
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 static void processInput(GLFWwindow * window)

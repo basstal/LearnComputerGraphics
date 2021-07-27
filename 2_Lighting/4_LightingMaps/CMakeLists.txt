@@ -33,10 +33,10 @@ target_include_directories(imgui PUBLIC
 
 # project source
 add_executable(${PROJECT_NAME} 
-    Exercise1.cpp
-    Exercise2.cpp
-    Exercise3.cpp
-    Exercise4.cpp
+    # Exercise1.cpp
+    # Exercise2.cpp
+    # Exercise3.cpp
+    # Exercise4.cpp
     DiffuseMap.cpp
     SpecularMap.cpp
     Main.cpp

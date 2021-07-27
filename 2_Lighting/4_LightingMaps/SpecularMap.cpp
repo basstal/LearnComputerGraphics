@@ -101,7 +101,15 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int , int );
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -136,6 +144,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void specularMap_setup(GLFWwindow * window)
 {
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
@@ -280,11 +289,6 @@ void specularMap_imgui(GLFWwindow * window)
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
     ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
-}
-
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 static void processInput(GLFWwindow * window)
