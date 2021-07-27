@@ -2,6 +2,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -14,9 +15,7 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <Utils.h>
-
 static float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -111,13 +110,13 @@ static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
 
+static unsigned int VAO, VBO;
 static glm::vec3 lightPos;
 static glm::mat4 model;
+static unsigned int lightVAO;
+
 static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> lampShader;
-static unsigned int lightVAO;
-static unsigned int VAO, VBO;
-
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -138,10 +137,11 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void materials_setup(GLFWwindow * window)
+void exercise1_setup(GLFWwindow * window)
 {
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    
     glGenVertexArrays(1, &VAO);
 
     glGenBuffers(1, &VBO);
@@ -171,7 +171,7 @@ void materials_setup(GLFWwindow * window)
     getProjectFilePath("Shaders/2_3/MaterialsFS23.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
-    getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
+    getProjectFilePath("Shaders/2_3/ExerciseLight23.frag", fsPath);
     lampShader = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
 
     lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -182,51 +182,7 @@ void materials_setup(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int materials(GLFWwindow * window)
-{
-    processInput(window);
-        
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
-
-    lampShader->use();
-    lampShader->setMat4("model", model);
-    lampShader->setMat4("view", view);
-    lampShader->setMat4("projection", projection);
-    glBindVertexArray(lightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    shaderProgram->use();
-    shaderProgram->setMat4("model", glm::mat4(1.0));
-    shaderProgram->setMat4("view", view);
-    shaderProgram->setMat4("projection", projection);
-    shaderProgram->setVec3("lightPos", lightPos);
-    shaderProgram->setVec3("viewPos", camera.Position);
-    shaderProgram->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-    shaderProgram->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    
-    glm::vec3 lightColor;
-    lightColor.x = sin(glfwGetTime() * 2.0f);
-    lightColor.y = sin(glfwGetTime() * 0.7f);
-    lightColor.z = sin(glfwGetTime() * 1.3f);
-    
-    glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
-    
-    shaderProgram->setVec3("light.ambient", ambientColor);
-    shaderProgram->setVec3("light.diffuse", diffuseColor);
-    shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
-    shaderProgram->setFloat("material.shininess", 32.0f);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    return 0;
-
-}
-
-void materials_imgui(GLFWwindow * window)
+void exercise1_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     if (bCursorOff)
@@ -242,6 +198,53 @@ void materials_imgui(GLFWwindow * window)
         }
     }
 }
+
+int exercise1(GLFWwindow * window)
+{
+    processInput(window);
+        
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
+
+    glm::vec3 lightColor;
+    lightColor.x = sin(glfwGetTime() * 2.0f);
+    lightColor.y = sin(glfwGetTime() * 0.7f);
+    lightColor.z = sin(glfwGetTime() * 1.3f);
+    
+    lampShader->use();
+    lampShader->setVec3("lightColor", lightColor);
+    lampShader->setMat4("model", model);
+    lampShader->setMat4("view", view);
+    lampShader->setMat4("projection", projection);
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    shaderProgram->use();
+    shaderProgram->setMat4("model", glm::mat4(1.0));
+    shaderProgram->setMat4("view", view);
+    shaderProgram->setMat4("projection", projection);
+    shaderProgram->setVec3("lightPos", lightPos);
+    shaderProgram->setVec3("viewPos", camera.Position);
+    
+    shaderProgram->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+    shaderProgram->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    shaderProgram->setFloat("material.shininess", 32.0f);
+    glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
+    
+    shaderProgram->setVec3("light.ambient", ambientColor);
+    shaderProgram->setVec3("light.diffuse", diffuseColor);
+    shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
+
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    return 0;
+
+}
+
 
 static void processInput(GLFWwindow * window)
 {

@@ -97,7 +97,15 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int , int );
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -109,8 +117,6 @@ static unsigned int lightVAO;
 
 static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> lampShader;
-static int exercise_index = 0;
-
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -133,6 +139,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void exercise2_setup(GLFWwindow * window)
 {
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
     
     glGenVertexArrays(1, &VAO);
@@ -190,8 +197,6 @@ void exercise2_imgui(GLFWwindow * window)
             switch_cursor(window);
         }
     }
-    ImGui::RadioButton("Exercise 1", &exercise_index, 0); ImGui::SameLine();
-    ImGui::RadioButton("Exercise 2", &exercise_index, 1);
 }
 
 int exercise2(GLFWwindow * window)
@@ -203,20 +208,7 @@ int exercise2(GLFWwindow * window)
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
 
-    glm::vec3 lightColor;
-    if (exercise_index == 0)
-    {
-        // ** exercise 1
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
-    }
-    else
-    {
-        // ** exercise 2
-        lightColor = glm::vec3(1.0);
-    }
-
+    glm::vec3 lightColor = glm::vec3(1.0);
     
     lampShader->use();
     lampShader->setVec3("lightColor", lightColor);
@@ -233,45 +225,22 @@ int exercise2(GLFWwindow * window)
     shaderProgram->setVec3("lightPos", lightPos);
     shaderProgram->setVec3("viewPos", camera.Position);
     
-    if (exercise_index == 0)
-    {
-        // ** exercise 1
-        shaderProgram->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        shaderProgram->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-        shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        shaderProgram->setFloat("material.shininess", 32.0f);
-        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
-        
-        shaderProgram->setVec3("light.ambient", ambientColor);
-        shaderProgram->setVec3("light.diffuse", diffuseColor);
-        shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
-    }
-    else
-    {
-        // ** exercise 2
-        // ** reference : [http://devernay.free.fr/cours/opengl/materials.html]
-        // light properties
-        shaderProgram->setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
-        shaderProgram->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
-        shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    // ** reference : [http://devernay.free.fr/cours/opengl/materials.html]
+    // light properties
+    shaderProgram->setVec3("light.ambient", 1.0f, 1.0f, 1.0f); // note that all light colors are set at full intensity
+    shaderProgram->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shaderProgram->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-        // material properties
-        shaderProgram->setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
-        shaderProgram->setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-        shaderProgram->setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
-        shaderProgram->setFloat("material.shininess", 32.0f);
-    }
+    // material properties
+    shaderProgram->setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
+    shaderProgram->setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+    shaderProgram->setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+    shaderProgram->setFloat("material.shininess", 32.0f);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     return 0;
 
-}
-
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
 
 static void processInput(GLFWwindow * window)

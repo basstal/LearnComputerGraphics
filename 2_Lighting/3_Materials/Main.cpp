@@ -18,16 +18,20 @@ static void processInput(GLFWwindow *window)
 
 extern int materials(GLFWwindow *);
 extern int exercise2(GLFWwindow * window);
+extern int exercise1(GLFWwindow * window);
 
 extern void materials_setup(GLFWwindow *);
 extern void exercise2_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
 
 extern void exercise2_imgui(GLFWwindow * );
+extern void exercise1_imgui(GLFWwindow * );
 extern void materials_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"materials", FuncSet(materials_setup, materials, materials_imgui)},
     {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
+    {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
