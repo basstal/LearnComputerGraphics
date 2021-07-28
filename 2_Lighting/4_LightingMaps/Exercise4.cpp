@@ -114,10 +114,10 @@ static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> lampShader;
 static unsigned int lightVAO;
 static unsigned int VAO, VBO;
-static unsigned int diffuseMapTexture;
+static unsigned int diffuseMapTexture, specularTexture, emissionTexture;
 
 static glm::vec3 lightColor = glm::vec3(1.0f);
-static glm::vec3 ambient = glm::vec3(0.5f), diffuse = glm::vec3(0.1f), specular = glm::vec3(1.0f);
+static glm::vec3 ambient = glm::vec3(0.1f), diffuse = glm::vec3(0.5f), specular = glm::vec3(1.0f);
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -138,14 +138,19 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void exercise1_setup(GLFWwindow * window)
+void exercise4_setup(GLFWwindow * window)
 {
+    
     glfwSetScrollCallback(window, scroll_callback);
     
-    int width, height, nrChannels;
+    int width, height, nrChannels, width1, height1, nrChannels1, width2, height2, nrChannels2;
     std::string path;
     getProjectFilePath("Assets/diffuse_map.png", path);
     unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    getProjectFilePath("Assets/specular_map.png", path);
+    unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
+    getProjectFilePath("Assets/matrix.jpg", path);
+    unsigned char *data2 = stbi_load(path.c_str(), &width2, &height2, &nrChannels2, 0);
 
     glGenTextures(1, &diffuseMapTexture);
     glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
@@ -162,7 +167,42 @@ void exercise1_setup(GLFWwindow * window)
     {
         std::cout<< "Failed to load texture" << std::endl;
     }
+
+    glGenTextures(1, &specularTexture);
+    glBindTexture(GL_TEXTURE_2D, specularTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (data1)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        cout <<"Failed to load texture" << endl;
+    }
+    
+    glGenTextures(1, &emissionTexture);
+    glBindTexture(GL_TEXTURE_2D, emissionTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (data2)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        cout <<"Failed to load texture" << endl;
+    }
+
     stbi_image_free(data);
+    stbi_image_free(data1);
+    stbi_image_free(data2);
 
     glGenVertexArrays(1, &VAO);
 
@@ -190,7 +230,7 @@ void exercise1_setup(GLFWwindow * window)
 
     std::string vsPath, fsPath;
     getProjectFilePath("Shaders/2_4/DiffuseMapVS24.vert", vsPath);
-    getProjectFilePath("Shaders/2_4/DiffuseMapFS24.frag", fsPath);
+    getProjectFilePath("Shaders/2_4/Exercise4.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
     getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
@@ -204,7 +244,7 @@ void exercise1_setup(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int exercise1(GLFWwindow * window)
+int exercise4(GLFWwindow * window)
 {
     processInput(window);
         
@@ -227,17 +267,21 @@ int exercise1(GLFWwindow * window)
     shaderProgram->setMat4("projection", projection);
     shaderProgram->setVec3("lightPos", lightPos);
     shaderProgram->setVec3("viewPos", camera.Position);
-    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    
     
     shaderProgram->setVec3("light.ambient", lightColor * ambient);
     shaderProgram->setVec3("light.diffuse", lightColor * diffuse);
     shaderProgram->setVec3("light.specular", lightColor * specular); 
     shaderProgram->setFloat("material.shininess", 32.0f);
     shaderProgram->setInt("material.diffuse", 0);
+    shaderProgram->setInt("material.specular", 1);
+    shaderProgram->setInt("material.emission", 2);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularTexture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, emissionTexture);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -246,7 +290,7 @@ int exercise1(GLFWwindow * window)
 }
 
 
-void exercise1_imgui(GLFWwindow * window)
+void exercise4_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     ImGui::ColorEdit3("Light Color", glm::value_ptr(lightColor));

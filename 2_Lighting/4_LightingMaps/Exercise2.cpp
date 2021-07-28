@@ -233,7 +233,6 @@ int exercise2(GLFWwindow * window)
 
     glm::mat4 view = camera.GetViewMatrix();
     float aspectRatio = (float) WIDTH/HEIGHT;
-    cout << " Exercise 2 : " << aspectRatio << endl;
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspectRatio, 0.01f, 100.0f);
 
     lampShader->use();
@@ -249,8 +248,6 @@ int exercise2(GLFWwindow * window)
     shaderProgram->setMat4("projection", projection);
     shaderProgram->setVec3("lightPos", lightPos);
     shaderProgram->setVec3("viewPos", camera.Position);
-    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    
     
     shaderProgram->setVec3("light.ambient", lightColor * ambient);
     shaderProgram->setVec3("light.diffuse", lightColor * diffuse);

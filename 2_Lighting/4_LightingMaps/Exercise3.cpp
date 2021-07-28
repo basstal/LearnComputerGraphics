@@ -138,8 +138,9 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void exercise1_setup(GLFWwindow * window)
+void exercise3_setup(GLFWwindow * window)
 {
+    
     glfwSetScrollCallback(window, scroll_callback);
     
     int width, height, nrChannels;
@@ -162,6 +163,7 @@ void exercise1_setup(GLFWwindow * window)
     {
         std::cout<< "Failed to load texture" << std::endl;
     }
+
     stbi_image_free(data);
 
     glGenVertexArrays(1, &VAO);
@@ -190,7 +192,7 @@ void exercise1_setup(GLFWwindow * window)
 
     std::string vsPath, fsPath;
     getProjectFilePath("Shaders/2_4/DiffuseMapVS24.vert", vsPath);
-    getProjectFilePath("Shaders/2_4/DiffuseMapFS24.frag", fsPath);
+    getProjectFilePath("Shaders/2_4/Exercise3.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
     getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
@@ -204,7 +206,7 @@ void exercise1_setup(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int exercise1(GLFWwindow * window)
+int exercise3(GLFWwindow * window)
 {
     processInput(window);
         
@@ -227,8 +229,6 @@ int exercise1(GLFWwindow * window)
     shaderProgram->setMat4("projection", projection);
     shaderProgram->setVec3("lightPos", lightPos);
     shaderProgram->setVec3("viewPos", camera.Position);
-    shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    
     
     shaderProgram->setVec3("light.ambient", lightColor * ambient);
     shaderProgram->setVec3("light.diffuse", lightColor * diffuse);
@@ -246,7 +246,7 @@ int exercise1(GLFWwindow * window)
 }
 
 
-void exercise1_imgui(GLFWwindow * window)
+void exercise3_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     ImGui::ColorEdit3("Light Color", glm::value_ptr(lightColor));

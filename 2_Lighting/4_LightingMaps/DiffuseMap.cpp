@@ -210,7 +210,6 @@ int diffuseMap(GLFWwindow * window)
 
     glm::mat4 view = camera.GetViewMatrix();
     float aspectRatio = (float) WIDTH/HEIGHT;
-    cout << " DiffuseMap : " << aspectRatio << endl;
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspectRatio, 0.01f, 100.0f);
 
     lampShader->use();
