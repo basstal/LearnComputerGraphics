@@ -21,8 +21,8 @@ bool firstMove = true;
 float lastX = 0.0f;
 float lastY = 0.0f;
 float lastTime = (float)glfwGetTime();
-float screenWidth = 1920;
-float screenHeight = 1080;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 // bool allowCursorPosCallback = false;
 
 Camera mainCamera = Camera();
@@ -61,7 +61,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow * window = glfwCreateWindow(screenWidth, screenHeight, "Model", NULL, NULL);
+    GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "Model", NULL, NULL);
     if (window == NULL)
     {
         cout << "ERROR::CREATE WINDOW FAILED!" << endl;
@@ -77,8 +77,8 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
-    // glfwSetCursorPosCallback(window, window_pos_callback);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
     glfwSetScrollCallback(window, scroll_callback);
 
     // Setup Dear ImGui context
@@ -125,7 +125,7 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if(ImGui::Begin("Editor"))
+        ImGui::Begin("Editor");
         {
             ImGui::InputFloat("Material shininess", &materialShininess);
             ImGui::ColorEdit3("clear color", (float*)&clear_color);
@@ -141,10 +141,6 @@ int main()
             ImGui::SliderFloat("linear", &linear, 0, 1);
             ImGui::SliderFloat("quadratic", &quadratic, 0, 1);
 
-            ImGui::End();
-        }
-        if(ImGui::Begin("Viewer"))
-        {
             ImGui::Separator();
             if (bCursorOff)
             {
@@ -184,7 +180,7 @@ int main()
         model = glm::scale(model, glm::vec3(0.1f));
         
         glm::mat4 view = mainCamera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(mainCamera.Zoom), (float)screenWidth/screenHeight, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(mainCamera.Zoom), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
 
         shader.use();
 
@@ -222,27 +218,29 @@ int main()
 
 void frame_buffer_size_callback(GLFWwindow * window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 void window_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
-    // if (allowCursorPosCallback)
-    // {
-        if ( firstMove )
-        {
-            lastX = (float)xPos;
-            lastY = (float)yPos;
-            firstMove = false;
-        }
-
-        float offsetX = (float)xPos - lastX;
-        float offsetY = lastY - (float)yPos;
+    if ( firstMove )
+    {
         lastX = (float)xPos;
         lastY = (float)yPos;
+        firstMove = false;
+    }
 
-        mainCamera.ProcessMouseMovement(offsetX, offsetY);
-    // }
+    float offsetX = (float)xPos - lastX;
+    float offsetY = lastY - (float)yPos;
+    lastX = (float)xPos;
+    lastY = (float)yPos;
+
+    mainCamera.ProcessMouseMovement(offsetX, offsetY);
 }
 
 void scroll_callback(GLFWwindow * window, double offsetX, double offsetY)
@@ -264,8 +262,6 @@ void processInput(GLFWwindow * window)
         bPressed = false;
         switch_cursor(window);
     }
-    // if (allowCursorPosCallback)
-    // {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         mainCamera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -274,7 +270,6 @@ void processInput(GLFWwindow * window)
         mainCamera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         mainCamera.ProcessKeyboard(RIGHT, deltaTime);
-    // }
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
