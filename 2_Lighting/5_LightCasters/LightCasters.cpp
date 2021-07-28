@@ -98,8 +98,8 @@ glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
@@ -140,6 +140,8 @@ int main()
         return -1;
     }
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
@@ -224,24 +226,33 @@ int main()
         shaderProgram->setFloat("material.shininess", 32.0f);
 
         shaderProgram->setVec3("viewPos", camera.Position);
+
+        // ** Spot Light
         shaderProgram->setVec3("spotLight.position", camera.Position);
         shaderProgram->setVec3("spotLight.direction", camera.Front);
         shaderProgram->setFloat("spotLight.cutOff",   glm::cos(glm::radians(12.5f)));
         shaderProgram->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
 
-        shaderProgram->setVec3("spotLight.ambient", glm::vec3(0.2));
-        shaderProgram->setVec3("spotLight.diffuse", glm::vec3(0.5));
-        shaderProgram->setVec3("spotLight.specular", glm::vec3(1));
+        shaderProgram->setVec3("spotLight.ambient", glm::vec3(0.1));
+        shaderProgram->setVec3("spotLight.diffuse", glm::vec3(0.2));
+        shaderProgram->setVec3("spotLight.specular", glm::vec3(0.5));
 
-        shaderProgram->setVec3("pointLight.ambient", glm::vec3(0.2));
-        shaderProgram->setVec3("pointLight.diffuse", glm::vec3(0.5));
-        shaderProgram->setVec3("pointLight.specular", glm::vec3(1));
+        // ** Point Light
+        shaderProgram->setVec3("pointLight.ambient", glm::vec3(0.1));
+        shaderProgram->setVec3("pointLight.diffuse", glm::vec3(0.2));
+        shaderProgram->setVec3("pointLight.specular", glm::vec3(0.5));
 
         shaderProgram->setVec3("pointLight.position", lightPos);
-        // ** Point Light
         shaderProgram->setFloat("pointLight.constant",  1.0f);
         shaderProgram->setFloat("pointLight.linear",    0.09f);
         shaderProgram->setFloat("pointLight.quadratic", 0.032f);
+
+        // ** Direction Light
+        shaderProgram->setVec3("directionLight.direction", glm::normalize(glm::vec3(5.0f, 3.0f, 1.0f)));
+        shaderProgram->setVec3("directionLight.ambient", glm::vec3(0.1));
+        shaderProgram->setVec3("directionLight.diffuse", glm::vec3(0.2));
+        shaderProgram->setVec3("directionLight.specular", glm::vec3(0.5));
+
 
         shaderProgram->setMat4("view", view);
         shaderProgram->setMat4("projection", projection);
@@ -268,7 +279,12 @@ int main()
 
 void frame_buffer_callback(GLFWwindow * window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 void processInput(GLFWwindow * window)
