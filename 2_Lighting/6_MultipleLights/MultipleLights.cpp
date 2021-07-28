@@ -93,8 +93,8 @@ glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = 0.0f;
@@ -242,6 +242,8 @@ int main()
 
     glm::vec3 dirDirection = glm::vec3(0.0f, 1.0f, 0.2f);
     float materialShininess = 32.0f;
+    glfwSetFramebufferSizeCallback(window , frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -253,7 +255,7 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if(ImGui::Begin("Editor"))
+        ImGui::Begin("Editor");
         {
             ImGui::InputFloat("Material shininess", &materialShininess);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -281,13 +283,6 @@ int main()
             ImGui::SliderFloat("spotAmbientStrength", &spotAmbientStrength, 0, 1);
             ImGui::SliderFloat("spotDiffuseStrength", &spotDiffuseStrength, 0, 1);
             ImGui::SliderFloat("spotSpecularStrength", &spotSpecularStrength, 0, 1);
-
-            
-            ImGui::End();
-        }
-        
-        if(ImGui::Begin("Viewer"))
-        {
             ImGui::Separator();
             if (bCursorOff)
             {
@@ -407,7 +402,12 @@ int main()
 
 void frame_buffer_callback(GLFWwindow * window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT =height;       
+        glViewport(0, 0, width, height);
+    }
 }
 
 void processInput(GLFWwindow * window)

@@ -103,10 +103,10 @@ int main()
     }
 
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
-        glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -114,7 +114,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          
+            ImGui::Begin("Editor");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))

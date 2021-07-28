@@ -102,7 +102,7 @@ int main()
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Draw Functions");                          
+            ImGui::Begin("Editor");                          
             for(auto entry : maps)
             {
                 if (ImGui::Button(entry.first.c_str()))
