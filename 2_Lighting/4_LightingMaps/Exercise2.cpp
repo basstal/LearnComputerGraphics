@@ -2,6 +2,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -19,6 +20,8 @@
 #include <others/stb_image.h>
 
 #include <Utils.h>
+
+using namespace std;
 
 static float vertices[] = {
     // positions          // normals           // texture coords
@@ -94,6 +97,7 @@ static glm::vec3 pointLightRepresentColor[] = {
 
 extern int WIDTH, HEIGHT;
 
+
 static Camera camera = Camera(glm::vec3(-2.0, -0.5, 2.5), glm::vec3(0, 1, 0), -35.0f, 14.0f);
 static float lastX = 0.0f;
 static float lastY = 0.0f;
@@ -104,14 +108,16 @@ static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
 
-static unsigned int VAO, VBO;
-static unsigned int lightVAO;
-static std::shared_ptr<Shader> shaderProgram;
-static std::shared_ptr<Shader> lampShader;
 static glm::vec3 lightPos;
 static glm::mat4 model;
-static unsigned int diffuseMapTexture, specularMapTexture;
+static std::shared_ptr<Shader> shaderProgram;
+static std::shared_ptr<Shader> lampShader;
+static unsigned int lightVAO;
+static unsigned int VAO, VBO;
+static unsigned int diffuseMapTexture, specularTexture;
 
+static glm::vec3 lightColor = glm::vec3(1.0f);
+static glm::vec3 ambient = glm::vec3(0.5f), diffuse = glm::vec3(0.1f), specular = glm::vec3(1.0f);
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -132,8 +138,11 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void specularMap_setup(GLFWwindow * window)
+void exercise2_setup(GLFWwindow * window)
 {
+    
+    glfwSetScrollCallback(window, scroll_callback);
+    
     int width, height, nrChannels, width1, height1, nrChannels1;
     std::string path;
     getProjectFilePath("Assets/diffuse_map.png", path);
@@ -142,7 +151,6 @@ void specularMap_setup(GLFWwindow * window)
     unsigned char *data1 = stbi_load(path.c_str(), &width1, &height1, &nrChannels1, 0);
 
     glGenTextures(1, &diffuseMapTexture);
-    glGenTextures(1, &specularMapTexture);
     glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -157,22 +165,25 @@ void specularMap_setup(GLFWwindow * window)
     {
         std::cout<< "Failed to load texture" << std::endl;
     }
-    glBindTexture(GL_TEXTURE_2D, specularMapTexture);
+
+    glGenTextures(1, &specularTexture);
+    glBindTexture(GL_TEXTURE_2D, specularTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if(data1)
+    if (data1)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
     {
-        std::cout<< "Failed to load texture" << std::endl;
+        cout <<"Failed to load texture" << endl;
     }
-    stbi_image_free(data);
+    
     stbi_image_free(data1);
+    stbi_image_free(data);
 
     glGenVertexArrays(1, &VAO);
 
@@ -198,10 +209,9 @@ void specularMap_setup(GLFWwindow * window)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-
     std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/2_4/SpecularMapVS24.vert", vsPath);
-    getProjectFilePath("Shaders/2_4/SpecularMapFS24.frag", fsPath);
+    getProjectFilePath("Shaders/2_4/DiffuseMapVS24.vert", vsPath);
+    getProjectFilePath("Shaders/2_4/Exercise2.frag", fsPath);
     shaderProgram = std::make_shared<Shader>(vsPath.c_str(), fsPath.c_str(), nullptr);
     getProjectFilePath("Shaders/2_2/VertexShader22.vert", vsPath);
     getProjectFilePath("Shaders/2_1/LightFragmentShader.frag", fsPath);
@@ -215,14 +225,16 @@ void specularMap_setup(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
 }
 
-int specularMap(GLFWwindow * window)
+int exercise2(GLFWwindow * window)
 {
     processInput(window);
         
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) WIDTH/HEIGHT, 0.01f, 100.0f);
+    float aspectRatio = (float) WIDTH/HEIGHT;
+    cout << " Exercise 2 : " << aspectRatio << endl;
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspectRatio, 0.01f, 100.0f);
 
     lampShader->use();
     lampShader->setMat4("model", model);
@@ -239,11 +251,10 @@ int specularMap(GLFWwindow * window)
     shaderProgram->setVec3("viewPos", camera.Position);
     shaderProgram->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
     
-    glm::vec3 lightColor = glm::vec3(1.0);
     
-    shaderProgram->setVec3("light.ambient", lightColor * glm::vec3(0.5));
-    shaderProgram->setVec3("light.diffuse", lightColor * glm::vec3(0.1));
-    shaderProgram->setVec3("light.specular", lightColor);
+    shaderProgram->setVec3("light.ambient", lightColor * ambient);
+    shaderProgram->setVec3("light.diffuse", lightColor * diffuse);
+    shaderProgram->setVec3("light.specular", lightColor * specular); 
     shaderProgram->setFloat("material.shininess", 32.0f);
     shaderProgram->setInt("material.diffuse", 0);
     shaderProgram->setInt("material.specular", 1);
@@ -251,7 +262,7 @@ int specularMap(GLFWwindow * window)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMapTexture);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, specularMapTexture);
+    glBindTexture(GL_TEXTURE_2D, specularTexture);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -259,9 +270,15 @@ int specularMap(GLFWwindow * window)
 
 }
 
-void specularMap_imgui(GLFWwindow * window)
+
+void exercise2_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
+    ImGui::ColorEdit3("Light Color", glm::value_ptr(lightColor));
+    ImGui::SliderFloat3("Ambient", glm::value_ptr(ambient), 0.1f, 2.0f);
+    ImGui::SliderFloat3("Diffuse", glm::value_ptr(diffuse), 0.1f, 2.0f);
+    ImGui::SliderFloat3("Specular", glm::value_ptr(specular), 0.1f, 2.0f);
+
     if (bCursorOff)
     {
         ImGui::Text("Press P to release control of the camera, and show cursor.");
@@ -307,6 +324,7 @@ static void processInput(GLFWwindow * window)
         bPressed = false;
         switch_cursor(window);
     }
+    
 }
 
 static void scroll_callback(GLFWwindow *window, double offsetX, double offsetY)

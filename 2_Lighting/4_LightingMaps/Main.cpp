@@ -18,20 +18,20 @@ static void processInput(GLFWwindow *window)
 
 extern int diffuseMap(GLFWwindow *);
 extern int exercise1(GLFWwindow * window);
-// extern int exercise2(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
 // extern int exercise3(GLFWwindow * window);
 // extern int exercise4(GLFWwindow * window);
 extern int specularMap(GLFWwindow * window);
 
 extern void diffuseMap_setup(GLFWwindow *);
 extern void exercise1_setup(GLFWwindow *);
-// extern void exercise2_setup(GLFWwindow *);
+extern void exercise2_setup(GLFWwindow *);
 // extern void exercise3_setup(GLFWwindow *);
 // extern void exercise4_setup(GLFWwindow *);
 extern void specularMap_setup(GLFWwindow *);
 
 extern void exercise1_imgui(GLFWwindow * );
-// extern void exercise2_imgui(GLFWwindow * );
+extern void exercise2_imgui(GLFWwindow * );
 // extern void exercise3_imgui(GLFWwindow * );
 // extern void exercise4_imgui(GLFWwindow * );
 extern void specularMap_imgui(GLFWwindow * );
@@ -40,7 +40,7 @@ extern void diffuseMap_imgui(GLFWwindow *);
 std::map<std::string, FuncSet> maps{
     {"diffuseMap", FuncSet(diffuseMap_setup, diffuseMap, diffuseMap_imgui)},
     {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui)},
-    // {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
+    {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui)},
     // {"exercise3", FuncSet(exercise3_setup, exercise3, exercise3_imgui)},
     // {"exercise4", FuncSet(exercise4_setup, exercise4, exercise4_imgui)},
     {"specularMap", FuncSet(specularMap_setup, specularMap, specularMap_imgui)},
@@ -49,6 +49,17 @@ std::map<std::string, FuncSet> maps{
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 int main()
@@ -101,9 +112,12 @@ int main()
         funcSet.setup(window);
     }
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+        glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();

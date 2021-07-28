@@ -89,8 +89,7 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-static int WIDTH = 1920;
-static int HEIGHT = 1080;
+extern int WIDHT, HEIGHT;
 
 static Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 static float lastX = 0.0f;
@@ -98,15 +97,7 @@ static float lastY = 0.0f;
 static float lastTime = (float)glfwGetTime();
 static bool moveMouse = true;
 
-static void frame_buffer_callback(GLFWwindow * window, int width, int height)
-{
-    if (width > 0 && height > 0)
-    {
-        WIDTH = width;
-        HEIGHT = height;
-        glViewport(0, 0, width, height);
-    }
-}
+
 static void scroll_callback(GLFWwindow *, double , double);
 static void mouse_callback(GLFWwindow * window, double xPos, double yPos);
 static void processInput(GLFWwindow *);
@@ -137,7 +128,6 @@ static void switch_cursor(GLFWwindow * window)
 
 void exercise1_setup(GLFWwindow * window)
 {
-    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, scroll_callback);
     
     glGenVertexArrays(1, &VAO);

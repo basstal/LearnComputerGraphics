@@ -52,8 +52,6 @@ static bool wireframe = false;
 static int key_state_left_control = GLFW_RELEASE;
 static int key_state_f = GLFW_RELEASE;
 
-static int SCR_WIDTH = 1920;
-static int SCR_HEIGHT = 1080;
 static unsigned int shaderProgram, yellowShaderProgram;
 static unsigned int EBO, VAO, VBO;
 static unsigned int VAO1, VBO1;
@@ -78,15 +76,12 @@ static void processInputWireframe(GLFWwindow * window)
     }
 }
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void processInput(GLFWwindow *window);
 static void checkShaderProgramLinkStatus(unsigned int programId);
 static void checkShaderCompileStatus(unsigned int shaderId);
 
 void exercise3_setup(GLFWwindow * window)
 {
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     /* Compile Vertex Shader */
     unsigned int vertexShader;
     vertexShader =glCreateShader(GL_VERTEX_SHADER);
@@ -225,15 +220,6 @@ static void checkShaderCompileStatus(unsigned int shaderId)
     }
 }
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    if (width > 0 && height > 0)
-    {
-        SCR_WIDTH = width;
-        SCR_HEIGHT = height;
-        glViewport(0, 0, width, height);
-    }
-}
 
 static void processInput(GLFWwindow *window)
 {

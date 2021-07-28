@@ -37,6 +37,16 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 int main()
 {
     glfwSetErrorCallback(glfw_error_callback);
@@ -88,9 +98,11 @@ int main()
     }
     
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
+        glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();

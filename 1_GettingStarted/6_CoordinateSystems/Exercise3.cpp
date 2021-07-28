@@ -70,6 +70,7 @@ static float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
+extern int WIDTH, HEIGHT;
 static unsigned int VAO, VBO;
 static std::shared_ptr<Shader> shaderProgram;
 static glm::mat4 view;
@@ -150,7 +151,7 @@ int exercise3(GLFWwindow * window)
 
     glBindVertexArray(VAO);
     float time = (float)glfwGetTime();
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)16.0f/9.0f, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
     shaderProgram->setMat4("projection", projection);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {

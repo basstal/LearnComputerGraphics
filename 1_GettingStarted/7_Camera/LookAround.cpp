@@ -73,6 +73,8 @@ static float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
+extern int WIDTH, HEIGHT;
+
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
@@ -253,8 +255,7 @@ void lookAround_setup(GLFWwindow * window)
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
-    shaderProgram->setMat4("projection", projection);
+    
     glEnable(GL_DEPTH_TEST);
 
 }
@@ -265,6 +266,8 @@ int lookAround(GLFWwindow * window)
     glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
+    shaderProgram->setMat4("projection", projection);
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shaderProgram->setMat4("view", view);
 
