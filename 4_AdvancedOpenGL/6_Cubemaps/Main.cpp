@@ -19,12 +19,10 @@ static void processInput(GLFWwindow *window)
 extern int cubemaps(GLFWwindow *);
 extern int reflection(GLFWwindow * window);
 extern int refraction(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
 
 extern void cubemaps_setup(GLFWwindow *);
 extern void reflection_setup(GLFWwindow *);
 extern void refraction_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
 
 extern void reflection_imgui(GLFWwindow * );
 extern void refraction_imgui(GLFWwindow * );
@@ -34,12 +32,29 @@ std::map<std::string, FuncSet> maps{
     {"cubemaps", FuncSet(cubemaps_setup, cubemaps, cubemaps_imgui)},
     {"reflection", FuncSet(reflection_setup, reflection, reflection_imgui)},
     {"refraction", FuncSet(refraction_setup, refraction, refraction_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+
+void (*current_viewport)(GLFWwindow *) = nullptr;
+
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        if (current_viewport)
+        {
+            current_viewport(window);
+        }
+        glViewport(0, 0, width, height);
+    }
 }
 
 int main()
@@ -87,9 +102,18 @@ int main()
     FuncSet funcSet = firstEntry->second;
     int (*current_draw)(GLFWwindow *) = funcSet.draw;
     void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    current_viewport = funcSet.viewport;
     if (funcSet.setup)
     {
         funcSet.setup(window);
+    }
+
+
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    if (current_viewport)
+    {
+        current_viewport(window);
     }
 
     while(!glfwWindowShouldClose(window))
@@ -114,6 +138,11 @@ int main()
                     }
                     current_draw = funcSet.draw;
                     current_imgui = funcSet.imgui;
+                    current_viewport = funcSet.viewport;
+                    if (current_viewport)
+                    {
+                        current_viewport(window);
+                    }
                 }
             }
             if (current_imgui)

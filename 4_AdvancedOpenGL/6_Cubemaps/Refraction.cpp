@@ -109,42 +109,38 @@ static float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
 // settings
-static const unsigned int SCR_WIDTH = 1920;
-static const unsigned int SCR_HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
-static int samples = 4;
-
 static unsigned int cubeVAO, cubeVBO;
-static unsigned int grassVAO, grassVBO;
-static unsigned int planeVAO, planeVBO;
-static unsigned int quadVAO, quadVBO;
-static unsigned int frameBuffer, multiSampleFBO;
-static unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
 static unsigned int skyboxVAO, skyboxVBO;
-static unsigned int skyboxTextures;
-static unsigned int houseVAO, houseVBO;
-static unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+static unsigned int skyboxTextures = 0;
 
 static std::shared_ptr<Shader> shader;
 static std::shared_ptr<Shader> refractionShader;
-static std::shared_ptr<Model> backpackModel;
-
+static std::shared_ptr<Model> backpackModel = nullptr;
+static std::vector<std::string> skyboxTexs = {
+    "Assets/skybox/right.jpg",
+    "Assets/skybox/left.jpg",
+    "Assets/skybox/top.jpg",
+    "Assets/skybox/bottom.jpg",
+    "Assets/skybox/front.jpg",
+    "Assets/skybox/back.jpg",
+};
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -167,40 +163,6 @@ static void switch_cursor(GLFWwindow * window)
 
 void refraction_setup(GLFWwindow * window)
 {
-//     // glfw: initialize and configure
-//     // ------------------------------
-//     glfwInit();
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-// #endif
-
-//     // glfw window creation
-//     // --------------------
-//     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-//     if (window == NULL)
-//     {
-//         std::cout << "Failed to create GLFW window" << std::endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-//     glfwMakeContextCurrent(window);
-//     glfwSetCursorPosCallback(window, mouse_callback);
-
-//     // tell GLFW to capture our mouse
-//     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-//     // glad: load all OpenGL function pointers
-//     // ---------------------------------------
-//     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-//     {
-//         std::cout << "Failed to initialize GLAD" << std::endl;
-//         return -1;
-//     }
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // build and compile shaders
@@ -208,7 +170,10 @@ void refraction_setup(GLFWwindow * window)
     shader = std::make_shared<Shader>("Shaders/4_6/CubemapsVS.vert", "Shaders/4_6/CubemapsFS.frag", nullptr);
     refractionShader = std::make_shared<Shader>("Shaders/4_6/ReflectionVS.vert", "Shaders/4_6/RefractionFS.frag", nullptr);
 
-    backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", false);
+    if (!backpackModel)
+    {
+        backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", false);
+    }
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
@@ -235,15 +200,11 @@ void refraction_setup(GLFWwindow * window)
 
     glBindVertexArray(0);
 
-    std::vector<std::string> skyboxTexs = {
-        "Assets/skybox/right.jpg",
-        "Assets/skybox/left.jpg",
-        "Assets/skybox/top.jpg",
-        "Assets/skybox/bottom.jpg",
-        "Assets/skybox/front.jpg",
-        "Assets/skybox/back.jpg",
-    };
-    skyboxTextures = LoadSkyboxTex(skyboxTexs);
+    if (!skyboxTextures)
+    {
+
+        skyboxTextures = LoadSkyboxTex(skyboxTexs);
+    }
 
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -252,20 +213,6 @@ void refraction_setup(GLFWwindow * window)
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    // // render loop
-    // // -----------
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-        
-    //     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-    //     // -------------------------------------------------------------------------------
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 void refraction_imgui(GLFWwindow * window)
@@ -290,11 +237,9 @@ void refraction_imgui(GLFWwindow * window)
 
 int refraction(GLFWwindow * window)
 {
-    // input
-    // -----
     processInput(window);
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextures);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -356,15 +301,6 @@ void processInput(GLFWwindow *window)
         bPressed = false;
         switch_cursor(window);
     }
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called
