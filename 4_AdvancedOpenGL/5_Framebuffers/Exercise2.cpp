@@ -1,22 +1,24 @@
 /*
+The glFrameBufferTexture2D function has the following parameters:
 
-Blending in OpenGL happens with the following equation:
+target: the framebuffer type we're targeting (draw, read or both).
 
-C¯result=C¯source∗Fsource+C¯destination∗Fdestination
+attachment: the type of attachment we're going to attach. Right now we're attaching a color attachment. Note that the 0 at the end suggests we can attach more than 1 color attachment. We'll get to that in a later chapter.
 
-C¯source: the source color vector. This is the color output of the fragment shader.
-C¯destination: the destination color vector. This is the color vector that is currently stored in the color buffer.
-Fsource: the source factor value. Sets the impact of the alpha value on the source color.
-Fdestination: the destination factor value. Sets the impact of the alpha value on the destination color.
+textarget: the type of the texture you want to attach.
+
+texture: the actual texture to attach.
+
+level: the mipmap level. We keep this at 0.
 
 */
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <others/stb_image.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,14 +26,11 @@ Fdestination: the destination factor value. Sets the impact of the alpha value o
 
 #include <Shader.h>
 #include <Camera.h>
+#include <Utils.h>
 
 #include <iostream>
 #include <vector>
 #include <map>
-
-#include "Utils.h"
-
-static bool wireframe = false;
 
 static float cubeVertices[] = {
     // Back face
@@ -89,21 +88,25 @@ static float planeVertices[] = {
         5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 };
 
-static float windowVertices[] = {
-    -0.5f,  -0.5f,  0.0f,   1.0f,   1.0f,
-    -0.5f,  0.5f,   0.0f,   1.0f,   0.0f,
-    0.5f,   -0.5f,  0.0f,   0.0f,   1.0f,
-    0.5f,   -0.5f,  0.0f,   0.0f,   1.0f,
-    -0.5f,  0.5f,   0.0f,   1.0f,   0.0f,
-    0.5f,   0.5f,   0.0f,   0.0f,   0.0f,
+static float quadVertices[] = {  
+    // positions   // texCoords
+    -1.0f, -1.0f,  0.0f, 0.0f,
+    -1.0f, 1.0f,  0.0f, 1.0f,
+    1.0f, 1.0f,  1.0f, 1.0f,
+
+    1.0f,  1.0f,  1.0f, 1.0f,
+    -1.0f, -1.0f,  0.0f, 0.0f,
+    1.0f,  -1.0f,  1.0f, 0.0f
 };
 
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
+static void DrawScene(std::shared_ptr<Shader> simpleShader);
 
 // settings
 extern int WIDTH, HEIGHT;
+static bool wireframe = false;
 
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -113,16 +116,17 @@ static bool firstMouse = true;
 
 // timing
 static float deltaTime = 0.0f;
-static float lastTime = 0.0f;
+static float lastFrame = 0.0f;
 
 static unsigned int cubeVAO, cubeVBO;
-static unsigned int vegetationVAO, vegetationVBO;
 static unsigned int planeVAO, planeVBO;
-static unsigned int cubeTexture, floorTexture, grassTexture;
+static unsigned int quadVAO, quadVBO;
+static unsigned int framebuffer;
+static unsigned int rbo;
+static unsigned int cubeTexture, floorTexture, framebufferTexture;
 
 static std::shared_ptr<Shader> simpleShader;
-static std::shared_ptr<Shader> vegetationShader;
-static std::vector<glm::vec3> vegetation;
+static std::shared_ptr<Shader> framebufferShader;
 
 
 static bool bCursorOff = false;
@@ -144,19 +148,15 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void blending_setup(GLFWwindow *window)
+void exercise2_setup(GLFWwindow * window)
 {
     glfwSetScrollCallback(window, scroll_callback);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    cubeTexture  = loadImage("Assets/marble.jpg", false);
+    cubeTexture  = loadImage("Assets/container.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
-    grassTexture = loadImage("Assets/grass.png", false);
 
     simpleShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
-    vegetationShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_3/VegetationFragmentShader.frag", nullptr);
+    framebufferShader = std::make_shared<Shader>("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessingSharpen.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
@@ -175,36 +175,35 @@ void blending_setup(GLFWwindow *window)
     glBindVertexArray(planeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
-    vegetation.clear();
-    vegetation.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
-    vegetation.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
-    vegetation.push_back(glm::vec3( 0.0f,  0.0f,  0.7f));
-    vegetation.push_back(glm::vec3(-0.3f,  0.0f, -2.3f));
-    vegetation.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));  
-
-    // vegetation VAO
-    glGenVertexArrays(1, &vegetationVAO);
-    glGenBuffers(1, &vegetationVBO);
-    glBindVertexArray(vegetationVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, vegetationVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    // quad VAO
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
 
+    // framebuffer
+    glGenFramebuffers(1, &framebuffer);
+    
+
+    
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void blending_imgui(GLFWwindow * window)
+
+void exercise2_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     if (bCursorOff)
@@ -222,73 +221,73 @@ void blending_imgui(GLFWwindow * window)
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
     ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
-
 }
 
-int blending(GLFWwindow *window)
+void exercise2_viewport(GLFWwindow *window)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glDeleteTextures(1, &framebufferTexture);
+    glGenTextures(1, &framebufferTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    glDeleteRenderbuffers(1, &rbo);
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    }
+}
+int exercise2(GLFWwindow * window)
 {
     processInput(window);
         
+
+    // first pass
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
-    simpleShader->use();
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-    simpleShader->setMat4("view", view);
-    simpleShader->setMat4("projection", projection);
+    DrawScene(simpleShader);
 
-    glBindVertexArray(cubeVAO);
+    // second pass
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.1, 0.1, 0.1, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    framebufferShader->use();
+    glBindVertexArray(quadVAO);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.5f, 0.0f, -1.0f));
-    model = glm::scale(model, glm::vec3(1.0));
-    simpleShader->setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0));
-    simpleShader->setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    glBindVertexArray(planeVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    vegetationShader->use();
-    vegetationShader->setMat4("projection", projection);
-    vegetationShader->setMat4("view", view);
-    glBindVertexArray(vegetationVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    // ** clear the top edge's line
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    for(unsigned int i = 0; i < vegetation.size(); i++) 
-    {
-        model = glm::mat4(1.0f);
-        glm::vec3 vegetationPos = vegetation[i];
-        model = glm::translate(model, vegetationPos);
-        vegetationShader->setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
-    glBindVertexArray(0);
     return 0;
 
 }
-
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 static void processInput(GLFWwindow *window)
 {
-    float currentTime = (float)glfwGetTime();
-    float deltaTime = currentTime - lastTime;
-    lastTime = currentTime;
-    
+    float currentFrame = glfwGetTime();
+    float deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -336,4 +335,31 @@ static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
+}
+
+static void DrawScene(std::shared_ptr<Shader> simpleShader)
+{
+    simpleShader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    simpleShader->setMat4("view", view);
+    simpleShader->setMat4("projection", projection);
+
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 0.0f, -1.0f));
+    simpleShader->setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f));
+    simpleShader->setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glBindVertexArray(planeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }

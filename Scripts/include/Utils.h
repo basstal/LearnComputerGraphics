@@ -7,8 +7,6 @@
 #include <others/stb_image.h>
 #include <iostream>
 #include <vector>
-// #include <codecvt>
-// #include <locale>
 
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs);
 

@@ -6,11 +6,13 @@ public:
     int (*draw)(GLFWwindow *);
     void (*setup)(GLFWwindow *);
     void (*imgui)(GLFWwindow*);
-    FuncSet(void (*in_setup)(GLFWwindow *), int (*in_draw)(GLFWwindow *), void (*in_imgui)(GLFWwindow*) = nullptr)
+    void (*viewport)(GLFWwindow *);
+    FuncSet(void (*in_setup)(GLFWwindow *), int (*in_draw)(GLFWwindow *), void (*in_imgui)(GLFWwindow*) = nullptr, void (*in_viewport)(GLFWwindow *) = nullptr)
     {
         draw = in_draw;
         setup = in_setup;
         imgui = in_imgui;
+        viewport = in_viewport;
     }
     FuncSet(){}
 };

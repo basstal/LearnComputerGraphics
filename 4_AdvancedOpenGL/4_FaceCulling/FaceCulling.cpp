@@ -25,7 +25,7 @@ GL_FRONT_AND_BACK: Culls both the front and back faces.
 
 #include "Utils.h"
 
-bool wireframe = true;
+bool wireframe = false;
 
 float vertices[] = {
     // back face
@@ -72,11 +72,6 @@ float vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // top-left              
 };
 
-/* Also make sure to add a call to OpenGL to specify that triangles defined by a clockwise ordering 
-   are now 'front-facing' triangles so the cube is rendered as normal:
-   glFrontFace(GL_CW);
-*/
-
 float planeVertices[] = {
     // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
@@ -94,8 +89,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -107,18 +102,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastTime = 0.0f;
 
-int samples = 4;
-
 unsigned int cubeVAO, cubeVBO;
-unsigned int windowVAO, windowVBO;
 unsigned int planeVAO, planeVBO;
-unsigned int quadVAO, quadVBO;
-unsigned int frameBuffer, multiSampleFBO;
-unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
-unsigned int skyboxVAO, skyboxVBO;
-unsigned int skyboxTextures;
-unsigned int houseVAO, houseVBO;
-unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+unsigned int cubeTexture, floorTexture;
 
 int main()
 {
@@ -141,7 +127,8 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -199,15 +186,13 @@ int main()
         simpleShader.use();
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 model = glm::mat4(1.0f);
         simpleShader.setMat4("view", view);
         simpleShader.setMat4("projection", projection);
-        simpleShader.setMat4("model", model);
 
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
-        model = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f, 0.0f, -1.0f));
         model = glm::scale(model, glm::vec3(scale));
         simpleShader.setMat4("model", model);
@@ -258,9 +243,14 @@ void processInput(GLFWwindow *window)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        // make sure the viewport matches the new window dimensions; note that width and 
+        // height will be significantly larger than specified on retina displays.
+        glViewport(0, 0, width, height);
+    }
 }
 
 // glfw: whenever the mouse moves, this callback is called

@@ -114,37 +114,27 @@ static float windowVertices[] = {
     0.5f,   0.5f,   0.0f,   0.0f,   0.0f,
 };
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
 // settings
-static const unsigned int SCR_WIDTH = 1920;
-static const unsigned int SCR_HEIGHT = 1080;
-
+extern int WIDTH, HEIGHT;
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
 static float deltaTime = 0.0f;
 static float lastTime = 0.0f;
 
-// static int samples = 4;
 
 static unsigned int cubeVAO, cubeVBO;
 static unsigned int windowVAO, windowVBO;
 static unsigned int planeVAO, planeVBO;
-// static unsigned int quadVAO, quadVBO;
-static unsigned int frameBuffer, multiSampleFBO;
-static unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
-// static unsigned int skyboxVAO, skyboxVBO;
-// static unsigned int skyboxTextures;
-// static unsigned int houseVAO, houseVBO;
-// static unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+static unsigned int cubeTexture, floorTexture, windowTexture;
 
 static std::shared_ptr<Shader> simpleShader;
 static std::shared_ptr<Shader> windowShader;
@@ -172,32 +162,7 @@ static void switch_cursor(GLFWwindow * window)
 
 void semiTransparent_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Advanced OpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    
 
     cubeTexture  = loadImage("Assets/marble.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
@@ -207,24 +172,26 @@ void semiTransparent_setup(GLFWwindow * window)
     windowShader = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/4_3/WindowFragmentShader.frag", nullptr);
 
     // cube VAO
-    // if (cubeVAO <= 0)
-    // {
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
-    
-        // glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // glBindVertexArray(0);
-    // }
-    
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     // plane VAO
-    // if (planeVAO <= 0)
-    // {
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
-        
-        // glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // glBindVertexArray(0);
-    // }
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     windows.clear();
     windows.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
@@ -234,14 +201,15 @@ void semiTransparent_setup(GLFWwindow * window)
     windows.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));  
 
     // window VAO
-    // if (windowVAO <= 0)
-    // {
     glGenVertexArrays(1, &windowVAO);
     glGenBuffers(1, &windowVBO);
-    
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // glBindVertexArray(0);
-    // }
+    glBindVertexArray(windowVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, windowVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5* sizeof(float), (void *)(3*sizeof(float)));
 
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -252,18 +220,6 @@ void semiTransparent_setup(GLFWwindow * window)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    // float scale = 1.0f;
-
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 void semiTransparent_imgui(GLFWwindow * window)
@@ -297,19 +253,11 @@ int semiTransparent(GLFWwindow * window)
 
     simpleShader->use();
     glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     simpleShader->setMat4("view", view);
     simpleShader->setMat4("projection", projection);
 
-    
-    // std::cout << "cubeVAO : " << cubeVAO << std::endl;
     glBindVertexArray(cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
     glm::mat4 model = glm::mat4(1.0f);
@@ -325,12 +273,6 @@ int semiTransparent(GLFWwindow * window)
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, floorTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -339,23 +281,8 @@ int semiTransparent(GLFWwindow * window)
     windowShader->setMat4("projection", projection);
     windowShader->setMat4("view", view);
     glBindVertexArray(windowVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, windowVAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5* sizeof(float), (void *)(3*sizeof(float)));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, windowTexture);
-
-    // have render problem with transparent object, should be order from farthest to nearest
-    // for(unsigned int i = 0; i < windows.size(); i++) 
-    // {
-    //     model = glm::mat4(1.0f);
-    //     model = glm::translate(model, windows[i]);				
-    //     windowShader->setMat4("model", model);
-    //     glDrawArrays(GL_TRIANGLES, 0, 6);
-    // }
 
     std::map<float, glm::vec3> sorted;
     for (unsigned int i = 0; i < windows.size(); i++)
@@ -403,15 +330,6 @@ static void processInput(GLFWwindow *window)
         bPressed = false;
         switch_cursor(window);
     }
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called

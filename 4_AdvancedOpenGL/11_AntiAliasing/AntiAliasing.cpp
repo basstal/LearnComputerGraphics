@@ -192,7 +192,7 @@ int main()
     Shader shader("Shaders/3_3/ModelVS33.vert", "Shaders/4_2/SimpleFragmentShader.frag", nullptr);
     Shader backpackShader("Shaders/3_3/ModelVS33.vert", "Shaders/4_3/WindowFragmentShader.frag", nullptr);
     Shader framebufferShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/FramebufferFS.frag", nullptr);
-    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessing.frag", nullptr);
+    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessingKernels.frag", nullptr);
     Shader customAntiAliasingShader("Shaders/4_11/CustomAAVS.vert", "Shaders/4_11/CustomAAFS.frag", nullptr);
     // backpack
     Model backpack("Assets/backpack/backpack.obj", true);

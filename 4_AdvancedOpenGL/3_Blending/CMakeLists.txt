@@ -1,11 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-# SET(CMAKE_BUILD_TYPE "Release")
-
 set(ROOT_PATH 
     "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
-
 
 set(PROJECT_NAME "Blending")
 
@@ -13,11 +10,11 @@ set(PROJECT_NAME "Blending")
 project(${PROJECT_NAME})
 
 # lib source glad
-# add_library(glad
-#     "${ROOT_PATH}/Plugins/glad/glad.c")
+add_library(glad
+    "${ROOT_PATH}/Plugins/glad/glad.c")
 
-# target_include_directories(glad PUBLIC
-#     "${ROOT_PATH}/Plugins")
+target_include_directories(glad PUBLIC
+    "${ROOT_PATH}/Plugins")
 
 # lib source imgui
 add_library(imgui
@@ -38,22 +35,13 @@ add_executable(${PROJECT_NAME}
     Main.cpp
     Blending.cpp
     SemiTransparent.cpp
-    # SemiTransparentOld.cpp
-    "${ROOT_PATH}/Plugins/glad/glad.c"
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/STBImage.cpp")
 
 target_link_libraries(${PROJECT_NAME}
     "${ROOT_PATH}/Plugins/glfw-3.3.4/lib-vc2019/glfw3_mt.lib"
-    # "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/assimp-vc142-mtd.lib"
-    # "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/zlibstaticd.lib"
-    # "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/IrrXMLd.lib"
-    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x86/OpenGL32.Lib"
-    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x86/kernel32.Lib"
-    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x86/User32.Lib"
-    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x86/Gdi32.Lib"
-    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x86/shell32.lib"
+    glad
     imgui)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
@@ -63,11 +51,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "${ROOT_PATH}/Plugins"
     "${ROOT_PATH}/Scripts/include")
 
-# add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD                    # Adds a post-build event to project
-#     COMMAND ${CMAKE_COMMAND} -E copy_if_different                       # which executes "cmake - E copy_if_different..."
-#     "${ROOT_PATH}/Plugins/assimp-5.0.1/lib/assimp-vc142-mtd.dll"        # <--this is in-file
-#     $<TARGET_FILE_DIR:${PROJECT_NAME}>)                                 # <--this is out-file path
-    
 if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS
         "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT.LIB")

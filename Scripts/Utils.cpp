@@ -97,11 +97,6 @@ unsigned int loadImage(const char * path, bool flipOnLoad)
 {
     std::string filePath;
     getProjectFilePath(path, filePath);
-    // std::string fileName = std::string(path);
-    // if (!directory.empty())
-        // fileName = directory + '/' + fileName;
-    // std::cout << "path : " << path << std::endl;
-    // std::cout << "filePath : " << filePath << std::endl;
     
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -156,17 +151,13 @@ void getProjectFilePath(const char * projectRelativePath2File, std::string& outp
     {
         wchar_t absolutePath[300];
         _wgetcwd(absolutePath, 300);
-        // std::wcout<< absolutePath <<std::endl;
         std::wstring pathStr(absolutePath);
-        // std::wcout << pathStr <<std::endl;
         std::wstring::size_type index = pathStr.rfind(L"LearnOpenGL");
-        // std::cout<<"index : " << index <<std::endl;
         pathStr = pathStr.substr(0, index + 11);
         outputPath.clear();
         outputPath.append(pathStr.begin(), pathStr.end());
         outputPath.push_back('\\');
         outputPath.append(projectRelativePath2File);
-        // std::cout << "outputPath : " << outputPath << std::endl;
         replaceStringInPlace(outputPath, "/", "\\");
     }
     else

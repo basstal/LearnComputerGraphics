@@ -54,7 +54,6 @@ void Mesh::BindTexture(const Shader& shader)
     unsigned int reflectionNr = 1;
     unsigned int tangentNr = 1;
 
-    // std::cout << "mesh textures size = " << textures.size() << std::endl;
     for (unsigned int i = 0 ; i < textures.size(); ++ i)
     {
         glActiveTexture(GL_TEXTURE0 + i);

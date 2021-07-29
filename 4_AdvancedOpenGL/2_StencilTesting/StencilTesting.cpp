@@ -7,9 +7,7 @@ ref: specifies the reference value for the stencil test. The stencil buffer's co
 
 mask: specifies a mask that is ANDed with both the reference value and the stored stencil value before the test compares them. Initially set to all 1s.
 
-*/
 
-/*
 The glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass) contains three options of which we can specify for each option what action to take:
 
 sfail: action to take if the stencil test fails.
@@ -112,8 +110,8 @@ void processInput(GLFWwindow *window);
 void DrawModel(Shader& simpleShader, float scale);
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -125,18 +123,10 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastTime = 0.0f;
 
-// int samples = 4;
 
 unsigned int cubeVAO, cubeVBO;
-// unsigned int grassVAO, grassVBO;
 unsigned int planeVAO, planeVBO;
-// unsigned int quadVAO, quadVBO;
-// unsigned int frameBuffer, multiSampleFBO;
-unsigned int cubeTexture, floorTexture, grassTexture, windowTexture;
-// unsigned int skyboxVAO, skyboxVBO;
-// unsigned int skyboxTextures;
-// unsigned int houseVAO, houseVBO;
-// unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+unsigned int cubeTexture, floorTexture;
 
 int main()
 {
@@ -159,7 +149,8 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -172,11 +163,8 @@ int main()
     cubeTexture  = loadImage("Assets/marble.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
 
-    std::string vsPath, fsPath;
-    getProjectFilePath("Shaders/4_1/VertexShader.vert", vsPath);
-    getProjectFilePath("/Shaders/4_1/FragmentShader.frag", fsPath);
-    Shader simpleShader(std::string("Shaders/4_1/VertexShader.vert"), std::string("Shaders/4_1/FragmentShader.frag"), std::string(""));
-    Shader outlineShader(std::string("Shaders/4_1/VertexShader.vert"), std::string("Shaders/4_2/SimpleFragmentShader.frag"), std::string(""));
+    Shader simpleShader("Shaders/4_1/VertexShader.vert", "Shaders/4_1/FragmentShader.frag", nullptr);
+    Shader outlineShader("Shaders/4_1/VertexShader.vert", "Shaders/4_2/SimpleFragmentShader.frag", nullptr);
 
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
@@ -275,9 +263,14 @@ void processInput(GLFWwindow *window)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        // make sure the viewport matches the new window dimensions; note that width and 
+        // height will be significantly larger than specified on retina displays.
+        glViewport(0, 0, width, height);
+    }
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -289,7 +282,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
-        // std::cout << "firstMouse : " << firstMouse << std::endl;
     }
 
     float xoffset = xpos - lastX;
@@ -297,8 +289,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     lastX = xpos;
     lastY = ypos;
-    // std::cout << "xoffset : " << xoffset << std::endl;
-    // std::cout << "yoffset : " << yoffset << std::endl;
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 

@@ -84,6 +84,11 @@ public:
         Yaw += delta;
         updateCameraVectors();
     }
+    void CameraPitchRotate(float delta)
+    {
+        Pitch += delta;
+        updateCameraVectors();
+    }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
@@ -126,7 +131,6 @@ private:
         glm::vec3 front;
         front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         front.y = sin(glm::radians(Pitch));
-        // front.y = 0;
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         Front = glm::normalize(front);
         // Also re-calculate the Right and Up vector

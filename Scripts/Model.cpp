@@ -16,7 +16,6 @@ std::vector<Mesh> &Model::GetMeshes()
 
 void Model::Draw(Shader &shader)
 {
-    // std::cout << "meshes.size() = "  << meshes.size() << std::endl;
     for (unsigned int i = 0; i < meshes.size(); ++i)
         meshes[i].Draw(shader);
 }
@@ -179,12 +178,10 @@ std::vector<Texture> Model::loadMaterialTexture(aiMaterial * mat, aiTextureType 
                 std::string pathStr(directory);
                 pathStr.append("/");
                 pathStr.append(str.C_Str());
-                // std::cout << "pathStr : " << pathStr << std::endl;
                 texture.ID = loadImage(pathStr.c_str(), flipTexturesOnLoad);
             }
             else
             {
-                // std::cout << "str : " << str.C_Str() << std::endl;
                 texture.ID = loadImage(str.C_Str(), flipTexturesOnLoad);
             }
             texture.Type = typeName;

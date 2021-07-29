@@ -2,9 +2,13 @@
 The glFrameBufferTexture2D function has the following parameters:
 
 target: the framebuffer type we're targeting (draw, read or both).
+
 attachment: the type of attachment we're going to attach. Right now we're attaching a color attachment. Note that the 0 at the end suggests we can attach more than 1 color attachment. We'll get to that in a later chapter.
+
 textarget: the type of the texture you want to attach.
+
 texture: the actual texture to attach.
+
 level: the mipmap level. We keep this at 0.
 
 */
@@ -23,7 +27,6 @@ level: the mipmap level. We keep this at 0.
 #include <Shader.h>
 #include <Camera.h>
 #include <Utils.h>
-// #include <Model.h>
 
 #include <iostream>
 #include <vector>
@@ -94,42 +97,33 @@ static float quadVertices[] = {
     -0.2f,  1.0f,  0.0f, 1.0f,
     0.2f, 0.6f,  1.0f, 0.0f,
     0.2f,  1.0f,  1.0f, 1.0f
-};	
+};
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 static void DrawScene(std::shared_ptr<Shader> simpleShader);
 
 // settings
-static const unsigned int SCR_WIDTH = 1920;
-static const unsigned int SCR_HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 static bool wireframe = false;
 
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
 static float deltaTime = 0.0f;
 static float lastFrame = 0.0f;
 
-static int samples = 4;
-
 static unsigned int cubeVAO, cubeVBO;
-static unsigned int grassVAO, grassVBO;
 static unsigned int planeVAO, planeVBO;
 static unsigned int quadVAO, quadVBO;
-static unsigned int framebuffer, multiSampleFBO;
+static unsigned int framebuffer;
 static unsigned int rbo;
-static unsigned int cubeTexture, floorTexture, grassTexture, windowTexture, framebufferTexture;
-static unsigned int skyboxVAO, skyboxVBO;
-static unsigned int skyboxTextures;
-static unsigned int houseVAO, houseVBO;
-static unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
+static unsigned int cubeTexture, floorTexture, framebufferTexture;
 
 static std::shared_ptr<Shader> simpleShader;
 static std::shared_ptr<Shader> framebufferShader;
@@ -154,39 +148,9 @@ static void switch_cursor(GLFWwindow * window)
     bCursorOff = !bCursorOff;
 }
 
-void rearViewMirror_setup(GLFWwindow * window)
+void exercise1_setup(GLFWwindow * window)
 {
-    // // glfw: initialize and configure
-    // // ------------------------------
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // // glfw window creation
-    // // --------------------
-    // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // // glad: load all OpenGL function pointers
-    // // ---------------------------------------
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     cubeTexture  = loadImage("Assets/container.jpg", false);
     floorTexture = loadImage("Assets/metal.png", false);
@@ -197,70 +161,49 @@ void rearViewMirror_setup(GLFWwindow * window)
     // cube VAO
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
-    
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     
     // plane VAO
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     // quad VAO
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
-
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
 
     // framebuffer
     glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    // generate texture
-    glGenTextures(1, &framebufferTexture);
-    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
-
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
 
     
     if (!wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
-    // // render loop
-    // // -----------
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-    //     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-    //     // -------------------------------------------------------------------------------
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 
-void rearViewMirror_imgui(GLFWwindow * window)
+void exercise1_imgui(GLFWwindow * window)
 {
     ImGui::Separator();
     if (bCursorOff)
@@ -279,7 +222,36 @@ void rearViewMirror_imgui(GLFWwindow * window)
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
     ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
 }
-int rearViewMirror(GLFWwindow * window)
+
+void exercise1_viewport(GLFWwindow *window)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glDeleteTextures(1, &framebufferTexture);
+    glGenTextures(1, &framebufferTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    glDeleteRenderbuffers(1, &rbo);
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    }
+}
+int exercise1(GLFWwindow * window)
 {
     processInput(window);
         
@@ -291,13 +263,14 @@ int rearViewMirror(GLFWwindow * window)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    float angle = 180 / camera.MouseSensitivity;
-    camera.ProcessMouseMovement(angle, 0);
+    camera.CameraYawRotate(180);
+    float OriginPitch = camera.Pitch;
+    camera.CameraPitchRotate(-OriginPitch * 2);
     DrawScene(simpleShader);
+    camera.CameraPitchRotate(OriginPitch * 2);
+    camera.CameraYawRotate(-180);
 
-    camera.ProcessMouseMovement(-angle, 0);
-
-    // // second pass
+    // second pass
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.1, 0.1, 0.1, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -306,35 +279,9 @@ int rearViewMirror(GLFWwindow * window)
     
     framebufferShader->use();
     glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    simpleShader->use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    simpleShader->setMat4("view", view);
-    simpleShader->setMat4("projection", projection);
-    
-    glBindVertexArray(cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.5f, 0.0f, -1.0f));
-    simpleShader->setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     return 0;
 
@@ -370,15 +317,6 @@ static void processInput(GLFWwindow *window)
     }
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -409,23 +347,15 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 static void DrawScene(std::shared_ptr<Shader> simpleShader)
 {
     simpleShader->use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
     simpleShader->setMat4("view", view);
     simpleShader->setMat4("projection", projection);
-    simpleShader->setMat4("model", model);
 
     glBindVertexArray(cubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cubeTexture); 	
-    model = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.5f, 0.0f, -1.0f));
     simpleShader->setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -436,12 +366,6 @@ static void DrawScene(std::shared_ptr<Shader> simpleShader)
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, floorTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);

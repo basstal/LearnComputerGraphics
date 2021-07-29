@@ -18,23 +18,16 @@ static void processInput(GLFWwindow *window)
 
 extern int blending(GLFWwindow *);
 extern int semiTransparent(GLFWwindow * window);
-// extern int specularMap(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
 
 extern void blending_setup(GLFWwindow *);
 extern void semiTransparent_setup(GLFWwindow *);
-// extern void specularMap_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
 
 extern void semiTransparent_imgui(GLFWwindow * );
-// extern void specularMap_imgui(GLFWwindow * );
 extern void blending_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"blending", FuncSet(blending_setup, blending, blending_imgui)},
     {"semiTransparent", FuncSet(semiTransparent_setup, semiTransparent, semiTransparent_imgui)},
-    // {"specularMap", FuncSet(specularMap_setup, specularMap, specularMap_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -42,6 +35,16 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
+}
 int main()
 {
     glfwSetErrorCallback(glfw_error_callback);
@@ -91,6 +94,9 @@ int main()
     {
         funcSet.setup(window);
     }
+
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
 
     while(!glfwWindowShouldClose(window))
     {

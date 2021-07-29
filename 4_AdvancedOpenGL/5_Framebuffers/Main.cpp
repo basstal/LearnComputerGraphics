@@ -17,24 +17,25 @@ static void processInput(GLFWwindow *window)
 }
 
 extern int framebuffers(GLFWwindow *);
-extern int rearViewMirror(GLFWwindow * window);
-// extern int specularMap(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
+extern int exercise1(GLFWwindow * window);
+extern int exercise2(GLFWwindow * window);
 
 extern void framebuffers_setup(GLFWwindow *);
-extern void rearViewMirror_setup(GLFWwindow *);
-// extern void specularMap_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
+extern void exercise1_setup(GLFWwindow *);
+extern void exercise2_setup(GLFWwindow *);
 
-extern void rearViewMirror_imgui(GLFWwindow * );
-// extern void specularMap_imgui(GLFWwindow * );
 extern void framebuffers_imgui(GLFWwindow *);
+extern void exercise1_imgui(GLFWwindow * );
+extern void exercise2_imgui(GLFWwindow * );
+
+extern void framebuffers_viewport(GLFWwindow *);
+extern void exercise1_viewport(GLFWwindow *);
+extern void exercise2_viewport(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
-    {"framebuffers", FuncSet(framebuffers_setup, framebuffers, framebuffers_imgui)},
-    {"rearViewMirror", FuncSet(rearViewMirror_setup, rearViewMirror, rearViewMirror_imgui)},
-    // {"specularMap", FuncSet(specularMap_setup, specularMap, specularMap_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
+    {"framebuffers", FuncSet(framebuffers_setup, framebuffers, framebuffers_imgui, framebuffers_viewport)},
+    {"exercise1", FuncSet(exercise1_setup, exercise1, exercise1_imgui, exercise1_viewport)},
+    {"exercise2", FuncSet(exercise2_setup, exercise2, exercise2_imgui, exercise2_viewport)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -42,6 +43,22 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+void (*current_viewport)(GLFWwindow *) = nullptr;
+
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        if (current_viewport)
+        {
+            current_viewport(window);
+        }
+        glViewport(0, 0, width, height);
+    }
+}
 int main()
 {
     glfwSetErrorCallback(glfw_error_callback);
@@ -87,9 +104,17 @@ int main()
     FuncSet funcSet = firstEntry->second;
     int (*current_draw)(GLFWwindow *) = funcSet.draw;
     void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    current_viewport = funcSet.viewport;
     if (funcSet.setup)
     {
         funcSet.setup(window);
+    }
+
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    if (current_viewport)
+    {
+        current_viewport(window);
     }
 
     while(!glfwWindowShouldClose(window))
@@ -114,6 +139,11 @@ int main()
                     }
                     current_draw = funcSet.draw;
                     current_imgui = funcSet.imgui;
+                    current_viewport = funcSet.viewport;
+                    if (current_viewport)
+                    {
+                        current_viewport(window);
+                    }
                 }
             }
             if (current_imgui)
