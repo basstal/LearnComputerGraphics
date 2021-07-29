@@ -56,8 +56,8 @@ float cubeVertices[] = {
 };
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 4.0f));
@@ -77,6 +77,16 @@ void DrawCube(Shader shader, glm::vec3 position)
     model = glm::translate(model, position);	// move top-left
     shader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 int main()
@@ -100,6 +110,8 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     
     Shader redShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS1.frag", nullptr);
     Shader greenShader("Shaders/4_8/UniformBufferObjectVS.vert", "Shaders/4_8/UniformBufferObjectFS2.frag", nullptr);
