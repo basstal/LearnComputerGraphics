@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -11,11 +15,9 @@
 #include <Shader.h>
 #include <Model.h>
 
-bool wireframe = false;
 
-
-const int HEIGHT = 1080;
-const int WIDTH = 1920;
+int HEIGHT = 1080;
+int WIDTH = 1920;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -27,22 +29,8 @@ float deltaTime = 0.0f;
 Camera camera = Camera(glm::vec3(0.0, 0.0, 3.0));
 
 
-// 2-gamma correction
 bool openGammaCorrection = false;
-bool glGammaCorrection = false;
 
-// set up vertex data (and buffer(s)) and configure vertex attributes
-// ------------------------------------------------------------------
-float planeVertices[] = {
-    // positions            // normals         // texcoords
-        10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-
-        10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-        10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
-};
 
 // lighting info
 // -------------
@@ -68,11 +56,67 @@ void mouse_scroll_callback(GLFWwindow *, double, double);
 void processInput(GLFWwindow * window);
 void renderCube();
 void renderQuad();
-void renderScene(const Shader &shader, unsigned int planeVAO);
+void renderScene(const Shader &shader);
 void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
 float lerp(float, float, float);
+
+unsigned int planeVAO = 0, planeVBO = 0;
+void renderPlane()
+{
+    if (!planeVAO)
+    {
+
+        // set up vertex data (and buffer(s)) and configure vertex attributes
+        // ------------------------------------------------------------------
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+                10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+        };
+        // plane VAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMove = true;
+    }
+    bCursorOff = !bCursorOff;
+}
 
 int main()
 {
@@ -94,11 +138,7 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetScrollCallback(window, mouse_scroll_callback);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
     {
         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
@@ -106,36 +146,66 @@ int main()
         return -1;
     }
 
-    if (!wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    glfwSetScrollCallback(window, mouse_scroll_callback);
 
     glEnable(GL_DEPTH_TEST);
-
-    // plane VAO
-    unsigned int planeVAO, planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glBindVertexArray(0);
 
     unsigned int floorTexture = loadImageGamma("Assets/wood.png", false, false);
     unsigned int floorTextureGammaCorrected = loadImageGamma("Assets/wood.png", true, false);
 
-    Shader shader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_2/GammaCorrectionFS.frag", NULL);
+    Shader shader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_2/GammaCorrectionFS.frag", nullptr);
 
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
 
     while(!glfwWindowShouldClose(window))
     {
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        {
+            ImGui::Begin("Editor");                          
+            ImGui::Separator();
+            if (bCursorOff)
+            {
+                ImGui::Text("Press P to release control of the camera, and show cursor.");
+            }
+            else
+            {
+                ImGui::Text("Press P or Button follows to take control of the camera");
+                if(ImGui::Button("Posses camera") && !bCursorOff)
+                {
+                    switch_cursor(window);
+                }
+            }
+            glm::vec3 pos = camera.Position;
+            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+            ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
+            ImGui::Separator();
+            ImGui::Checkbox("Gamma Correction", &openGammaCorrection);
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+
         processInput(window);
         
         // render
@@ -148,6 +218,7 @@ int main()
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
+        shader.setMat4("model", glm::mat4(1.0f));
 
         shader.setVec3("lightPositions", &lightPositions[0][0], 4);
         shader.setVec3("lightColors", &lightColors[0][0], 4);
@@ -155,9 +226,11 @@ int main()
         shader.setVec3("viewPos", camera.Position);
         shader.setInt("gamma", openGammaCorrection);
         
-        glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, (openGammaCorrection? floorTextureGammaCorrected : floorTexture));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        renderPlane();
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -194,22 +267,25 @@ void processInput(GLFWwindow * window)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
-
-    // 2-gamma correction
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !glGammaCorrection)
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
     {
-        openGammaCorrection = !openGammaCorrection;
-        glGammaCorrection = true;
+        bPressed = true;
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
     {
-        glGammaCorrection = false;
+        bPressed = false;
+        switch_cursor(window);
     }
 }
 
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 
@@ -508,13 +584,12 @@ void renderQuad()
 
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader, unsigned int planeVAO)
+void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

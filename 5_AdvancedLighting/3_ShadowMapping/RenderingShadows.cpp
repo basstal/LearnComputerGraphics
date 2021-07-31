@@ -17,9 +17,7 @@
 
 static bool wireframe = false;
 
-
-static int WIDTH = 1920;
-static int HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 
 static const int SHADOW_WIDTH = 1024;
 static const int SHADOW_HEIGHT = 1024;
@@ -33,36 +31,60 @@ static float deltaTime = 0.0f;
 
 static Camera camera = Camera(glm::vec3(0.0, 0.0, 3.0));
 
-static float planeVertices[] = {
-    // positions            // normals         // texcoords
-    -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-    -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-        25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-
-    -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-        25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-        25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
-};
 
 using namespace std;
 
-static void frame_buffer_callback(GLFWwindow *, int , int);
 static void cursor_pos_callback(GLFWwindow *, double, double);
 static void mouse_scroll_callback(GLFWwindow *, double, double);
 static void processInput(GLFWwindow * window);
 static void renderCube();
 static void renderQuad();
-static void renderScene(const Shader &shader, unsigned int planeVAO);
+static void renderScene(const Shader &shader);
 static void renderScene3D(const Shader &shader);
 static void renderQuadSimple();
 static void renderCubeSimple();
 static float lerp(float, float, float);
 
+static unsigned int planeVAO = 0, planeVBO = 0;
+static void renderPlane()
+{
+    if (!planeVAO)
+    {
+
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+            -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+                25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+
+            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+                25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+                25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+        };
+        // plane VAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 static std::shared_ptr<Shader> simpleShadowShader;
 static std::shared_ptr<Shader> renderingShadowShader;
 static glm::vec3 lightPos = glm::vec3(-2.0f, 4.0f, -1.0f);
 static unsigned int shadowFBO;
-static unsigned int planeVAO, planeVBO;
 static unsigned int woodTexture, depthTexture;
 
 static bool bCursorOff = false;
@@ -86,66 +108,15 @@ static void switch_cursor(GLFWwindow * window)
 
 void renderingShadows_setup(GLFWwindow *window)
 {
-//     glfwInit();
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-// #endif
-
-//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
-//     if (window == NULL)
-//     {
-//         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-//     glfwMakeContextCurrent(window);
-
-//     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-//     {
-//         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-    if (!wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
     
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-
-    // glfwSetCursorPosCallback(window, cursor_pos_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // 2 shadow mapping
     simpleShadowShader = std::make_shared<Shader>("Shaders/5_3/SimpleShadowVS.vert", "Shaders/5_3/SimpleShadowFS.frag", nullptr);
     renderingShadowShader = std::make_shared<Shader>("Shaders/5_3/RenderingShadowVS.vert", "Shaders/5_3/RenderingShadowFS.frag", nullptr);
 
     woodTexture = loadImage("Assets/wood.png", false);
-    // plane VAO
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
     
     // 2 shadow mapping
     glGenFramebuffers(1, &shadowFBO);
@@ -168,17 +139,6 @@ void renderingShadows_setup(GLFWwindow *window)
     if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "ERROR:: FRAME BUFFER INIT FAILED! " << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-        
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 void renderingShadows_imgui(GLFWwindow *window)
@@ -225,7 +185,7 @@ int renderingShadows(GLFWwindow *window)
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
-    renderScene(*simpleShadowShader, planeVAO);
+    renderScene(*simpleShadowShader);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, WIDTH, HEIGHT);
@@ -248,7 +208,7 @@ int renderingShadows(GLFWwindow *window)
     glBindTexture(GL_TEXTURE_2D, woodTexture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    renderScene(*renderingShadowShader, planeVAO);
+    renderScene(*renderingShadowShader);
     return 0;
 
 }
@@ -291,12 +251,6 @@ void processInput(GLFWwindow * window)
         switch_cursor(window);
     }
 }
-
-void frame_buffer_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 
 void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
@@ -593,13 +547,12 @@ void renderQuad()
 
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader, unsigned int planeVAO)
+void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

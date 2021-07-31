@@ -39,7 +39,7 @@ void mouse_scroll_callback(GLFWwindow *, double, double);
 void processInput(GLFWwindow * window);
 void renderCube();
 void renderQuad();
-void renderScene(const Shader &shader, unsigned int planeVAO);
+void renderScene(const Shader &shader);
 void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
@@ -574,13 +574,12 @@ void renderQuad()
 
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader, unsigned int planeVAO)
+void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
