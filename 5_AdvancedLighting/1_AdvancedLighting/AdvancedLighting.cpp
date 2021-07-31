@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -11,11 +15,9 @@
 #include <Shader.h>
 #include <Model.h>
 
-bool wireframe = false;
 
-
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 bool firstMove = true;
 float lastX = 0.0f;
@@ -27,20 +29,7 @@ float deltaTime = 0.0f;
 Camera camera = Camera();
 
 
-// 1-blinn phong
-bool openBlinn = false;
-bool glBlinnPressed = false;
-
-float planeVertices[] = {
-    // positions            // normals         // texcoords
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-
-    10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-    -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-    10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
-};
+int lightMode = 0;
 
 using namespace std;
 
@@ -54,7 +43,28 @@ void renderScene(const Shader &shader, unsigned int planeVAO);
 void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
+void renderPlane();
 float lerp(float, float, float);
+
+
+static bool bCursorOff = false;
+static bool bPressed;
+
+static void switch_cursor(GLFWwindow * window)
+{
+    if (!bCursorOff)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPosCallback(window, nullptr);
+        firstMove = true;
+    }
+    bCursorOff = !bCursorOff;
+}
 
 int main()
 {
@@ -84,46 +94,67 @@ int main()
         return -1;
     }
 
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    if (!wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glEnable(GL_DEPTH_TEST);
 
-    // 1-blinn phong
-    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_1/BlinnPhongFS.frag", NULL);
-
-    // planeVAO
-    unsigned int planeVAO, planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
+
+    Shader blinnShader("Shaders/5_1/BlinnPhongVS.vert", "Shaders/5_1/BlinnPhongFS.frag", nullptr);
+    Shader lightShader("Shaders/2_1/ColorsVertexShader.vert", "Shaders/2_1/LightFragmentShader.frag", nullptr);
 
     unsigned int planeTex = loadImage("Assets/wood.png", true);
-    
 
+    glm::vec3 lightPos = glm::vec3(1.0, 1.0, 1.0);
     while(!glfwWindowShouldClose(window))
     {
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        {
+            ImGui::Begin("Editor");                          
+            ImGui::Separator();
+            if (bCursorOff)
+            {
+                ImGui::Text("Press P to release control of the camera, and show cursor.");
+            }
+            else
+            {
+                ImGui::Text("Press P or Button follows to take control of the camera");
+                if(ImGui::Button("Posses camera") && !bCursorOff)
+                {
+                    switch_cursor(window);
+                }
+            }
+            glm::vec3 pos = camera.Position;
+            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+            ImGui::Text("Camera Yaw (%.1f), Pitch (%.1f)", camera.Yaw, camera.Pitch);
+            ImGui::Separator();
+            ImGui::RadioButton("PHONG", &lightMode, 0); ImGui::SameLine();
+            ImGui::RadioButton("BLINN-PHONG", &lightMode, 1);
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+
         processInput(window);
 
         blinnShader.use();
@@ -132,14 +163,28 @@ int main()
         blinnShader.setMat4("projection", projection);
         glm::mat4 view = camera.GetViewMatrix();
         blinnShader.setMat4("view", view);
-        blinnShader.setBool("openBlinn", openBlinn);
-        blinnShader.setVec3("lightPos", glm::vec3(0.0, 0.0, 0.0));
+        glm::mat4 model = glm::mat4(1.0f);
+        blinnShader.setMat4("model", model);
+        
+        blinnShader.setBool("openBlinn", lightMode == 1);
+        blinnShader.setVec3("lightPos", lightPos);
         blinnShader.setVec3("viewPos", camera.Position);
 
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, planeTex);
-        glBindVertexArray(planeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        renderPlane();
         
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        model = glm::mat4(1.0);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightShader.setMat4("model", model);
+        renderCube();
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -175,22 +220,25 @@ void processInput(GLFWwindow * window)
     {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
-
-    // 1 -blinn phong
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !glBlinnPressed)
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
     {
-        openBlinn = !openBlinn;
-        glBlinnPressed = true;
+        bPressed = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && bPressed)
     {
-        glBlinnPressed = false;
+        bPressed = false;
+        switch_cursor(window);
     }
 }
 
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        glViewport(0, 0, width, height);
+    }
 }
 
 
@@ -216,6 +264,43 @@ void mouse_scroll_callback(GLFWwindow * window, double offsetX, double offsetY)
     camera.ProcessMouseScroll((float)offsetY);
 }
 
+unsigned int planeVAO = 0, planeVBO = 0;
+void renderPlane()
+{
+    if (!planeVAO)
+    {
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+            10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+            10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+            10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+        };
+        // planeVAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
+        
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
 unsigned int cubeVAO = 0;

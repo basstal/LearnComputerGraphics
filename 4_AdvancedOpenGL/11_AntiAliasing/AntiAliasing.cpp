@@ -330,16 +330,9 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    // per-frame time logic
-    // --------------------
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    // if (!glfwGetWindowAttrib(window, GLFW_FOCUSED))
-    // {
-    //     // window has no input focus
-    //     glfwFocusWindow(window);
-    // }
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
