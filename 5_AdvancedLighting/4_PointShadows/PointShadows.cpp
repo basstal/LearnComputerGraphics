@@ -112,7 +112,7 @@ int main()
         cout << "ERROR:: FRAME BUFFER INIT FAILED! " << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vert", "Shaders/5_4/PointShadowFS.frag", "Shaders/5_4/PointShadowGS.gs");
+    Shader pointShadowShader("Shaders/5_4/PointShadowVS.vert", "Shaders/5_4/PointShadowFS.frag", "Shaders/5_4/PointShadowGS.geom");
     Shader pointShadowDrawShader("Shaders/5_4/RenderingShadowVS.vert", "Shaders/5_4/RenderingShadowFS.frag", NULL);
     Shader lightShader("Shaders/5_4/RenderingShadowVS.vert", "Shaders/5_4/SimpleColorFS.frag", NULL);
 

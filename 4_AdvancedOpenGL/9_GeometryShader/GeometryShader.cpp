@@ -38,43 +38,18 @@ static std::shared_ptr<Shader> geometryShaderProgram;
 
 void geometryShader_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(1920, 1080, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-
-    geometryShaderProgram = std::make_shared<Shader>("Shaders/4_9/SimpleGeometryVS.vert", "Shaders/4_9/SimpleGeometryFS.frag", "Shaders/4_9/SimpleGeometryGS.gs");
+    geometryShaderProgram = std::make_shared<Shader>("Shaders/4_9/SimpleGeometryVS.vert", "Shaders/4_9/SimpleGeometryFS.frag", "Shaders/4_9/SimpleGeometryGS.geom");
 
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
-    
-
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 }
 
 void geometryShader_imgui(GLFWwindow * window)
@@ -87,14 +62,7 @@ int geometryShader(GLFWwindow * window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     geometryShaderProgram->use();
-
     glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     glDrawArrays(GL_POINTS, 0, 4);
 
     return 0;

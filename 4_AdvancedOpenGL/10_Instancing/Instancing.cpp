@@ -16,20 +16,18 @@ static float quadVertices[] = {
      0.05f,  0.05f,  0.0f, 1.0f, 1.0f		    		
 };
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
 // settings
-static const unsigned int SCR_WIDTH = 800;
-static const unsigned int SCR_HEIGHT = 600;
+extern int WIDTH, HEIGHT;
 static bool wireframe = false;
 
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
@@ -40,25 +38,6 @@ static unsigned int quadVAO, quadVBO;
 
 void instancing_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
     shaderProgram = std::make_shared<Shader>("Shaders/4_10/InstancingVS.vert", "Shaders/4_10/InstancingFS.frag", nullptr);
 
     glm::vec2 translations[100];
@@ -108,16 +87,7 @@ void instancing_setup(GLFWwindow * window)
     else
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-    
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-    // glfwTerminate();
+    }   
 }
 
 void instancing_imgui(GLFWwindow * window)
@@ -156,15 +126,6 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called

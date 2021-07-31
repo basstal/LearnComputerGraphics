@@ -31,18 +31,16 @@ triangle_strip
 #include <Model.h>
 #include <Camera.h>
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
-static const float SCR_WIDTH = 1920;
-static const float SCR_HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
@@ -74,46 +72,15 @@ static void switch_cursor(GLFWwindow * window)
 
 void explodingObjects_setup(GLFWwindow *window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
-    explodingShader = std::make_shared<Shader>("Shaders/4_9/ExplodingVS.vert", "Shaders/4_9/ExplodingFS.frag", "Shaders/4_9/ExplodingGS.gs");
+    explodingShader = std::make_shared<Shader>("Shaders/4_9/ExplodingVS.vert", "Shaders/4_9/ExplodingFS.frag", "Shaders/4_9/ExplodingGS.geom");
 
-    // explodingShader->use();
     if (!backpackModel)
     {
         backpackModel = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
     }
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();    
-    // }
-    // glfwTerminate();
 }
 
 void explodingObjects_imgui(GLFWwindow *window)
@@ -143,7 +110,7 @@ int explodingObjects(GLFWwindow *window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     explodingShader->use();
     explodingShader->setFloat("time", glfwGetTime());
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/HEIGHT, 0.1f, 100.0f);
     explodingShader->setMat4("projection", projection);
     glm::mat4 view = camera.GetViewMatrix();
     explodingShader->setMat4("view", view);
@@ -181,15 +148,6 @@ static void processInput(GLFWwindow *window)
         bPressed = false;
         switch_cursor(window);
     }
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called

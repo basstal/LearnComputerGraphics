@@ -733,7 +733,7 @@ static void compile_shaders(GLFWwindow * window)
     }
     if (!normalShader)
     {
-        normalShader = std::make_shared<Shader>("Shaders/5_9/DrawNormalVectorVS.vert", "Shaders/5_9/DrawNormalVectorFS.frag", "Shaders/5_9/DrawNormalVectorGS.gs");
+        normalShader = std::make_shared<Shader>("Shaders/5_9/DrawNormalVectorVS.vert", "Shaders/5_9/DrawNormalVectorFS.frag", "Shaders/5_9/DrawNormalVectorGS.geom");
     }
     else
     {
@@ -750,7 +750,7 @@ static void compile_shaders(GLFWwindow * window)
     }
     if (!wireframeShader)
     {
-        wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Wireframe.gs");
+        wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Wireframe.geom");
 
     }
     else
@@ -762,7 +762,7 @@ static void compile_shaders(GLFWwindow * window)
     glUniformBlockBinding(wireframeShader->ID, blockIndex, 0);
     if (!pointShader)
     {
-        pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Point.gs");
+        pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Point.geom");
 
     }
     else

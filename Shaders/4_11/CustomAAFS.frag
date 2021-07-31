@@ -1,8 +1,6 @@
 #version 330 core
 out vec4 FragColor;
 
-// in vec2 TexCoords;
-
 int offset = 5;
 
 uniform bool bUsePostProcess;

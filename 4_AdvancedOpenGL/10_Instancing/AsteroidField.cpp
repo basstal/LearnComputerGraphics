@@ -11,19 +11,17 @@
 #include <Shader.h>
 #include <Model.h>
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
 
 // settings
-static const unsigned int SCR_WIDTH = 1920;
-static const unsigned int SCR_HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 
 // camera
 static Camera camera(glm::vec3(0, 0.0f, 60.0f));
-static float lastX = (float)SCR_WIDTH  / 2.0;
-static float lastY = (float)SCR_HEIGHT / 2.0;
+static float lastX = (float)WIDTH  / 2.0;
+static float lastY = (float)HEIGHT / 2.0;
 static bool firstMouse = true;
 
 // timing
@@ -33,10 +31,11 @@ static float lastFrame = 0.0f;
 static std::shared_ptr<Shader> shaderProgram;
 static std::shared_ptr<Shader> instanceAsteroidShader;
 
-static std::shared_ptr<Model> planet;
-static std::shared_ptr<Model> rock;
+static std::shared_ptr<Model> planet = nullptr;
+static std::shared_ptr<Model> rock = nullptr;
 
 static unsigned int amount = 100000;
+static glm::mat4 *modelMatrices = nullptr;
 
 
 static bool bCursorOff = false;
@@ -60,69 +59,55 @@ static void switch_cursor(GLFWwindow * window)
 
 void asteroidField_setup(GLFWwindow * window)
 {
-    // glfwInit();
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    // if (window == NULL)
-    // {
-    //     std::cout << "Failed to create GLFW window" << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
-    // glfwMakeContextCurrent(window);
-
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
-
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
 
-    glm::mat4 *modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    srand(glfwGetTime()); // initialize random seed	
-    float radius = 150.0f;
-    float offset = 25.0f;
-    for(unsigned int i = 0; i < amount; i++)
+    if (!modelMatrices)
     {
-        glm::mat4 model = glm::mat4(1.0f);
-        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
-        model = glm::translate(model, glm::vec3(x, y, z));
+        modelMatrices = new glm::mat4[amount];
+        srand(glfwGetTime()); // initialize random seed	
+        float radius = 150.0f;
+        float offset = 25.0f;
+        for(unsigned int i = 0; i < amount; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+            float angle = (float)i / (float)amount * 360.0f;
+            float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+            float x = sin(angle) * radius + displacement;
+            displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+            float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
+            displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+            float z = cos(angle) * radius + displacement;
+            model = glm::translate(model, glm::vec3(x, y, z));
 
-        // 2. scale: scale between 0.05 and 0.25f
-        float scale = (rand() % 20) / 100.0f + 0.05;
-        model = glm::scale(model, glm::vec3(scale));
+            // 2. scale: scale between 0.05 and 0.25f
+            float scale = (rand() % 20) / 100.0f + 0.05;
+            model = glm::scale(model, glm::vec3(scale));
 
-        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
-        float rotAngle = (rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+            // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+            float rotAngle = (rand() % 360);
+            model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
 
-        // 4. now add to list of matrices
-        modelMatrices[i] = model;
+            // 4. now add to list of matrices
+            modelMatrices[i] = model;
+        }
     }
 
 
     shaderProgram = std::make_shared<Shader>("Shaders/4_10/AsteroidFieldVS.vert", "Shaders/4_10/AsteroidFieldFS.frag", nullptr);
     instanceAsteroidShader = std::make_shared<Shader>("Shaders/4_10/InstanceAsteroidVS.vert", "Shaders/4_10/AsteroidFieldFS.frag", nullptr);
-    planet = std::make_shared<Model>("Assets/planet/planet.obj", false);
-    rock = std::make_shared<Model>("Assets/rock/rock.obj", false);
+    if (!planet)
+    {
+
+        planet = std::make_shared<Model>("Assets/planet/planet.obj", false);
+    }
+    if (!rock)
+    {
+        rock = std::make_shared<Model>("Assets/rock/rock.obj", false);
+
+    }
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);
@@ -150,15 +135,6 @@ void asteroidField_setup(GLFWwindow * window)
         glVertexAttribDivisor(6, 1);
         glBindVertexArray(0);
     }
-
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-    // glfwTerminate();
 }
 
 void asteroidField_imgui(GLFWwindow * window)
@@ -188,7 +164,7 @@ int asteroidField(GLFWwindow * window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shaderProgram->use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 1000.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), WIDTH/ (float)HEIGHT, 0.1f, 1000.0f);
     glm::mat4 view = camera.GetViewMatrix();
     shaderProgram->setMat4("projection", projection);
     shaderProgram->setMat4("view", view);
@@ -197,13 +173,6 @@ int asteroidField(GLFWwindow * window)
     model = glm::scale(model, glm::vec3(4.0));
     shaderProgram->setMat4("model", model);
     planet->Draw(*shaderProgram);
-    
-    // use no instancing
-    // for(unsigned int i = 0; i < amount; i++)
-    // {
-    //     shader.setMat4("model", modelMatrices[i]);
-    //     rock.Draw(shader);
-    // }
 
     // use instancing
     instanceAsteroidShader->use();
@@ -250,15 +219,6 @@ void processInput(GLFWwindow *window)
         bPressed = false;
         switch_cursor(window);
     }
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called

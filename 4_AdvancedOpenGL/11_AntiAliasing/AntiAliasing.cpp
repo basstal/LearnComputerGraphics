@@ -101,19 +101,11 @@ static int options = 0;
 static bool bUsePostProcess = false;
 
 unsigned int cubeVAO, cubeVBO;
-unsigned int grassVAO, grassVBO;
-unsigned int planeVAO, planeVBO;
 unsigned int quadVAO, quadVBO;
 unsigned int frameBuffer = 0, multiSampleFBO = 0, texMultisampleFBO = 0;
 unsigned int renderbufferMultisample = 0, renderbufferMultisampleColor = 0, renderbufferDepth;
 unsigned int multisampleTextureAttachment;
-unsigned int cubeTexture, floorTexture, grassTexture, windowTexture, framebufferTexture;
-unsigned int skyboxVAO, skyboxVBO;
-unsigned int skyboxTextures;
-unsigned int houseVAO, houseVBO;
-unsigned int instanceVAO, instanceVBO, instanceVBO1, instanceRockVBO;
-
-
+unsigned int framebufferTexture;
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -159,10 +151,6 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
-    // tell GLFW to capture our mouse
-    // glfwSetCursorPosCallback(window, mouse_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     // glad: load all OpenGL function pointers
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -170,6 +158,7 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     glfwSetScrollCallback(window, scroll_callback);
@@ -192,7 +181,7 @@ int main()
     Shader shader("Shaders/3_3/ModelVS33.vert", "Shaders/4_2/SimpleFragmentShader.frag", nullptr);
     Shader backpackShader("Shaders/3_3/ModelVS33.vert", "Shaders/4_3/WindowFragmentShader.frag", nullptr);
     Shader framebufferShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/FramebufferFS.frag", nullptr);
-    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessingKernels.frag", nullptr);
+    Shader postProcessingShader("Shaders/4_5/FramebufferVS.vert", "Shaders/4_5/PostProcessingGaussianBlur.frag", nullptr);
     Shader customAntiAliasingShader("Shaders/4_11/CustomAAVS.vert", "Shaders/4_11/CustomAAFS.frag", nullptr);
     // backpack
     Model backpack("Assets/backpack/backpack.obj", true);
@@ -200,9 +189,9 @@ int main()
     // cube
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-    glBindVertexArray(cubeVAO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glBindVertexArray(0);
@@ -210,7 +199,13 @@ int main()
     // quad
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
-
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
     envInit();
 
 
@@ -255,9 +250,6 @@ int main()
 
         // Rendering
         ImGui::Render();
-        // int display_w, display_h;
-        // glfwGetFramebufferSize(window, &display_w, &display_h);
-        // glViewport(0, 0, display_w, display_h);
 
         processInput(window);
         
@@ -304,12 +296,6 @@ int main()
             glDisable(GL_DEPTH_TEST);
 
             glBindVertexArray(quadVAO);
-            glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, framebufferTexture);
             glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -321,15 +307,9 @@ int main()
             customAntiAliasingShader.setBool("bUsePostProcess", bUsePostProcess);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glDisable(GL_DEPTH_TEST);
+            glBindVertexArray(quadVAO);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment);
-            glBindVertexArray(quadVAO);
-            glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-            // glEnableVertexAttribArray(1);
-            // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
         
@@ -385,10 +365,7 @@ void processInput(GLFWwindow *window)
 void envInit()
 {
     // framebuffer with multisampled renderbuffer objects
-    if (multiSampleFBO == 0)
-    {
-        glGenFramebuffers(1, &multiSampleFBO);
-    }
+    glGenFramebuffers(1, &multiSampleFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
 
     // use renderbuffer as color_attachment
@@ -433,11 +410,7 @@ void envInit()
 
 
     // normal framebuffer with texture attachment
-    if (frameBuffer == 0)
-    {
-        glGenFramebuffers(1, &frameBuffer);
-
-    }
+    glGenFramebuffers(1, &frameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
     glDeleteTextures(1, &framebufferTexture);

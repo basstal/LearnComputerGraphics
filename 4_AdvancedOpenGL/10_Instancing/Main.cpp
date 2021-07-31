@@ -18,23 +18,16 @@ static void processInput(GLFWwindow *window)
 
 extern int instancing(GLFWwindow *);
 extern int asteroidField(GLFWwindow * window);
-// extern int geometryShader(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
 
 extern void instancing_setup(GLFWwindow *);
 extern void asteroidField_setup(GLFWwindow *);
-// extern void geometryShader_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
 
 extern void asteroidField_imgui(GLFWwindow * );
-// extern void geometryShader_imgui(GLFWwindow * );
 extern void instancing_imgui(GLFWwindow *);
 
 std::map<std::string, FuncSet> maps{
     {"instancing", FuncSet(instancing_setup, instancing, instancing_imgui)},
     {"asteroidField", FuncSet(asteroidField_setup, asteroidField, asteroidField_imgui)},
-    // {"geometryShader", FuncSet(geometryShader_setup, geometryShader, geometryShader_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
 };
 
 static void glfw_error_callback(int error, const char* description)
@@ -42,6 +35,23 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+
+void (*current_viewport)(GLFWwindow *) = nullptr;
+
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        if (current_viewport)
+        {
+            current_viewport(window);
+        }
+        glViewport(0, 0, width, height);
+    }
+}
 int main()
 {
     glfwSetErrorCallback(glfw_error_callback);
@@ -87,9 +97,17 @@ int main()
     FuncSet funcSet = firstEntry->second;
     int (*current_draw)(GLFWwindow *) = funcSet.draw;
     void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    current_viewport = funcSet.viewport;
     if (funcSet.setup)
     {
         funcSet.setup(window);
+    }
+    
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    if (current_viewport)
+    {
+        current_viewport(window);
     }
 
     while(!glfwWindowShouldClose(window))
@@ -114,6 +132,11 @@ int main()
                     }
                     current_draw = funcSet.draw;
                     current_imgui = funcSet.imgui;
+                    current_viewport = funcSet.viewport;
+                    if (current_viewport)
+                    {
+                        current_viewport(window);
+                    }
                 }
             }
             if (current_imgui)
