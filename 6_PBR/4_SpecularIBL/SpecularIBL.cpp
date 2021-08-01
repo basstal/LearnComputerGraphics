@@ -16,7 +16,6 @@
 
 #include <iostream>
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void processInput(GLFWwindow *window);
@@ -26,8 +25,7 @@ static void loadHDRImage(const char *);
 static void renderQuad();
 
 // settings
-static int SCR_WIDTH = 1920;
-static int SCR_HEIGHT = 1080;
+extern int WIDTH, HEIGHT;
 // camera
 static Camera camera(glm::vec3(0.0f, 0.0f, 22.0f));
 static float lastX = 800.0f / 2.0;
@@ -115,42 +113,7 @@ static void RecompileShaders(GLFWwindow * window)
 
 void specularIBL_setup(GLFWwindow * window)
 {
-//     // glfw: initialize and configure
-//     // ------------------------------
-//     glfwInit();
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_SAMPLES, 4);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-// #endif
-
-//     // glfw window creation
-//     // --------------------
-//     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-//     glfwMakeContextCurrent(window);
-//     if (window == NULL)
-//     {
-//         std::cout << "Failed to create GLFW window" << std::endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    // glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
-    // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // // glad: load all OpenGL function pointers
-    // // ---------------------------------------
-    // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    // {
-    //     std::cout << "Failed to initialize GLAD" << std::endl;
-    //     return -1;
-    // }
 
     // configure global opengl state
     // -----------------------------
@@ -170,9 +133,6 @@ void specularIBL_setup(GLFWwindow * window)
 
     
     RecompileShaders(window);
-    framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
-
-    
 
     // pbr: setup framebuffer
     // ----------------------
@@ -327,28 +287,8 @@ void specularIBL_setup(GLFWwindow * window)
     renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
     // then before rendering, configure the viewport to the original framebuffer's screen dimensions
-    // int scrWidth, scrHeight;
-    framebuffer_size_callback(window, SCR_WIDTH, SCR_HEIGHT);
     RecompileShaders(window);
-
-    // // render loop
-    // // -----------
-    // while (!glfwWindowShouldClose(window))
-    // {
-        
-
-
-    //     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-    //     // -------------------------------------------------------------------------------
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // // glfw: terminate, clearing all previously allocated GLFW resources.
-    // // ------------------------------------------------------------------
-    // glfwTerminate();
 }
 
 void specularIBL_imgui(GLFWwindow * window)
@@ -373,18 +313,6 @@ void specularIBL_imgui(GLFWwindow * window)
     }
     ImGui::SliderFloat("lod", &lod, 0, 4);
     ImGui::Separator();
-    // ImGui::Text("Current Draw Mode : %s", drawModeMap[drawMode]);
-    // if (ImGui::CollapsingHeader("Draw Mode Selection"))
-    // {
-    //     for (int i = 0; i < 3; ++i)
-    //     {
-    //         ImGui::RadioButton(drawModeMap[i], &drawMode, i);
-    //         if (i < 2)
-    //         {
-    //             ImGui::SameLine();
-    //         }
-    //     }
-    // }
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
 }
@@ -403,13 +331,12 @@ int specularIBL(GLFWwindow * window)
 
     // render
     // ------
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // render scene, supplying the convoluted irradiance map to the final shader.
     // ------------------------------------------------------------------------------------------
     pbrShader->use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     pbrShader->setMat4("projection", projection);
     glm::mat4 view = camera.GetViewMatrix();
     pbrShader->setMat4("view", view);
@@ -417,13 +344,10 @@ int specularIBL(GLFWwindow * window)
 
     for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
     {
-        // glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
-        // newPos = lightPositions[i];
         pbrShader->setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
         pbrShader->setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
     }
     // render rows*column number of spheres with material properties defined by textures (they all have the same material properties)
-    // glm::mat4 model = glm::mat4(1.0f);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
     glActiveTexture(GL_TEXTURE1);
@@ -485,7 +409,6 @@ static void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float cameraSpeed = 2.5 * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -504,21 +427,6 @@ static void processInput(GLFWwindow *window)
         switch_cursor(window);
     }
 }
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    if (width > 0 && height > 0)
-    {
-        SCR_WIDTH = width;
-        SCR_HEIGHT = height;
-        // make sure the viewport matches the new window dimensions; note that width and 
-        // height will be significantly larger than specified on retina displays.
-        glViewport(0, 0, width, height);
-    }
-}
-
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------

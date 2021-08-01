@@ -8,7 +8,6 @@ uniform float lod;
 
 void main()
 {
-    // vec3 envColor = texture(environmentMap, localPos).rgb;
     vec3 envColor = textureLod(environmentMap, localPos, lod).rgb;
 
     envColor = envColor / (envColor + vec3(1.0));

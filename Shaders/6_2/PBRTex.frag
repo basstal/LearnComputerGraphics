@@ -13,7 +13,6 @@ uniform vec3 camPos;
 
 //material parameters
 uniform sampler2D albedoMap;
-uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
 uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
@@ -64,7 +63,6 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 void main()
 {
     vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-    // vec3 normal     = texture(normalMap, TexCoords).rgb;
     float metallic  = texture(metallicMap, TexCoords).r;
     float roughness = texture(roughnessMap, TexCoords).r;
     float ao        = texture(aoMap, TexCoords).r;
