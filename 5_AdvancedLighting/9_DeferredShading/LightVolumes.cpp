@@ -40,7 +40,6 @@ static float deltaTime = 0.0f;
 
 static Camera camera = Camera(glm::vec3(3.5f, -1.5f, 5), glm::vec3(0, 1, 0), -124, -19);
 static std::shared_ptr<Shader> deferredShader = nullptr, wireframeShader = nullptr, pointShader = nullptr, simpleShader = nullptr, normalShader = nullptr;
-static std::shared_ptr<Shader> debugQuadShader = nullptr;
 static std::shared_ptr<Shader> lightVolumesShader = nullptr;
 static std::shared_ptr<Shader> lightShader = nullptr;
 static std::shared_ptr<Model> backpack = nullptr;
@@ -448,16 +447,6 @@ static void compile_shaders(GLFWwindow * window)
         pointShader->recompileFromSource();
     }
     
-    // use this shader to debug G-Buffer
-    if (!debugQuadShader)
-    {
-        debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_9/DebugQuadFS.frag", nullptr);
-
-    }
-    else
-    {
-        debugQuadShader->recompileFromSource();
-    }
     if (!lightVolumesShader)
     {
         lightVolumesShader = std::make_shared<Shader>("Shaders/5_9/LightVolumes.vert", "Shaders/5_9/LightVolumes.frag", nullptr);

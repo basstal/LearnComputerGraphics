@@ -40,7 +40,6 @@ static float deltaTime = 0.0f;
 
 static Camera camera = Camera(glm::vec3(3.5f, -1.5f, 5), glm::vec3(0, 1, 0), -124, -19);
 static std::shared_ptr<Shader> deferredShader, wireframeShader, pointShader;
-static std::shared_ptr<Shader> debugQuadShader;
 static std::shared_ptr<Shader> quadShader;
 static std::shared_ptr<Shader> lightShader;
 static std::shared_ptr<Model> backpack = nullptr;
@@ -101,8 +100,6 @@ void deferredShading_setup(GLFWwindow * window)
     deferredShader = std::make_shared<Shader>("Shaders/5_9/GBufferVS.vert", "Shaders/5_9/GBufferFS.frag", nullptr);
     wireframeShader = std::make_shared<Shader>("Shaders/5_9/Wireframe.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Wireframe.geom");
     pointShader = std::make_shared<Shader>("Shaders/5_9/Point.vert", "Shaders/5_9/Wireframe.frag", "Shaders/5_9/Point.geom");
-    // use this shader to debug G-Buffer
-    debugQuadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_9/DebugQuadFS.frag", nullptr);
     quadShader = std::make_shared<Shader>("Shaders/5_9/DebugQuadVS.vert", "Shaders/5_9/QuadFS.frag", nullptr);
     lightShader = std::make_shared<Shader>("Shaders/2_3/MaterialsVS23.vert", "Shaders/2_3/ExerciseLight23.frag", nullptr);
 
