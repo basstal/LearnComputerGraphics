@@ -16,11 +16,8 @@
 #include <Shader.h>
 #include <Model.h>
 
-static bool wireframe = false;
-
-
-static int HEIGHT = 1080;
-static int WIDTH = 1920;
+extern int HEIGHT;
+extern int WIDTH ;
 
 static bool firstMove = true;
 static float lastX = 0.0f;
@@ -33,13 +30,12 @@ static Camera camera = Camera(glm::vec3(0, 0, 3.0));
 
 using namespace std;
 
-static void frame_buffer_callback(GLFWwindow *, int , int);
 static void cursor_pos_callback(GLFWwindow *, double, double);
 static void mouse_scroll_callback(GLFWwindow *, double, double);
 static void processInput(GLFWwindow * window);
 static void renderCube();
 static void renderQuad();
-static void renderScene(const Shader &shader, unsigned int planeVAO);
+static void renderScene(const Shader &shader);
 static void renderScene3D(const Shader &shader);
 static void renderQuadSimple();
 static void renderCubeSimple();
@@ -75,43 +71,9 @@ static void switch_cursor(GLFWwindow * window)
 
 void parallaxMapping1_setup(GLFWwindow *window)
 {
-//     glfwInit();
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-// #endif
-
-//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "CHAPTER5", NULL, NULL);
-//     if (window == NULL)
-//     {
-//         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-//     glfwMakeContextCurrent(window);
-
-//     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-//     {
-//         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-    if (!wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
     
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-
-    // glfwSetCursorPosCallback(window, cursor_pos_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     parallaxMappingShader = std::make_shared<Shader>("Shaders/5_6/ParallaxMappingVS.vert", "Shaders/5_6/ParallaxMappingFS.frag", nullptr);
     simpleLight = std::make_shared<Shader>("Shaders/4_1/VertexShader.vert", "Shaders/5_4/SimpleColorFS.frag", nullptr);
@@ -125,16 +87,6 @@ void parallaxMapping1_setup(GLFWwindow *window)
     parallaxMappingShader->setInt("normalMap", 1);
     parallaxMappingShader->setInt("depthMap", 2);
     parallaxMappingShader->setVec3("lightPos", lightPos);
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 void parallaxMapping1_imgui(GLFWwindow *window)
@@ -234,12 +186,6 @@ void processInput(GLFWwindow * window)
         switch_cursor(window);
     }
 }
-
-void frame_buffer_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 
 void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
@@ -534,15 +480,52 @@ void renderQuad()
     glBindVertexArray(0);
 }
 
+
+static unsigned int planeVAO = 0, planeVBO = 0;
+static void renderPlane()
+{
+    if (!planeVAO)
+    {
+
+        // set up vertex data (and buffer(s)) and configure vertex attributes
+        // ------------------------------------------------------------------
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+                10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+        };
+        // plane VAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader, unsigned int planeVAO)
+void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

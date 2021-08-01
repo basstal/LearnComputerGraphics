@@ -214,7 +214,7 @@ int renderingShadows(GLFWwindow *window)
 }
 
 
-void processInput(GLFWwindow * window)
+static void processInput(GLFWwindow * window)
 {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -252,7 +252,7 @@ void processInput(GLFWwindow * window)
     }
 }
 
-void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
+static void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
     if (firstMove)
     {
@@ -269,17 +269,17 @@ void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
     camera.ProcessMouseMovement(offsetX, offsetY);
 }
 
-void mouse_scroll_callback(GLFWwindow * window, double offsetX, double offsetY)
+static void mouse_scroll_callback(GLFWwindow * window, double offsetX, double offsetY)
 {
     camera.ProcessMouseScroll((float)offsetY);
 }
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
+static unsigned int cubeVAO = 0;
+static unsigned int cubeVBO = 0;
 
-void renderCubeSimple()
+static void renderCubeSimple()
 {
     // initialize (if necessary)
     if (cubeVAO == 0)
@@ -350,7 +350,7 @@ void renderCubeSimple()
     glBindVertexArray(0);
 }
 
-void renderCube()
+static void renderCube()
 {
     // initialize (if necessary)
     if (cubeVAO == 0)
@@ -423,10 +423,10 @@ void renderCube()
 
 // renderQuad() renders a 1x1 XY quad in NDC
 // -----------------------------------------
-unsigned int quadVAO = 0;
-unsigned int quadVBO;
+static unsigned int quadVAO = 0;
+static unsigned int quadVBO;
 
-void renderQuadSimple()
+static void renderQuadSimple()
 {
     if (quadVAO == 0)
     {
@@ -453,7 +453,7 @@ void renderQuadSimple()
     glBindVertexArray(0);
 }
 
-void renderQuad()
+static void renderQuad()
 {
     if (quadVAO == 0)
     {
@@ -547,7 +547,7 @@ void renderQuad()
 
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader)
+static void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
@@ -575,7 +575,7 @@ void renderScene(const Shader &shader)
 
 // renders the 3D scene
 // --------------------
-void renderScene3D(const Shader &shader)
+static void renderScene3D(const Shader &shader)
 {
     // room cube
     glm::mat4 model = glm::mat4(1.0f);
@@ -615,7 +615,7 @@ void renderScene3D(const Shader &shader)
     renderCube();
 }
 
-float lerp(float a,  float b,  float f) 
+static float lerp(float a,  float b,  float f) 
 {
     return a + f * (b - a);
 }
