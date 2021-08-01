@@ -17,8 +17,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+int SCR_WIDTH = 1920;
+int SCR_HEIGHT = 1080;
 
 
 GLenum glCheckError_(const char *file, int line)
@@ -105,7 +105,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Debugging", NULL, NULL);
     glfwMakeContextCurrent(window);
     if (window == NULL)
     {
@@ -114,6 +114,7 @@ int main()
         return -1;
     }
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -247,7 +248,6 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
         float rotationSpeed = 10.0f;
         float angle = (float)glfwGetTime() * rotationSpeed;
         glm::mat4 model = glm::mat4(1.0f);
@@ -257,7 +257,7 @@ int main()
 
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(cubeVAO);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -313,7 +313,12 @@ void processInput(GLFWwindow *window)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+    if (width > 0 && height > 0)
+    {
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        // make sure the viewport matches the new window dimensions; note that width and 
+        // height will be significantly larger than specified on retina displays.
+        glViewport(0, 0, width, height);
+    }
 }
