@@ -7,6 +7,14 @@
 #include <others/stb_image.h>
 #include <iostream>
 #include <vector>
+#include <glm/gtc/type_ptr.hpp>
+
+struct Character{
+    unsigned int TextureID;
+    glm::ivec2 Bearing;
+    glm::ivec2 Size;
+    unsigned int Advance;
+};
 
 unsigned int LoadSkyboxTex(std::vector<std::string> skyboxTexs);
 
