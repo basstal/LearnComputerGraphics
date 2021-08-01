@@ -8,8 +8,6 @@ uniform sampler2D gAlbedoSpec;
 in VS_OUT
 {
     vec3 NormalModel;
-    // vec3 Normal;
-    // vec2 TexCoords;
     vec3 Position;
     mat4 projection;
     mat4 view;
@@ -69,7 +67,6 @@ void main()
     vec3 lighting = vec3(0);
     if (subjects)
     {
-        // lighting = Albedo * 0.1f;
         vec3 viewDir = normalize(viewPos - FragPos);
         float light2FragDist = length(fs_in.lightPosition - FragPos);
         // diffuse

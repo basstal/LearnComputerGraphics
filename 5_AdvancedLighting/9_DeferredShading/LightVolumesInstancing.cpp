@@ -28,8 +28,8 @@ static std::map<int, const char *> drawModeMap = {
     {2, "Point"},
 };
 
-static int HEIGHT = 1080;
-static int WIDTH = 1920;
+extern int HEIGHT;
+extern int WIDTH ;
 
 static bool firstMove = true;
 static float lastX = 0.0f;
@@ -53,30 +53,25 @@ static std::vector<float> lightRadius;
 static float constant  = 1.0, linear    = 0.7, quadratic = 1.8; 
 static unsigned int NR_LIGHTS = 50;
 static unsigned int ubo, sphereVAO, indexCount;
-// static vector<std::shared_ptr<Icosphere>> spheres;
 static unsigned int depthRB;
 static unsigned int vbo, ebo, lightParamsBO, lightPositionsBO, lightColorsBO, modelBO;
 static bool bDrawNormal = false;
-static bool bShowLightVolumes = true;
 static std::vector<glm::vec3> positions, normals;
 static std::vector<glm::vec2> uv;
 static std::vector<unsigned int> indices;
 
-static void frame_buffer_callback(GLFWwindow *, int , int);
 static void cursor_pos_callback(GLFWwindow *, double, double);
 static void mouse_scroll_callback(GLFWwindow *, double, double);
 static void processInput(GLFWwindow * window);
 static void renderCube();
 static void renderQuad();
-static void renderScene(const Shader &shader, unsigned int planeVAO);
+static void renderScene(const Shader &shader);
 static void renderScene3D(const Shader &shader);
 static void renderQuadSimple();
 static void renderCubeSimple();
 static float lerp(float, float, float);
 static void calculateLightInfo(GLFWwindow * window, bool);
 static void compile_shaders(GLFWwindow * window);
-// static void drawImGuiContent(GLFWwindow * window);
-static void window_size_callback(GLFWwindow * window, int width, int height);
 
 static bool bCursorOff = false;
 static bool bPressed;
@@ -95,31 +90,6 @@ static void switch_cursor(GLFWwindow * window)
         firstMove = true;
     }
     bCursorOff = !bCursorOff;
-}
-
-static void switch_drawMode(GLFWwindow * window)
-{
-    // deferredShader->setInt("drawMode", drawMode);
-    // debugQuadShader->setInt("drawMode", drawMode);
-    // lightVolumesShader->setInt("drawMode", drawMode);
-    // lightShader->setInt("drawMode", drawMode);
-    // ** use custom shader
-    switch(drawMode)
-    {
-        case 0:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-        case 1:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            break;
-        case 2:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-            break;
-        default:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-    }
-
 }
 
 // using instance render all spheres
@@ -262,108 +232,39 @@ static void renderSpheres()
         glVertexAttribDivisor(9, 1);
     }
 
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
     glBindVertexArray(sphereVAO);
-    // glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
     glDrawElementsInstanced(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0, NR_LIGHTS);
-    // glDisable(GL_CULL_FACE);
 }
-
-// static void InitSpheres(GLFWwindow * window)
-// {
-//     spheres.clear();
-//     for (unsigned int i = 0; i < NR_LIGHTS; ++i)
-//     {
-//         std::shared_ptr<Icosphere> sphere = std::make_shared<Icosphere>(1.0f, 3, false);    // radius, subdivision, smooth
-//         spheres.push_back(sphere);
-//     }
-// }
 
 void lightVolumesInstancing_setup(GLFWwindow * window)
 {
-//     glfwInit();
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-// #endif
-
-//     GLFWwindow * window = glfwCreateWindow(WIDTH, HEIGHT, "lightVolumes", NULL, NULL);
-//     if (window == NULL)
-//     {
-//         cout << "ERROR::CREATE WINDOW:: FAILED!" << endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-//     glfwMakeContextCurrent(window);
-
-//     if( ! gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) )
-//     {
-//         cout << "ERROR::GLAD LOADER INIT FAILED!" <<endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-    
     glEnable(GL_DEPTH_TEST);
     
-    // glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwGetWindowSize(window, &WIDTH, &HEIGHT);
-    // glfwSetCursorPosCallback(window, cursor_pos_callback);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     
     if (!backpack)
     {
         backpack = std::make_shared<Model>("Assets/backpack/backpack.obj", true);
     }
 
-    // InitSpheres(window);
-    
     glGenFramebuffers(1, &gBufferFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
-
-    // position color buffer
-    glGenTextures(1, &gPosition);
     
-    // normal color buffer
-    glGenTextures(1, &gNormal);
-    
-    // color + specular color buffer
-    glGenTextures(1, &gAlbedoSpec);
-    
-
-    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
-    glDrawBuffers(3, attachments);
-
-    glGenRenderbuffers(1, &depthRB);
-    window_size_callback(window, WIDTH, HEIGHT);
-
-    
-    objectPositions.clear();
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0, -3.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  0.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -3.0,  3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -3.0,  3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
-
-    
+    if (objectPositions.empty())
+    {
+        objectPositions.push_back(glm::vec3(-3.0,  -3.0, -3.0));
+        objectPositions.push_back(glm::vec3( 0.0,  -3.0, -3.0));
+        objectPositions.push_back(glm::vec3( 3.0,  -3.0, -3.0));
+        objectPositions.push_back(glm::vec3(-3.0,  -3.0,  0.0));
+        objectPositions.push_back(glm::vec3( 0.0,  -3.0,  0.0));
+        objectPositions.push_back(glm::vec3( 3.0,  -3.0,  0.0));
+        objectPositions.push_back(glm::vec3(-3.0,  -3.0,  3.0));
+        objectPositions.push_back(glm::vec3( 0.0,  -3.0,  3.0));
+        objectPositions.push_back(glm::vec3( 3.0,  -3.0,  3.0));
+    }
 
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-    
-    
     
     glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 3 * sizeof(glm::mat4));
 
@@ -372,45 +273,10 @@ void lightVolumesInstancing_setup(GLFWwindow * window)
     // lighting info
     // -------------
     calculateLightInfo(window, false);
-    // // Setup Dear ImGui context
-    // IMGUI_CHECKVERSION();
-    // ImGui::CreateContext();
-    // ImGuiIO& io = ImGui::GetIO(); (void)io;
-    
-    // 
-
-    // // Setup Dear ImGui style
-    // ImGui::StyleColorsDark();
-    
-
-    // // Setup Platform/Renderer bindings
-    // ImGui_ImplGlfw_InitForOpenGL(window, true);
-    // ImGui_ImplOpenGL3_Init("#version 330 core");
-
-
-    // while(!glfwWindowShouldClose(window))
-    // {
-        
-
-    //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    //     glfwSwapBuffers(window);
-    //     glfwPollEvents();
-    // }
-
-    // glfwTerminate();
 }
 
 void lightVolumesInstancing_imgui(GLFWwindow * window)
 {
-    // ImGui::Begin("Editor");
-    // ImGui::Text("Lights Color & Position");
-    // for (int i = 0; i < 4; ++i)
-    // {
-    //     ImGui::ColorEdit3(("light" + std::to_string(i) + " Color").c_str(), glm::value_ptr(lightColors[i]), ImGuiColorEditFlags_HDR);
-    //     ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
-    //     ImGui::Separator();
-    // }
     ImGui::Spacing();
     ImGui::Text("Light Info");
     bool bLightInfoChanged = false;
@@ -421,15 +287,8 @@ void lightVolumesInstancing_imgui(GLFWwindow * window)
     bool lightCountChanged = ImGui::InputScalar("Light Count",      ImGuiDataType_U32,     &NR_LIGHTS,  &u32_one, NULL, "%u");
     if (bLightInfoChanged || lightCountChanged)
     {
-        // if (lightCountChanged)
-        // {
-        //     InitSpheres(window);
-        // }
         calculateLightInfo(window, !lightCountChanged);
     }
-    // ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
-    // ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
-    // ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
     ImGui::Separator();
     if (bCursorOff)
     {
@@ -461,19 +320,13 @@ void lightVolumesInstancing_imgui(GLFWwindow * window)
         }
     }
     ImGui::Checkbox("DrawNormal", &bDrawNormal);
-    ImGui::Checkbox("ShowLightVolumes", &bShowLightVolumes);
     glm::vec3 pos = camera.Position;
     ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
-
-    // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    // ImGui::Text("Press space key to navigating in scene");
-    // ImGui::End();
 }
 
 int lightVolumesInstancing(GLFWwindow * window)
 {
     processInput(window);
-    // switch_drawMode(window);
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100.f);
     glm::mat4 view = camera.GetViewMatrix();
     
@@ -517,20 +370,6 @@ int lightVolumesInstancing(GLFWwindow * window)
         lightVolumesShader->setFloat("shininess", 64);
         lightVolumesShader->setFloat("Linear", linear);
         lightVolumesShader->setFloat("Quadratic", quadratic);
-        // for (unsigned int i = 0; i < lightPositions.size(); i++)
-        // {
-        //     glm::mat4 model = glm::mat4(1.0f);
-        //     model = glm::translate(model, glm::vec3(lightPositions[i]));
-        //     // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-        //     lightVolumesShader->setVec3("light.Position", lightPositions[i]);
-        //     lightVolumesShader->setVec3("light.Color", lightColors[i]);
-            
-        //     lightVolumesShader->setFloat("light.Radius", lightRadius[i]);
-        //     lightVolumesShader->setMat4("model", model);
-        //     spheres[i]->draw();
-        //     // sphere->setRadius(lightRadius[i]);
-        //     // sphere->draw();
-        // }
         renderSpheres();
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
@@ -553,37 +392,12 @@ int lightVolumesInstancing(GLFWwindow * window)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_DEPTH_BUFFER_BIT| GL_COLOR_BUFFER_BIT);
-        // ** use simple shader - white color
-        // simpleShader->use();
-        // simpleShader->setMat4("projection", projection);
-        // simpleShader->setMat4("view", view);
-        // glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::scale(model, glm::vec3(2.0f));
-        // simpleShader->setMat4("model", model);
-
 
         std::shared_ptr<Shader> usedShader = drawMode == 1 ? wireframeShader : pointShader;
         usedShader->use();
         usedShader->setVec3("viewPos", camera.Position);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-
-        if (bShowLightVolumes)
-        {
-            usedShader->setBool("backFaceCull", true);
-            usedShader->setVec3("color", glm::vec3(0.86, 0.62, 0.01));
-            // ** TODO:
-            // for (unsigned int i = 0; i < lightPositions.size(); i++)
-            // {
-            //     glm::mat4 model = glm::mat4(1.0f);
-            //     model = glm::translate(model, glm::vec3(lightPositions[i]));
-            //     // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-            //     glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            //     spheres[i]->draw();
-            //     // spheres[i]->setRadius(lightRadius[i]);
-            // }
-            usedShader->setBool("backFaceCull", false);
-        }
 
         usedShader->setVec3("color", glm::vec3(0, 0.496, 0.496));
         for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
@@ -609,19 +423,6 @@ int lightVolumesInstancing(GLFWwindow * window)
         normalShader->setVec3("color", glm::vec3(0.92, 0.496, 0));
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-        if (bShowLightVolumes && drawMode != 0)
-        {
-            // ** TODO:
-            // for (unsigned int i = 0; i < lightPositions.size(); i++)
-            // {
-            //     glm::mat4 model = glm::mat4(1.0f);
-            //     model = glm::translate(model, glm::vec3(lightPositions[i]));
-            //     // cout<< "lightRadius[i]" << lightRadius[i] << endl;
-            //     // sphere->setRadius(lightRadius[i]);
-            //     glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(model));
-            //     spheres[i]->draw();
-            // }
-        }
         for (unsigned int i = 0 ; i < objectPositions.size(); ++i)
         {
             glm::mat4 model = glm::mat4(1.0f);
@@ -640,85 +441,52 @@ int lightVolumesInstancing(GLFWwindow * window)
         }
     }
     
-
-    // // debug G-Buffer start
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // debugquadShader->use();
-    // debugquadShader->setInt("renderTexture", 0);
-    // glClearColor(1, 1, 1, 1.0f);
-    // glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    // glm::mat4 model = glm::mat4(1.0);
-    // model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0));
-    // model = glm::scale(model, glm::vec3(0.495));
-    // debugquadShader->setMat4("model", model);
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, gPosition);
-    // renderQuadSimple();
-
-    // model = glm::mat4(1.0);
-    // model = glm::translate(model, glm::vec3(0.5f, 0.5f, 0));
-    // model = glm::scale(model, glm::vec3(0.495));
-    // debugquadShader->setMat4("model", model);
-    // glBindTexture(GL_TEXTURE_2D, gNormal);
-    // renderQuadSimple();
-
-    // model = glm::mat4(1.0);
-    // model = glm::translate(model, glm::vec3(-0.5f, -0.5f, 0));
-    // model = glm::scale(model, glm::vec3(0.495));
-    // debugquadShader->setMat4("model", model);
-    // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    // renderQuadSimple();
-
-    // model = glm::mat4(1.0);
-    // model = glm::translate(model, glm::vec3(0.5f, -0.5f, 0));
-    // model = glm::scale(model, glm::vec3(0.495));
-    // debugquadShader->setMat4("model", model);
-    // debugquadShader->setBool("onlyAlpha", true);
-    // glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    // renderQuadSimple();
-    // debugquadShader->setBool("onlyAlpha", false);
-    // // debug G-Buffer end
-
-    
     return 0;
-
 }
 
-static void window_size_callback(GLFWwindow * window, int width, int height)
+void lightVolumesInstancing_viewport(GLFWwindow * window)
 {
-    if (width > 0 && height > 0)
-    {
-        WIDTH = width;
-        HEIGHT = height;
-        glBindTexture(GL_TEXTURE_2D, gPosition);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+    
+    // position color buffer
+    glDeleteTextures(1, &gPosition);
+    glGenTextures(1, &gPosition);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
 
-        glBindTexture(GL_TEXTURE_2D, gNormal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+    // normal color buffer
+    glDeleteTextures(1, &gNormal);
+    glGenTextures(1, &gNormal);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WIDTH, HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+    // color + specular color buffer
+    glDeleteTextures(1, &gAlbedoSpec);
+    glGenTextures(1, &gAlbedoSpec);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
 
-        glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; 
+    glDrawBuffers(3, attachments);
 
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteRenderbuffers(1, &depthRB);
+    glGenRenderbuffers(1, &depthRB);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRB);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRB);
 
-        glViewport(0, 0, WIDTH, HEIGHT);
-    }
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAME BUFFER INIT FAILED!" <<endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 static void compile_shaders(GLFWwindow * window)
@@ -808,7 +576,6 @@ static void compile_shaders(GLFWwindow * window)
 static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
 {
     lightRadius.clear();
-    // srand(13);
     if (!bFixedPosition)
     {
         lightPositions.clear();
@@ -828,9 +595,6 @@ static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
             glm::vec3 lightColor = glm::vec3(rColor, gColor, bColor);
             lightColors.push_back(lightColor);
         }
-        // sort(lightPositions.begin(), lightPositions.end(), [](glm::vec3 a, glm::vec3 b){
-
-        // });
     }
     for (unsigned int i = 0; i < NR_LIGHTS; i++)
     {
@@ -841,7 +605,6 @@ static void calculateLightInfo(GLFWwindow * window, bool bFixedPosition)
         (-linear +  std::sqrtf(linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * lightMax))) 
         / (2 * quadratic);  
         lightRadius.push_back(radius);
-        // spheres[i]->setRadius(radius);
     }
 }
 
@@ -883,11 +646,6 @@ static void processInput(GLFWwindow * window)
     }
 }
 
-static void frame_buffer_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 
 static void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
@@ -923,63 +681,64 @@ static void renderCubeSimple()
     {
         glGenVertexArrays(1, &cubeVAO);
         glGenBuffers(1, &cubeVBO);
+        float vertices[] = {
+            // back face
+            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+            1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            // left face
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            // right face
+            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+            1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+            1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+            1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+            // bottom face
+            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+            // top face
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f, // bottom-left        
+            1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+            1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+            1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+        };
+        // link vertex attributes
+        glBindVertexArray(cubeVAO);
+        // fill buffer
+        glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     }
-    float vertices[] = {
-        // back face
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-        -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-        -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-        // front face
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-         1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-        -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-        -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-        // left face
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-        // right face
-        1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-        1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-        1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-        1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-        1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-        1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-        // bottom face
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-        -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-        -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-         1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-         1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-        // top face
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f, // bottom-left        
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-         1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-        -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-    };
-    // link vertex attributes
-    glBindVertexArray(cubeVAO);
-    // fill buffer
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     // render Cube
+    glBindVertexArray(cubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }
@@ -1179,15 +938,49 @@ static void renderQuad()
     glBindVertexArray(0);
 }
 
+
+static unsigned int planeVAO = 0, planeVBO = 0;
+static void renderPlane()
+{
+    if (!planeVAO)
+    {
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+                25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+            -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+                25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+                25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+        };
+        // plane VAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)( 6 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 // renders the 3D scene
 // --------------------
-static void renderScene(const Shader &shader, unsigned int planeVAO)
+static void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

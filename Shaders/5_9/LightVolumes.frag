@@ -72,7 +72,6 @@ void main()
     vec3 lighting = vec3(0);
     if (subjects)
     {
-        // lighting = Albedo * 0.1f;
         vec3 viewDir = normalize(viewPos - FragPos);
         float light2FragDist = length(light.Position - FragPos);
         // diffuse

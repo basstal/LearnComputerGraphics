@@ -14,9 +14,13 @@ float LinearizeDepth(float depth)
     return (2.0 * near_plane * far_plane) / (far_plane + near_plane - z * (far_plane - near_plane));	
 }
 
+vec3 perspectiveColor(float depthValue)
+{
+    return vec3(LinearizeDepth(depthValue) / far_plane); // perspective
+}
+
 void main()
 {             
     float depthValue = texture(depthMap, TexCoords).r;
-    // FragColor = vec4(vec3(LinearizeDepth(depthValue) / far_plane), 1.0); // perspective
     FragColor = vec4(vec3(depthValue), 1.0); // orthographic
 }

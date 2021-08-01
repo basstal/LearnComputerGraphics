@@ -40,10 +40,5 @@ vec4 ExposureToneMapping()
 
 void main()
 {
-    // vec3 hdrColor = texture(texHDR, TexCoords).rgb;
-    // FragColor = vec4(hdrColor, 1.0);
-
-    // FragColor = ReinhardToneMapping();
-
     FragColor = ExposureToneMapping();
 }

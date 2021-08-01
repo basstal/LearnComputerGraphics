@@ -19,27 +19,46 @@ static void processInput(GLFWwindow *window)
 extern int lightVolumes(GLFWwindow *);
 extern int deferredShading(GLFWwindow * window);
 extern int lightVolumesInstancing(GLFWwindow * window);
-// extern int zoom(GLFWwindow * window);
 
 extern void lightVolumes_setup(GLFWwindow *);
 extern void deferredShading_setup(GLFWwindow *);
 extern void lightVolumesInstancing_setup(GLFWwindow *);
-// extern void zoom_setup(GLFWwindow *);
 
 extern void deferredShading_imgui(GLFWwindow * );
 extern void lightVolumesInstancing_imgui(GLFWwindow * );
 extern void lightVolumes_imgui(GLFWwindow *);
 
+extern void deferredShading_viewport(GLFWwindow *);
+extern void lightVolumes_viewport(GLFWwindow *);
+extern void lightVolumesInstancing_viewport(GLFWwindow *);
+
 std::map<std::string, FuncSet> maps{
-    {"lightVolumes", FuncSet(lightVolumes_setup, lightVolumes, lightVolumes_imgui)},
-    {"deferredShading", FuncSet(deferredShading_setup, deferredShading, deferredShading_imgui)},
-    {"lightVolumesInstancing", FuncSet(lightVolumesInstancing_setup, lightVolumesInstancing, lightVolumesInstancing_imgui)},
-    // {"zoom", FuncSet(zoom_setup, zoom, zoom_imgui)},
+    {"lightVolumes", FuncSet(lightVolumes_setup, lightVolumes, lightVolumes_imgui, lightVolumes_viewport)},
+    {"deferredShading", FuncSet(deferredShading_setup, deferredShading, deferredShading_imgui, deferredShading_viewport)},
+    {"lightVolumesInstancing", FuncSet(lightVolumesInstancing_setup, lightVolumesInstancing, lightVolumesInstancing_imgui, lightVolumesInstancing_viewport)},
 };
 
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+
+void (*current_viewport)(GLFWwindow *) = nullptr;
+
+int WIDTH = 1920, HEIGHT = 1080;
+static void frame_buffer_callback(GLFWwindow * window, int width, int height)
+{
+    if (width > 0 && height > 0)
+    {
+        WIDTH = width;
+        HEIGHT = height;
+        if (current_viewport)
+        {
+            current_viewport(window);
+        }
+        glViewport(0, 0, width, height);
+    }
 }
 
 int main()
@@ -87,11 +106,18 @@ int main()
     FuncSet funcSet = firstEntry->second;
     int (*current_draw)(GLFWwindow *) = funcSet.draw;
     void (*current_imgui)(GLFWwindow *) = funcSet.imgui;
+    current_viewport = funcSet.viewport;
     if (funcSet.setup)
     {
         funcSet.setup(window);
     }
 
+    glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
+    glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    if (current_viewport)
+    {
+        current_viewport(window);
+    }
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -114,6 +140,11 @@ int main()
                     }
                     current_draw = funcSet.draw;
                     current_imgui = funcSet.imgui;
+                    current_viewport = funcSet.viewport;
+                    if (current_viewport)
+                    {
+                        current_viewport(window);
+                    }
                 }
             }
             if (current_imgui)

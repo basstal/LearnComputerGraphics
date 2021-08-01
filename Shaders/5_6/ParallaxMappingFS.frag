@@ -87,8 +87,6 @@ vec2 ParallaxOcclusionMapping(vec2 texCoords, vec3 viewDir)
 void main()
 {
     vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
-    // vec2 texCoords = ParallaxMapping(fs_in.TexCoords, viewDir);
-    // vec2 texCoords = SteepParallaxMapping(fs_in.TexCoords, viewDir);
     vec2 texCoords = ParallaxOcclusionMapping(fs_in.TexCoords, viewDir);
     if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
         discard;

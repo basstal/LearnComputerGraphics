@@ -15,8 +15,6 @@
 #include <Shader.h>
 #include <Model.h>
 
-bool wireframe = false;
-
 
 int HEIGHT = 1080;
 int WIDTH = 1920;
@@ -28,9 +26,6 @@ float lastY = 0.0f;
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
 
-// float isEditMode = false;
-// float openIMGUI = true;
-
 Camera camera = Camera(glm::vec3(0.0, 0.0, -1.0f));
 
 using namespace std;
@@ -41,7 +36,7 @@ void mouse_scroll_callback(GLFWwindow *, double, double);
 void processInput(GLFWwindow * window);
 void renderCube();
 void renderQuad();
-void renderScene(const Shader &shader, unsigned int planeVAO);
+void renderScene(const Shader &shader);
 void renderScene3D(const Shader &shader);
 void renderQuadSimple();
 void renderCubeSimple();
@@ -99,27 +94,23 @@ int main()
         return -1;
     }
 
-    if (!wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
-    // glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
+
+
     camera.CameraYawRotate(180);
+
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    
-    
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -158,57 +149,48 @@ int main()
         processInput(window);
         glfwPollEvents();
         
-        // if (openIMGUI)
-        // {
-            // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            // Start the Dear ImGui frame
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-            ImGui::Begin("Editor");
-            ImGui::Text("Lights Color & Position");
-            for (int i = 0; i < 4; ++i)
-            {
-                ImGui::ColorEdit3(("light" + std::to_string(i) + " Color").c_str(), glm::value_ptr(lightColors[i]));
-                ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
-                ImGui::Separator();
-            }
-            ImGui::Spacing();
-            ImGui::Text("attenuation");
-            ImGui::SliderFloat("constant", &constant, 0, 256.0f);
-            ImGui::SliderFloat("linear", &linear, 0, 128.f);
-            ImGui::SliderFloat("quadratic", &quadratic, 0, 32.f);
-            ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
-            ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
-            ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
-
+        ImGui::Begin("Editor");
+        ImGui::Text("Lights Color & Position");
+        for (int i = 0; i < 4; ++i)
+        {
+            ImGui::ColorEdit3(("light" + std::to_string(i) + " Color").c_str(), glm::value_ptr(lightColors[i]));
+            ImGui::DragFloat3(("light" + std::to_string(i) + " Position").c_str(), glm::value_ptr(lightPositions[i]), 0.05f, -88.f, 88.0f);
             ImGui::Separator();
-            if (bCursorOff)
-            {
-                ImGui::Text("Press P to release control of the camera, and show cursor.");
-            }
-            else
-            {
-                ImGui::Text("Press P or Button follows to take control of the camera");
-                if(ImGui::Button("Posses camera") && !bCursorOff)
-                {
-                    switch_cursor(window);
-                }
-            }
-            glm::vec3 pos = camera.Position;
-            ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            // ImGui::Text("Press space key to navigating in scene");
-            ImGui::End();
+        }
+        ImGui::Spacing();
+        ImGui::Text("attenuation");
+        ImGui::SliderFloat("constant", &constant, 0, 256.0f);
+        ImGui::SliderFloat("linear", &linear, 0, 128.f);
+        ImGui::SliderFloat("quadratic", &quadratic, 0, 32.f);
+        ImGui::SliderFloat("shininess", &shininess, 0, 256.f);
+        ImGui::SliderFloat("ambientStrength", &ambientStrength, 0, 32.f);
+        ImGui::SliderFloat("exposure", &exposure, 0, 128.f);
 
-            // Rendering
-            ImGui::Render();
-        // }
-        // else
-        // {
-        //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        // }
+        ImGui::Separator();
+        if (bCursorOff)
+        {
+            ImGui::Text("Press P to release control of the camera, and show cursor.");
+        }
+        else
+        {
+            ImGui::Text("Press P or Button follows to take control of the camera");
+            if(ImGui::Button("Posses camera") && !bCursorOff)
+            {
+                switch_cursor(window);
+            }
+        }
+        glm::vec3 pos = camera.Position;
+        ImGui::Text("Camera Position (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
+
+        // Rendering
+        ImGui::Render();
         
 
         // render
@@ -264,10 +246,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texHDR);
         renderQuadSimple();
 
-        // if (openIMGUI)
-        // {
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // }
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
     }
@@ -291,8 +270,6 @@ void processInput(GLFWwindow * window)
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    // if (!openIMGUI)
-    // {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -318,16 +295,6 @@ void processInput(GLFWwindow * window)
         bPressed = false;
         switch_cursor(window);
     }
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isEditMode)
-    // {
-    //     // openIMGUI = !openIMGUI;
-    //     isEditMode = true;
-    // }
-    // if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-    // {
-    //     isEditMode = false;
-    // }
 }
 
 void envInit()
@@ -349,22 +316,10 @@ void envInit()
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texHDR, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    // unsigned int rbo;
-    // glGenRenderbuffers(1, &rbo);
-    // glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WIDTH, HEIGHT);
-    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-    // if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    // {
-    //     cout << "FramebufferStatus not success" << endl;
-    // }
 }
 
 void frame_buffer_callback(GLFWwindow *window, int width, int height)
 {
-    // cout<< "width :" << width << ",height : " << height <<endl;
     if (width > 0 && height > 0)
     {
         WIDTH = width;
@@ -378,11 +333,6 @@ void frame_buffer_callback(GLFWwindow *window, int width, int height)
 
 void cursor_pos_callback(GLFWwindow * window, double xPos, double yPos)
 {
-    // if (openIMGUI) 
-    // {
-        // firstMove = true;
-        // return;
-    // }
     if (firstMove)
     {
         lastX = (float)xPos;
@@ -674,15 +624,53 @@ void renderQuad()
     glBindVertexArray(0);
 }
 
+
+
+unsigned int planeVAO = 0, planeVBO = 0;
+void renderPlane()
+{
+    if (!planeVAO)
+    {
+
+        // set up vertex data (and buffer(s)) and configure vertex attributes
+        // ------------------------------------------------------------------
+        float planeVertices[] = {
+            // positions            // normals         // texcoords
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+                10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+            -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+                10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+        };
+        // plane VAO
+        glGenVertexArrays(1, &planeVAO);
+        glGenBuffers(1, &planeVBO);
+        glBindVertexArray(planeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glBindVertexArray(0);
+    }
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 // renders the 3D scene
 // --------------------
-void renderScene(const Shader &shader, unsigned int planeVAO)
+void renderScene(const Shader &shader)
 {
     // floor
     glm::mat4 model = glm::mat4(1.0f);
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    renderPlane();
     // cubes
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));

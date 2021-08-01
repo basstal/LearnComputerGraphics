@@ -10,13 +10,10 @@ layout (location = 6) in mat4 model;
 
 uniform mat4 projection;
 uniform mat4 view;
-// uniform mat4 model;
 
 out VS_OUT
 {
     vec3 NormalModel;
-    // vec3 Normal;
-    // vec2 TexCoords;
     vec3 Position; // lightVolumes 顶点的世界坐标
     mat4 projection;
     mat4 view;
@@ -29,8 +26,6 @@ out VS_OUT
 void main()
 {
     gl_Position = projection * view * model * vec4(aPosition, 1.0f);
-    // vs_out.TexCoords = aTexCoords;
-    // vs_out.Normal = mat3(transpose(inverse(model))) * aNormal;
     vs_out.NormalModel = aNormal;
     vs_out.Position = aPosition;
     vs_out.view = view;

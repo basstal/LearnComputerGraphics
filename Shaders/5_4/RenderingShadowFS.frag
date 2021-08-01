@@ -43,11 +43,6 @@ float ShadowCalculation(vec3 fragPos)
 
     closestDepth *= far_plane;
     return ShadowWithPCF(fragToLight);
-    // float currentDepth = length(fragToLight);
-
-    // float bias = 0.05;
-    // float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-    // return shadow;
 }
 
 void main()
