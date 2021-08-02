@@ -38,6 +38,7 @@ static void frame_buffer_callback(GLFWwindow * window, int width, int height)
 {
     if (width > 0 && height > 0)
     {
+        
         WIDTH = width;
         HEIGHT = height;
         if (current_viewport)

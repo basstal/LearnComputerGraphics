@@ -48,6 +48,7 @@ add_executable(${PROJECT_NAME}
     SpriteRenderer.cpp
     GameLevel.cpp
     GameObject.cpp
+    BallObject.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"

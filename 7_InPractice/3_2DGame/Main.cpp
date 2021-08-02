@@ -11,11 +11,23 @@
 #include "FuncSet.h"
 #include <Game.h>
 
+float lastTime;
+Game *GameInstance;
+
 static void processInput(GLFWwindow *window)
 {
+    float currentTime = (float)glfwGetTime();
+    float deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
+    }
+    if (GameInstance)
+    {
+        GameInstance->ProcessInput(deltaTime);
+        GameInstance->Update(deltaTime);
     }
 }
 
@@ -24,19 +36,27 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-Game *GameInstance;
 int WIDTH = 1920, HEIGHT = 1080;
 static void frame_buffer_callback(GLFWwindow * window, int width, int height)
 {
     if (width > 0 && height > 0)
     {
+        float previousWidth = WIDTH, previousHeight = HEIGHT;
         WIDTH = width;
         HEIGHT = height;
         if (GameInstance)
         {
-            GameInstance->FramebufferCallback(window);
+            GameInstance->FramebufferCallback(window, previousWidth, previousHeight);
         }
         glViewport(0, 0, width, height);
+    }
+}
+
+static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if (GameInstance)
+    {
+        GameInstance->KeyCallback(window, key, scancode, action, mods);
     }
 }
 
@@ -69,8 +89,11 @@ int main()
 
     GameInstance = new Game(WIDTH, HEIGHT);
     GameInstance->Init();
+    glfwSetKeyCallback(window, KeyCallback);
     
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

@@ -10,13 +10,41 @@ GameLevel::GameLevel()
 {
     ResourceManager::LoadTexture("Assets/breakout/block.png", true, "block");
     ResourceManager::LoadTexture("Assets/breakout/block_solid.png", true, "block_solid");
+    RowsCount = 0;
+    ColsCount = 0;
 }
 
 void GameLevel::Draw(SpriteRenderer &renderer)
 {
-    for(GameObject brick : Bricks)
+    for(const GameObject & Brick : Bricks)
     {
-        renderer.DrawSprite(brick.texture, brick.pos, brick.size, 0.0f, brick.color);
+        if (!Brick.bIsPlaceholder && !Brick.bDestroyed)
+        {
+            renderer.DrawSprite(Brick.texture, Brick.pos, Brick.size, 0.0f, Brick.color);
+        }
+    }
+}
+
+void GameLevel::Reload(unsigned int levelWidth, unsigned int levelHeight)
+{
+    float unit_width = levelWidth / (float)ColsCount;
+    float unit_height = levelHeight / (float)RowsCount;
+    unsigned int CurRows = 0, CurCols = 0;
+    for (GameObject & Brick : Bricks)
+    {
+        if (CurCols >= ColsCount)
+        {
+            CurRows ++;
+            CurCols = 0;
+        }
+        if (!Brick.bIsPlaceholder)
+        {
+            glm::vec2 pos(unit_width * CurCols, unit_height * CurRows);
+            glm::vec2 size(unit_width, unit_height);
+            Brick.size = size;
+            Brick.pos = pos;
+        }
+        CurCols++;
     }
 }
 
@@ -40,8 +68,10 @@ void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int lev
             }
             tileData.push_back(rows);
         }
+        RowsCount = tileData.size();
         if (!tileData.empty())
         {
+            ColsCount = tileData[0].size();
             init(tileData, levelWidth, levelHeight);
         }
     }
@@ -92,6 +122,10 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData,
                         break;
                 }
                 Bricks.push_back(GameObject(pos, size, ResourceManager::GetTexture("block"), color));
+            }
+            else
+            {
+                Bricks.push_back(GameObject());
             }
         }
     }
