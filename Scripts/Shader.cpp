@@ -1,6 +1,15 @@
 #include <Shader.h>
 #include <Utils.h>
 
+Shader::Shader(const Shader& shader)
+{
+	vsPath = shader.vsPath;
+	fsPath = shader.fsPath;
+	gsPath = shader.gsPath;
+	ID = shader.ID;
+	recompileFromSource();
+}
+
 Shader::Shader(const char * vShaderCode, const char *fShaderCode, const char * gShaderCode, bool isSource)
 {
     compileAndLinkShaders(vShaderCode, fShaderCode, gShaderCode);

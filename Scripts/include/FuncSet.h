@@ -1,3 +1,6 @@
+#ifndef _FUNCSET_H_
+#define _FUNCSET_H_
+
 #include <GLFW/glfw3.h>
 
 class FuncSet
@@ -16,3 +19,5 @@ public:
     }
     FuncSet(){}
 };
+
+#endif
