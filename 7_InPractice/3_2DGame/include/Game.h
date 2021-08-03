@@ -20,6 +20,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include <PowerUp.h>
+#include <irrKlang.h>
 
 enum GameState
 {
@@ -57,6 +58,9 @@ public:
     int         Probability = 10;
 
     std::vector<PowerUp> PowerUps;
+    irrklang::ISoundEngine *SoundEngine;
+
+    std::string bleepSoundPath, solidSoundPath, powerupSoundPath, bleep1SoundPath;
     // unsigned int Width, Height;
     // constructor/destructor
     Game(unsigned int width, unsigned int height);

@@ -1,14 +1,11 @@
 #include <Game.h>
 
-
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Utils.h>
 
 using namespace std;
-
 
 extern int WIDTH, HEIGHT;
 
@@ -23,12 +20,19 @@ Game::Game(unsigned int width, unsigned int height)
     CurrentLevel = 0;
     State = GameState::GAME_ACTIVE;
     ShakeTime = 0.0f;
+    SoundEngine = irrklang::createIrrKlangDevice();
 }
 
 Game::~Game()
 {
-
+    delete Renderer;
+    delete Player;
+    delete Ball;
+    delete Processor;
+    delete Particle;
+    SoundEngine->drop();
 }
+
 
 void Game::Init()
 {
@@ -51,8 +55,15 @@ void Game::Init()
     ResourceManager::LoadTexture("Assets/breakout/powerup_confuse.png", true, "powerup_confuse");
     ResourceManager::LoadTexture("Assets/breakout/powerup_chaos.png", true, "powerup_chaos");
 
+    getProjectFilePath("Assets/breakout/bleep.mp3", bleepSoundPath);
+    getProjectFilePath("Assets/breakout/solid.wav", solidSoundPath);
+    getProjectFilePath("Assets/breakout/powerup.wav", powerupSoundPath);
+    getProjectFilePath("Assets/breakout/bleep.wav", bleep1SoundPath);
+
     // init level
     string path;
+    getProjectFilePath("Assets/breakout/breakout.mp3", path);
+    SoundEngine->play2D(path.c_str(), true);
     for (std::string LevelFile : LevelFiles)
     {
         GameLevel Level = GameLevel();
@@ -209,11 +220,13 @@ void Game::DoCollisions()
                 {
                     Brick.bDestroyed = true;
                     SpawnPowerUps(Brick);
+                    SoundEngine->play2D(bleepSoundPath.c_str(), false);
                 }
                 else
                 {
                     ShakeTime = 0.05f;
                     Processor->bShake = true;
+                    SoundEngine->play2D(solidSoundPath.c_str(), false);
                 }
                 
                 // ** 如果遇到非Solid的砖块并且在passthrough的状态，则不改变速度方向
@@ -265,6 +278,7 @@ void Game::DoCollisions()
         Ball->velocity.x = BallVelocity.x * percentage * strength;
         Ball->velocity.y = -1.0f * std::abs(Ball->velocity.y);
         Ball->velocity = glm::normalize(Ball->velocity) * glm::length(oldVelocity);
+        SoundEngine->play2D(bleep1SoundPath.c_str(), false);
     }
     for (PowerUp & powerUp : PowerUps)
     {
@@ -276,6 +290,7 @@ void Game::DoCollisions()
             }
             if (CheckCollision(*Player, powerUp))
             {
+                SoundEngine->play2D(powerupSoundPath.c_str(), false);
                 ActivatePowerUp(powerUp);
                 powerUp.bDestroyed = true;
                 powerUp.Activated = true;
@@ -289,9 +304,6 @@ bool Game::CheckCollision(GameObject &lhs, GameObject &rhs)
     glm::vec2 lhsRightBottom = lhs.pos + lhs.size;
     glm::vec2 rhsRightBottom = rhs.pos + rhs.size;
 
-    // bool collisionX = lhsRightBottom.x >= rhs.pos.x && rhsRightBottom.x >= lhs.pos.x;
-    // bool collisionY = lhsRightBottom.y >= rhs.pos.y && rhsRightBottom.y >= lhs.pos.y;
-    // return collisionX && collisionY;
     if (lhs.pos.x < rhs.pos.x && rhs.pos.x < lhsRightBottom.x &&
         lhs.pos.y < rhs.pos.y && lhsRightBottom.y > rhs.pos.y)
     {
@@ -369,6 +381,7 @@ void Game::ResetPlayer()
     Ball->pos = Player->pos + glm::vec2(PlayerSize.x / 2.0f - BallRadius, - BallRadius * 2.0f);
     Ball->PassThrough = false;
     Ball->Sticky = false;
+    Ball->color = glm::vec3(1.0f);
     PowerUps.clear();
     Processor->bChaos = false;
     Processor->bConfuse = false;
