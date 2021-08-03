@@ -49,6 +49,8 @@ add_executable(${PROJECT_NAME}
     GameLevel.cpp
     GameObject.cpp
     BallObject.cpp
+    ParticleGenerator.cpp
+    PostProcessor.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"

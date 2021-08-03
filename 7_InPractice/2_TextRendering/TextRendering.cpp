@@ -109,7 +109,7 @@ void textRendering_setup(GLFWwindow * window)
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
-    glyphShader = make_shared<Shader>("Shaders/7_2/renderGlyph.vert", "Shaders/7_2/renderGlyph.frag", nullptr);
+    glyphShader = make_shared<Shader>("Shaders/7_2/RenderGlyph.vert", "Shaders/7_2/RenderGlyph.frag", nullptr);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

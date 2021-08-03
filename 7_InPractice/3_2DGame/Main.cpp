@@ -42,13 +42,14 @@ static void frame_buffer_callback(GLFWwindow * window, int width, int height)
     if (width > 0 && height > 0)
     {
         float previousWidth = WIDTH, previousHeight = HEIGHT;
-        WIDTH = width;
-        HEIGHT = height;
+        WIDTH = std::max(width, 800);
+        HEIGHT = std::max(height, 600);
         if (GameInstance)
         {
             GameInstance->FramebufferCallback(window, previousWidth, previousHeight);
         }
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, WIDTH, HEIGHT);
+        glfwSetWindowSize(window, WIDTH, HEIGHT);
     }
 }
 
@@ -109,6 +110,7 @@ int main()
     
     glfwSetFramebufferSizeCallback(window, frame_buffer_callback);
     glfwGetFramebufferSize(window, &WIDTH, &HEIGHT);
+    frame_buffer_callback(window, WIDTH, HEIGHT);
     
     while(!glfwWindowShouldClose(window))
     {
@@ -119,12 +121,8 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        {
-            ImGui::Begin("Editor");                          
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
+        GameInstance->RenderImGui(window);
+        
         // Rendering
         ImGui::Render();
         int display_w, display_h;

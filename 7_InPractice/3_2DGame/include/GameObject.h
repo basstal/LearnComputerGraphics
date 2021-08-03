@@ -25,7 +25,7 @@ public:
 
     GameObject();
     GameObject(glm::vec2 inPos, glm::vec2 inSize, std::shared_ptr<Texture2D> inTex, glm::vec3 inColor = glm::vec3(1.0f));
-    void Draw(SpriteRenderer & Renderer);
+    virtual void Draw(SpriteRenderer & Renderer);
 };
 
 

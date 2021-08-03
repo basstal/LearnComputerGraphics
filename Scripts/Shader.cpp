@@ -215,3 +215,8 @@ void Shader::setVec2(const std::string &varName, glm::vec2 val) const
 {
 	glUniform2fv(glGetUniformLocation(ID, varName.c_str()), 1, glm::value_ptr(val));
 }
+
+void Shader::setVec4(const std::string &varName, glm::vec4 val) const
+{
+	glUniform4fv(glGetUniformLocation(ID, varName.c_str()), 1, glm::value_ptr(val));
+}

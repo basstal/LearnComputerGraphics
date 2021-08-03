@@ -102,8 +102,8 @@ static bool bUsePostProcess = false;
 
 unsigned int cubeVAO, cubeVBO;
 unsigned int quadVAO, quadVBO;
-unsigned int frameBuffer = 0, multiSampleFBO = 0, texMultisampleFBO = 0;
-unsigned int renderbufferMultisample = 0, renderbufferMultisampleColor = 0, renderbufferDepth;
+unsigned int frameBuffer = 0, texMultisampleFBO = 0;
+unsigned int renderbufferMultisample = 0, renderbufferDepth;
 unsigned int multisampleTextureAttachment;
 unsigned int framebufferTexture;
 
@@ -357,28 +357,6 @@ void processInput(GLFWwindow *window)
 
 void envInit()
 {
-    // framebuffer with multisampled renderbuffer objects
-    glGenFramebuffers(1, &multiSampleFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, multiSampleFBO);
-
-    // use renderbuffer as color_attachment
-    glDeleteRenderbuffers(1, &renderbufferMultisampleColor);
-    glGenRenderbuffers(1, &renderbufferMultisampleColor);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisampleColor);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbufferMultisampleColor);
-
-
-    glDeleteRenderbuffers(1, &renderbufferMultisample);
-    glGenRenderbuffers(1, &renderbufferMultisample);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisample);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: multiSampleFBO Framebuffer is not complete!" << std::endl;
-    }
 
     // framebuffer with multisampled texture attachment
     if (texMultisampleFBO == 0)
@@ -393,7 +371,10 @@ void envInit()
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, multisampleTextureAttachment, 0);
 
-    // use the same depth stencil buffer as before
+    glDeleteRenderbuffers(1, &renderbufferMultisample);
+    glGenRenderbuffers(1, &renderbufferMultisample);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferMultisample);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferMultisample);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)

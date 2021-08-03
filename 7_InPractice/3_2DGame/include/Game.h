@@ -12,6 +12,12 @@
 #include <GameObject.h>
 #include <BallObject.h>
 #include <tuple>
+#include <ParticleGenerator.h>
+#include <PostProcessor.h>
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 enum GameState
 {
@@ -31,6 +37,8 @@ typedef std::tuple<bool, Direction, glm::vec2> Collision;
 class Game
 {
 public:
+    PostProcessor * Processor;
+    ParticleGenerator * Particle;
     // game state
     std::vector<GameLevel>    Levels;
     std::vector<std::string> LevelFiles;
@@ -68,6 +76,8 @@ public:
     void DoCollisions();
     void ResetLevel();
     void ResetPlayer();
+    void RenderImGui(GLFWwindow *window);
+
 protected:
     Direction VectorDirection(glm::vec2 target);
     Collision CheckCollision(BallObject &Ball, GameObject &Obj);

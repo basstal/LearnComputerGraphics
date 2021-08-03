@@ -31,14 +31,18 @@ Game::~Game()
 
 void Game::Init()
 {
-    std::shared_ptr<Shader> shader = ResourceManager::LoadShader("Shaders/7_3/sprite.vert", "Shaders/7_3/sprite.frag", nullptr, string("SpriteShader"));
+    std::shared_ptr<Shader> shader = ResourceManager::LoadShader("Shaders/7_3/Sprite.vert", "Shaders/7_3/Sprite.frag", nullptr, string("SpriteShader"));
     shader->use();
-    
+    std::shared_ptr<Shader> particleShader = ResourceManager::LoadShader("Shaders/7_3/Particle.vert", "Shaders/7_3/Particle.frag", nullptr, string("Particle"));
+    particleShader->use();
+    std::shared_ptr<Shader> postprocessingShader = ResourceManager::LoadShader("Shaders/7_3/PostProcessing.vert", "Shaders/7_3/PostProcessing.frag", nullptr, string("PostProcessing"));
+    postprocessingShader->use();
 
     Renderer = new SpriteRenderer(shader);
     ResourceManager::LoadTexture("Assets/awesomeface.png", true, "face");
     ResourceManager::LoadTexture("Assets/breakout/background.jpg", true, "background");
     ResourceManager::LoadTexture("Assets/breakout/paddle.png", true, "paddle");
+    ResourceManager::LoadTexture("Assets/breakout/particle.png", true, "particle");
 
     // init level
     string path;
@@ -62,6 +66,10 @@ void Game::Init()
     glm::vec2 ballPos = playerPos + glm::vec2(PlayerSize.x / 2.0f - BallRadius, - BallRadius * 2.0f);
     Ball = new BallObject(ballPos, BallRadius, BallVelocity, ResourceManager::GetTexture("face"));
 
+    std::shared_ptr<Texture2D> particleTex = ResourceManager::GetTexture(string("particle"));
+    Particle = new ParticleGenerator(particleShader, particleTex, 500);
+
+    Processor = new PostProcessor(postprocessingShader);
 }
 
 void Game::ReloadLevels()
@@ -108,6 +116,7 @@ void Game::ProcessInput(float dt)
 }
 void Game::Update(float dt)
 {
+    Particle->Update(dt, dynamic_cast<GameObject *>(Ball), 2, glm::vec2(Ball->Radius / 2.0f));
     Ball->Move(dt, WIDTH);
     DoCollisions();
     if (Ball->pos.y >= HEIGHT)
@@ -118,15 +127,33 @@ void Game::Update(float dt)
 }
 void Game::Render(GLFWwindow * window)
 {
-    // Renderer->DrawSprite(ResourceManager::GetTexture("face"), glm::vec2(200.0f, 200.0f), glm::vec2(300.0f, 400.0f), 45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
     if (State == GAME_ACTIVE)
     {
+        Processor->PreDraw();
+        Renderer->shader->use();
         glm::mat4 projection = glm::ortho(0.0f, (float)WIDTH, (float)HEIGHT, 0.0f, -1.0f, 1.0f);
         Renderer->shader->setMat4("projection", projection);
         Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(WIDTH, HEIGHT));
         Levels[CurrentLevel].Draw(*Renderer);
         Player->Draw(*Renderer);
+        Particle->Draw(projection);
         Ball->Draw(*Renderer);
+
+        Processor->Draw();
+    }
+}
+
+void Game::RenderImGui(GLFWwindow *window)
+{
+    ImGui::Begin("Editor");
+    {
+        ImGui::Separator();
+        
+        ImGui::Checkbox("PostProcessing Chaos", &Processor->bChaos);
+        ImGui::Checkbox("PostProcessing Confuse", &Processor->bConfuse);
+        ImGui::Checkbox("PostProcessing Shake", &Processor->bShake);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
     }
 }
 
@@ -138,6 +165,7 @@ void Game::FramebufferCallback(GLFWwindow *window, int previousWidth, int previo
     Player->pos.x = currentPosWidth;
     Player->pos.y = HEIGHT - PlayerSize.y;
     Ball->pos = Player->pos + glm::vec2(PlayerSize.x / 2.0f - BallRadius, - BallRadius * 2.0f);
+    Processor->ReloadTex();
 }
 
 void Game::KeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods)

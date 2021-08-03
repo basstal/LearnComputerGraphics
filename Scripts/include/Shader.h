@@ -33,6 +33,7 @@ public:
     void setVec3(const std::string &varName, glm::vec3 val) const;
     void setVec3(const std::string &varName, float x, float y, float z) const;
     void setVec2(const std::string &varName, glm::vec2 val) const;
+    void setVec4(const std::string &varName, glm::vec4 val) const;
 
 protected:
     std::string vsPath;
