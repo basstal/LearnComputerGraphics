@@ -51,6 +51,7 @@ add_executable(${PROJECT_NAME}
     BallObject.cpp
     ParticleGenerator.cpp
     PostProcessor.cpp
+    TextRenderer.cpp
     "${ROOT_PATH}/Scripts/Shader.cpp"
     "${ROOT_PATH}/Scripts/Utils.cpp"
     "${ROOT_PATH}/Scripts/Model.cpp"

@@ -4,19 +4,10 @@
 TextRenderer::TextRenderer(std::shared_ptr<Shader> inShader)
 {
     shader = inShader;
-    
 
-    glyphShader = make_shared<Shader>("Shaders/7_2/RenderGlyph.vert", "Shaders/7_2/RenderGlyph.frag", nullptr);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glyphShader->use();
-    
-
-    glGenVertexArrays(1, &VAO);
+    glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
+    glBindVertexArray(planeVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
@@ -49,6 +40,8 @@ void TextRenderer::Load(const char * inPath, unsigned int fontSize)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+    Characters.clear();
+
     for (unsigned char c = 0; c < 128; ++c)
     {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
@@ -70,7 +63,7 @@ void TextRenderer::Load(const char * inPath, unsigned int fontSize)
             glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             (unsigned int)face->glyph->advance.x
         };
-        Characters.insert(pair<char, Character>(c, character));
+        Characters.insert(std::pair<char, Character>(c, character));
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -82,24 +75,26 @@ void TextRenderer::RenderText(std::string text, float x, float y, float scale, g
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(planeVAO);
 
-    string::const_iterator c;
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++)
     {
         Character ch = Characters[*c];
         float xpos = x + ch.Bearing.x * scale;
-        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+        float ypos = y + (Characters['H'].Bearing.y - ch.Bearing.y) * scale;
 
         float w = ch.Size.x * scale;
         float h = ch.Size.y * scale;
 
         float vertices[6][4] = {
-            {xpos, ypos + h, 0.0f, 0.0f},
-            {xpos, ypos, 0.0f, 1.0f},
-            {xpos + w, ypos, 1.0f, 1.0f},
+            {xpos, ypos + h, 0.0f, 1.0f},
+            {xpos + w, ypos, 1.0f, 0.0f},
+            {xpos, ypos, 0.0f, 0.0f},
 
-            {xpos, ypos + h, 0.0f, 0.0f},
-            {xpos + w, ypos, 1.0f, 1.0f},
-            {xpos + w, ypos + h, 1.0f, 0.0f}
+            {xpos, ypos + h, 0.0f, 1.0f},
+            {xpos + w, ypos + h, 1.0f, 1.0f},
+            {xpos + w, ypos, 1.0f, 0.0f},
         };
 
         glActiveTexture(GL_TEXTURE0);

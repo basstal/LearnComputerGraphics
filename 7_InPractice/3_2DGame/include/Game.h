@@ -21,6 +21,7 @@
 
 #include <PowerUp.h>
 #include <irrKlang.h>
+#include <TextRenderer.h>
 
 enum GameState
 {
@@ -54,12 +55,15 @@ public:
     float       BallRadius = 25.f;
     BallObject  * Ball;
     bool         Keys[1024] = {false};
+    bool         KeysProcessed[1024] = {false};
     float       ShakeTime;
     int         Probability = 10;
+    bool        bLevelChangedDown = false, bLevelChangedUp = false;
+    unsigned int Lives;
 
     std::vector<PowerUp> PowerUps;
     irrklang::ISoundEngine *SoundEngine;
-
+    TextRenderer * Text;
     std::string bleepSoundPath, solidSoundPath, powerupSoundPath, bleep1SoundPath;
     // unsigned int Width, Height;
     // constructor/destructor

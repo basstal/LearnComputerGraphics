@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Utils.h>
+#include <sstream>
 
 using namespace std;
 
@@ -18,9 +19,10 @@ Game::Game(unsigned int width, unsigned int height)
         "Assets/breakout/level3.txt",
     };
     CurrentLevel = 0;
-    State = GameState::GAME_ACTIVE;
+    State = GameState::GAME_MENU;
     ShakeTime = 0.0f;
     SoundEngine = irrklang::createIrrKlangDevice();
+    Lives = 3;
 }
 
 Game::~Game()
@@ -42,6 +44,8 @@ void Game::Init()
     particleShader->use();
     std::shared_ptr<Shader> postprocessingShader = ResourceManager::LoadShader("Shaders/7_3/PostProcessing.vert", "Shaders/7_3/PostProcessing.frag", nullptr, string("PostProcessing"));
     postprocessingShader->use();
+    std::shared_ptr<Shader> textShader = ResourceManager::LoadShader("Shaders/7_3/Text.vert", "Shaders/7_3/Text.frag", nullptr, string("Text"));
+    textShader->use();
 
     Renderer = new SpriteRenderer(shader);
     ResourceManager::LoadTexture("Assets/awesomeface.png", true, "face");
@@ -88,6 +92,9 @@ void Game::Init()
     Particle = new ParticleGenerator(particleShader, particleTex, 500);
 
     Processor = new PostProcessor(postprocessingShader);
+
+    Text = new TextRenderer(textShader);
+    Text->Load("Assets/fonts/arial.ttf", 24);
 }
 
 void Game::ReloadLevels()
@@ -101,6 +108,31 @@ void Game::ReloadLevels()
 
 void Game::ProcessInput(float dt)
 {
+    if (State == GAME_MENU)
+    {
+        if (Keys[GLFW_KEY_ENTER] && !KeysProcessed[GLFW_KEY_ENTER])
+        {
+            State = GAME_ACTIVE;
+            KeysProcessed[GLFW_KEY_ENTER] = true;
+        }
+        if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
+        {
+            CurrentLevel = (CurrentLevel + 1) % Levels.size();
+            KeysProcessed[GLFW_KEY_W] = true;
+        }
+        if (Keys[GLFW_KEY_S] && !KeysProcessed[GLFW_KEY_S])
+        {
+            if (CurrentLevel > 0)
+            {
+                --CurrentLevel;
+            }
+            else
+            {
+                CurrentLevel = Levels.size() - 1;
+            }
+            KeysProcessed[GLFW_KEY_S] = true;
+        }
+    }  
     if (State == GAME_ACTIVE)
     {
         float velocity = PlayerVelocity * dt;
@@ -131,6 +163,15 @@ void Game::ProcessInput(float dt)
             Ball->Stuck = false;
         }
     }
+    if (State == GAME_WIN)
+    {
+        if (Keys[GLFW_KEY_ENTER])
+        {
+            KeysProcessed[GLFW_KEY_ENTER] = true;
+            Processor->bChaos = false;
+            State = GAME_MENU;
+        }
+    }
 }
 void Game::Update(float dt)
 {
@@ -139,7 +180,12 @@ void Game::Update(float dt)
     DoCollisions();
     if (Ball->pos.y >= HEIGHT)
     {
-        ResetLevel();
+        -- Lives;
+        if (Lives == 0)
+        {
+            ResetLevel();
+            State = GAME_MENU;
+        }
         ResetPlayer();
     }
     if (ShakeTime > 0.0f)
@@ -151,14 +197,21 @@ void Game::Update(float dt)
         }
     }
     UpdatePowerUps(dt);
+    if (State == GAME_ACTIVE && Levels[CurrentLevel].IsCompleted())
+    {
+        ResetLevel();
+        ResetPlayer();
+        Processor->bChaos = true;
+        State = GAME_WIN;
+    }
 }
 void Game::Render(GLFWwindow * window)
 {
-    if (State == GAME_ACTIVE)
+    glm::mat4 projection = glm::ortho(0.0f, (float)WIDTH, (float)HEIGHT, 0.0f, -1.0f, 1.0f);
+    if (State == GAME_ACTIVE || State == GAME_MENU)
     {
         Processor->PreDraw();
         Renderer->shader->use();
-        glm::mat4 projection = glm::ortho(0.0f, (float)WIDTH, (float)HEIGHT, 0.0f, -1.0f, 1.0f);
         Renderer->shader->setMat4("projection", projection);
         Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(WIDTH, HEIGHT));
         Levels[CurrentLevel].Draw(*Renderer);
@@ -172,8 +225,26 @@ void Game::Render(GLFWwindow * window)
         }
         Particle->Draw(projection);
         Ball->Draw(*Renderer);
+        std::stringstream ss; ss << Lives;
+        Text->shader->use();
+        Text->shader->setMat4("projection", projection);
+        Text->RenderText("Lives:" + ss.str(), 5.0f, 5.0f, 1.0f);
 
         Processor->Draw();
+    }
+    if (State == GAME_MENU)
+    {
+        Text->shader->use();
+        Text->shader->setMat4("projection", projection);
+        Text->RenderText("Press ENTER to start", WIDTH / 2 - 120.0f, HEIGHT / 2, 1.0f);
+        Text->RenderText("Press W or S to select level", WIDTH / 2 - 110.0f, HEIGHT/ 2 + 40.0f, 0.75f);
+    }
+    if (State == GAME_WIN)
+    {
+        Text->shader->use();
+        Text->shader->setMat4("projection", projection);
+        Text->RenderText("You WON !!", WIDTH / 2, HEIGHT / 2 - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        Text->RenderText("Press ENTER to retry or ESC to quit", WIDTH / 2 - 200.0f, HEIGHT / 2, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
     }
 }
 
@@ -205,6 +276,10 @@ void Game::FramebufferCallback(GLFWwindow *window, int previousWidth, int previo
 void Game::KeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
 {
     Keys[key] = action == GLFW_PRESS || action == GLFW_REPEAT;
+    if (action == GLFW_RELEASE)
+    {
+        KeysProcessed[key] = false;
+    }
 }
 
 void Game::DoCollisions()
@@ -373,6 +448,7 @@ void Game::ResetLevel()
     {
         Brick.bDestroyed = false;
     }
+    Lives = 3;
 }
 void Game::ResetPlayer()
 {

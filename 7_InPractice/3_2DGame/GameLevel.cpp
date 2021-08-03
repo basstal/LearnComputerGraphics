@@ -130,3 +130,15 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData,
         }
     }
 }
+
+bool GameLevel::IsCompleted()
+{
+    for (GameObject &tile : Bricks)
+    {
+        if (!tile.IsSolid && !tile.bDestroyed)
+        {
+            return false;
+        }
+    }
+    return true;
+}
