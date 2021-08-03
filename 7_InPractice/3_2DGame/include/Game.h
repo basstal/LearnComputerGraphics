@@ -19,6 +19,8 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include <PowerUp.h>
+
 enum GameState
 {
     GAME_ACTIVE,
@@ -51,6 +53,10 @@ public:
     float       BallRadius = 25.f;
     BallObject  * Ball;
     bool         Keys[1024] = {false};
+    float       ShakeTime;
+    int         Probability = 10;
+
+    std::vector<PowerUp> PowerUps;
     // unsigned int Width, Height;
     // constructor/destructor
     Game(unsigned int width, unsigned int height);
@@ -78,9 +84,14 @@ public:
     void ResetPlayer();
     void RenderImGui(GLFWwindow *window);
 
+    void SpawnPowerUps(GameObject &block);
+    void UpdatePowerUps(float dt);
+    void ActivatePowerUp(PowerUp &powerUp);
+
 protected:
     Direction VectorDirection(glm::vec2 target);
     Collision CheckCollision(BallObject &Ball, GameObject &Obj);
+    bool CheckCollision(GameObject &lhs, GameObject &rhs);
 
     SpriteRenderer *Renderer;
 };

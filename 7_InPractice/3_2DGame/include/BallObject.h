@@ -9,7 +9,8 @@ public:
     // ball state	
     float     Radius;
     bool      Stuck;
-
+    bool        PassThrough;
+    bool        Sticky;
     glm::vec2 velocity = glm::vec2(500.0f, 500.0f);
 
 

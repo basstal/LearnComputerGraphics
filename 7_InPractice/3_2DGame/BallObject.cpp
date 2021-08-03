@@ -40,6 +40,8 @@ BallObject::BallObject(glm::vec2 inPos, float inRadius, glm::vec2 inVelocity, st
 {
     Stuck = true;
     bDestroyed = false;
+    PassThrough = false;
+    Sticky = false;
     pos = inPos;
     Radius = inRadius;
     velocity = inVelocity;
