@@ -104,7 +104,7 @@ int main()
     Model backpack = Model(path.c_str(), true);
     getProjectFilePath("Shaders/3_3/ModelVS33.vert", vsPath);
     getProjectFilePath("Shaders/3_3/ModelFS33.frag", fsPath);
-    Shader shader = Shader(vsPath.c_str(), fsPath.c_str(), NULL);
+    Shader shader = Shader(vsPath.c_str(), fsPath.c_str(), nullptr);
     float materialShininess = 32.0f;
     glm::vec3 pointLightPosition = glm::vec3(1.2f, 1.0f, 1.0f);
     glm::vec3 clear_color = glm::vec3(0);
