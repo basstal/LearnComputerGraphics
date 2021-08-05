@@ -6,13 +6,14 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <ostream>
 #include <string>
 
 #include <Camera.h>
 #include <Model.h>
 
 #include <glm/matrix.hpp>
-
+#include <map>
 #include <Utils.h>
 
 using namespace std;
@@ -57,6 +58,7 @@ Shader * shader = nullptr;
 Shader * postprocessShader = nullptr;
 Shader * gBufferShader = nullptr;
 Shader * debugQuad = nullptr;
+Shader * pointShader = nullptr;
 unsigned int framebuffer, frameTexture, renderbuffer, ppFramebuffer, ppFrameTexture;
 float scaleFactor = 1.0f;
 
@@ -95,6 +97,15 @@ void recompileShaders()
     {
         debugQuad->recompileFromSource();
     }
+    if (!pointShader)
+    {
+        pointShader = new Shader("Temp/Point.vert", "Temp/Point.frag", "Temp/Point.geom");
+    }
+    else
+    {
+        pointShader->recompileFromSource();
+    }
+    
     
 }
 
@@ -199,6 +210,109 @@ void onWindowSizeChanged()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
+
+struct VertexMerged
+{
+    glm::vec3 Position;
+    std::vector<glm::vec3> Normals;
+    std::vector<glm::vec2> TexCoords;
+    std::vector<glm::vec3> Tangents;
+    VertexMerged(Vertex vertex){
+        Position = vertex.Position;
+        Normals = std::vector<glm::vec3>{vertex.Normal};
+        TexCoords = std::vector<glm::vec2>{vertex.TexCoords};
+        Tangents = std::vector<glm::vec3>{vertex.Tangent};
+    }
+    VertexMerged(){}
+};
+
+ostream& operator << (ostream &os, glm::vec3 v3)
+{
+    return os << "(" << v3.x << "," << v3.y << "," << v3.z << ")";
+}
+
+std::vector<float> allPoints = std::vector<float>();
+void MarkVertexAsEdge(Model& model)
+{
+    std::vector<Mesh>& meshs = model.GetMeshes();
+    std::vector<VertexMerged> vertexVector;
+    for(Mesh &mesh : meshs)
+    {
+        vertexVector.clear();
+        for(Vertex & vertex : mesh.vertices)
+        {
+            glm::vec3 pos = vertex.Position;
+            bool newOne = true;
+            for (VertexMerged &mergedData : vertexVector)
+            {
+                if (mergedData.Position.x == pos.x &&
+                mergedData.Position.y == pos.y &&
+                mergedData.Position.z == pos.z)
+                {
+                    
+                    mergedData.Normals.push_back(vertex.Normal);
+                    mergedData.TexCoords.push_back(vertex.TexCoords);
+                    mergedData.Tangents.push_back(vertex.Tangent);
+                    newOne = false;
+                    break;
+                }
+            }
+            if (newOne)
+            {
+                vertexVector.push_back(VertexMerged(vertex));
+            }
+        }
+        std::vector<VertexMerged> picked = std::vector<VertexMerged>();
+        for (auto it = vertexVector.begin();it != vertexVector.end(); ++it)
+        {
+            VertexMerged merged = *it;
+            glm::vec3 Position = merged.Position;
+            if (merged.Normals.size() > 0)
+            {
+                glm::vec3 avg(0.0f);
+                for (auto Normal : merged.Normals)
+                {
+                    avg += Normal;
+                }
+                avg /= merged.Normals.size();
+                float lengthSquare = avg.x * avg.x + avg.y * avg.y + avg.z * avg.z;
+                if (lengthSquare > 1)
+                {
+                    // cout << "Position : (" << Position.x << ", " << Position.y << ", " << Position.z <<")" <<endl;
+                    // cout << "Normals count " << merged.Normals.size() << endl;
+                    // cout << "Normals avg : (" << avg.x <<", " << avg.y<<", "<<avg.z<<")"<<endl; 
+                    picked.push_back(merged);
+                }
+            }
+        }
+        for (int index : mesh.indices)
+        {
+            std::vector<Vertex> vertices = mesh.vertices;
+            glm::vec3 pos = vertices[index].Position;
+            allPoints.push_back(pos.x);
+            allPoints.push_back(pos.y);
+            allPoints.push_back(pos.z);
+            bool unPicked = true;
+            for (VertexMerged &mergedData : picked)
+            {
+                if (mergedData.Position.x == pos.x && 
+                mergedData.Position.y == pos.y &&
+                mergedData.Position.z == pos.z)
+                {
+                    allPoints.push_back(mergedData.Normals.size());
+                    unPicked = false;
+                    break;
+                }
+            }
+            if (unPicked)
+            {
+                allPoints.push_back(0);
+            }
+            // cout <<" index : " << index << " pos : "<< pos  <<"normals : " << *(--allPoints.end()) << endl;
+        }
+    }
+}
+
 int main()
 {
     glfwInit();
@@ -243,10 +357,11 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
 
     Model backpack = Model("Temp/Model/jdxc.obj", true);
+    Model polySurface = Model("Temp/Model/polySurface.obj", true);
     recompileShaders();
+    MarkVertexAsEdge(polySurface);
     
 
     float materialShininess = 32.0f;
@@ -282,6 +397,20 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    unsigned int pointsVAO, pointsVBO;
+    glGenVertexArrays(1, &pointsVAO);
+    glBindVertexArray(pointsVAO);
+    glGenBuffers(1, &pointsVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, pointsVBO);
+    
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * allPoints.size(), &allPoints[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float ) * 4, 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float ) * 4, (void *)(sizeof(float) * 3));
+
     glBindVertexArray(0);
 
     onWindowSizeChanged();
@@ -378,7 +507,7 @@ int main()
         shader->setFloat("pointLight.linear", linear);
         shader->setFloat("pointLight.quadratic", quadratic);
 
-        backpack.Draw(*shader);
+        polySurface.Draw(*shader);
 
         glBindFramebuffer(GL_FRAMEBUFFER, ppFramebuffer);
         glDisable(GL_DEPTH_TEST);
@@ -400,7 +529,7 @@ int main()
         gBufferShader->setMat4("view", view);
         gBufferShader->setMat4("projection", projection);
         
-        backpack.Draw(*gBufferShader);
+        polySurface.Draw(*gBufferShader);
 
 
 
@@ -425,6 +554,36 @@ int main()
         debugQuad->setMat4("model", topLeft);
         glBindTexture(GL_TEXTURE_2D, ppFrameTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw marked points
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(GL_DEPTH_TEST);
+
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        pointShader->use();
+        model = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+        pointShader->setMat4("model", model);
+        pointShader->setMat4("view", view);
+        pointShader->setMat4("projection", projection);
+        glBindVertexArray(pointsVAO);
+        int pointCount = allPoints.size() / 4;
+        glDrawArrays(GL_TRIANGLES, 0, pointCount);
+        
+
+        // draw last texture in main frame
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
+
+        debugQuad->use();
+        model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5));
+        glm::mat4 bottomRight = glm::translate(model, glm::vec3(1, -1, 0.0f));
+        debugQuad->setMat4("model", bottomRight);
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, frameTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
