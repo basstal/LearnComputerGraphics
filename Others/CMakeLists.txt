@@ -4,7 +4,7 @@ set(ROOT_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/..")
 get_filename_component(ROOT_PATH ${ROOT_PATH} REALPATH)
 
-set(PROJECT_NAME "Temp")
+set(PROJECT_NAME "Others")
 
 set(CMAKE_CXX_STANDARD 11)
 

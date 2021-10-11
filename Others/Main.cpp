@@ -71,7 +71,7 @@ void recompileShaders()
 {
     if (!shader)
     {
-        shader = new Shader("Temp/ModelVS33.vert", "Temp/ModelFS33.frag", nullptr);
+        shader = new Shader("Others/ModelVS33.vert", "Others/ModelFS33.frag", nullptr);
     }
     else
     {
@@ -80,7 +80,7 @@ void recompileShaders()
     
     if (!postprocessShader)
     {
-        postprocessShader = new Shader("Temp/PostProcessingSharpen.vert", "Temp/PostProcessingSharpen.frag", nullptr);
+        postprocessShader = new Shader("Others/PostProcessingSharpen.vert", "Others/PostProcessingSharpen.frag", nullptr);
     }
     else
     {
@@ -88,7 +88,7 @@ void recompileShaders()
     }
     if (!gBufferShader)
     {
-        gBufferShader = new Shader("Temp/GBufferVS.vert", "Temp/GBufferFS.frag", nullptr);
+        gBufferShader = new Shader("Others/GBufferVS.vert", "Others/GBufferFS.frag", nullptr);
     }
     else
     {
@@ -96,7 +96,7 @@ void recompileShaders()
     }
     if (!debugQuad)
     {
-        debugQuad = new Shader("Temp/DebugQuadVS.vert", "Temp/DebugQuadFS.frag", nullptr);
+        debugQuad = new Shader("Others/DebugQuadVS.vert", "Others/DebugQuadFS.frag", nullptr);
     }
     else
     {
@@ -104,7 +104,7 @@ void recompileShaders()
     }
     if (!pointShader)
     {
-        pointShader = new Shader("Temp/Point.vert", "Temp/Point.frag", "Temp/Point.geom");
+        pointShader = new Shader("Others/Point.vert", "Others/Point.frag", "Others/Point.geom");
     }
     else
     {
@@ -695,8 +695,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    Model backpack = Model("Temp/Model/jdxc.obj", true);
-    Model polySurface = Model("Temp/Model/polySurface.obj", true);
+    Model backpack = Model("Others/Model/jdxc.obj", true);
+    Model polySurface = Model("Others/Model/polySurface.obj", true);
     InitVertex2Triangle(polySurface);
     recompileShaders();
     MarkVertexAsEdge(polySurface);
