@@ -71,7 +71,7 @@ void recompileShaders()
 {
     if (!shader)
     {
-        shader = new Shader("Others/ModelVS33.vert", "Others/ModelFS33.frag", nullptr);
+        shader = new Shader("7_InPractice/DeferredOutline/ModelVS33.vert", "7_InPractice/DeferredOutline/ModelFS33.frag", nullptr);
     }
     else
     {
@@ -80,7 +80,7 @@ void recompileShaders()
     
     if (!postprocessShader)
     {
-        postprocessShader = new Shader("Others/PostProcessingSharpen.vert", "Others/PostProcessingSharpen.frag", nullptr);
+        postprocessShader = new Shader("7_InPractice/DeferredOutline/PostProcessingSharpen.vert", "7_InPractice/DeferredOutline/PostProcessingSharpen.frag", nullptr);
     }
     else
     {
@@ -88,7 +88,7 @@ void recompileShaders()
     }
     if (!gBufferShader)
     {
-        gBufferShader = new Shader("Others/GBufferVS.vert", "Others/GBufferFS.frag", nullptr);
+        gBufferShader = new Shader("7_InPractice/DeferredOutline/GBufferVS.vert", "7_InPractice/DeferredOutline/GBufferFS.frag", nullptr);
     }
     else
     {
@@ -96,7 +96,7 @@ void recompileShaders()
     }
     if (!debugQuad)
     {
-        debugQuad = new Shader("Others/DebugQuadVS.vert", "Others/DebugQuadFS.frag", nullptr);
+        debugQuad = new Shader("7_InPractice/DeferredOutline/DebugQuadVS.vert", "7_InPractice/DeferredOutline/DebugQuadFS.frag", nullptr);
     }
     else
     {
@@ -104,7 +104,7 @@ void recompileShaders()
     }
     if (!pointShader)
     {
-        pointShader = new Shader("Others/Point.vert", "Others/Point.frag", "Others/Point.geom");
+        pointShader = new Shader("7_InPractice/DeferredOutline/Point.vert", "7_InPractice/DeferredOutline/Point.frag", "7_InPractice/DeferredOutline/Point.geom");
     }
     else
     {
@@ -695,8 +695,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    Model backpack = Model("Others/Model/jdxc.obj", true);
-    Model polySurface = Model("Others/Model/polySurface.obj", true);
+    Model backpack = Model("7_InPractice/DeferredOutline/Model/jdxc.obj", true);
+    Model polySurface = Model("7_InPractice/DeferredOutline/Model/polySurface.obj", true);
     InitVertex2Triangle(polySurface);
     recompileShaders();
     MarkVertexAsEdge(polySurface);

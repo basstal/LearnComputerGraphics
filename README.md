@@ -2,13 +2,14 @@
 
 Follow https://learnopengl.com/
 
-Use cmake for make & build project in each section
+Use CMake to make & build projects in each section
 
 Only test & build on windows
 
-```shell
-cd 1_GettingStarted/1_HelloWindow
-cmake .
+```
+mkdir build
+cd build
+cmake ..
 cmake --build .
 ```
 
@@ -16,10 +17,10 @@ cmake --build .
 
 1. CL.exe not found??
 
-    Open 'Developer Command Prompt for VS 2019' in Windows finder and Open code there( type in 'code .' ), through the opened vs-code editor File-Open Folder... your project folder.
+    Open 'Developer Command Prompt for VS 2019' in Windows finder and Open code there(e.g. type 'code .' in cmd), through the opened vscode editor File-Open Folder... and select your project folder.
 
-    Reference:[<https://code.visualstudio.com/docs/cpp/config-msvc>]
+    Reference [<https://code.visualstudio.com/docs/cpp/config-msvc>]
 
 2. glslangValidator require??
 
-    Using VSCode extensions GLSL-Lint require glslangValidator, download link [<https://github.com/KhronosGroup/glslang/releases/tag/master-tot>].
+    Using vscode extensions GLSL-Lint require glslangValidator, download link [<https://github.com/KhronosGroup/glslang/releases/tag/master-tot>].

@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(LearnOpenGL)
+
+subdirs(
+        Scripts
+        Plugins/glad 
+        Plugins/glad43
+        Plugins/imgui 
+        Plugins/others
+        # Plugins/glm
+        1_GettingStarted/1_HelloWindow 
+        1_GettingStarted/2_HelloTriangle
+        1_GettingStarted/3_Shaders
+        1_GettingStarted/4_Textures
+        1_GettingStarted/5_Transformations
+        1_GettingStarted/6_CoordinateSystems
+        1_GettingStarted/7_Camera
+        1_GettingStarted/ImGuiTemplate
+        2_Lighting/1_Colors
+        2_Lighting/2_BasicLighting
+        2_Lighting/3_Materials
+        2_Lighting/4_LightingMaps
+        2_Lighting/5_LightCasters
+        2_Lighting/6_MultipleLights
+        3_ModelLoading/3_Model
+        4_AdvancedOpenGL/1_DepthTesting
+        4_AdvancedOpenGL/2_StencilTesting
+        4_AdvancedOpenGL/3_Blending
+        4_AdvancedOpenGL/4_FaceCulling
+        4_AdvancedOpenGL/5_Framebuffers
+        4_AdvancedOpenGL/6_Cubemaps
+        4_AdvancedOpenGL/8_AdvancedGLSL
+        4_AdvancedOpenGL/9_GeometryShader
+        4_AdvancedOpenGL/10_Instancing
+        4_AdvancedOpenGL/11_AntiAliasing
+        5_AdvancedLighting/1_AdvancedLighting
+        5_AdvancedLighting/2_GammaCorrection
+        5_AdvancedLighting/3_ShadowMapping
+        5_AdvancedLighting/4_PointShadows
+        5_AdvancedLighting/5_NormalMapping
+        5_AdvancedLighting/6_ParallaxMapping
+        5_AdvancedLighting/7_HDR
+        5_AdvancedLighting/8_Bloom
+        5_AdvancedLighting/9_DeferredShading
+        5_AdvancedLighting/10_SSAO
+        6_PBR/2_Lighting
+        6_PBR/3_DiffuseIrradiance
+        6_PBR/4_SpecularIBL
+        7_InPractice/1_Debugging
+        7_InPractice/2_TextRendering
+        7_InPractice/3_2DGame
+        7_InPractice/DeferredOutline
+)

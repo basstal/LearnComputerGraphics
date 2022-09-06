@@ -89,7 +89,7 @@ static glm::vec3 pointLightRepresentColor[] = {
     glm::vec3(0.5f, 0.2f, 1.0f),
 };
 
-extern int WIDHT, HEIGHT;
+extern int WIDTH, HEIGHT;
 
 
 static Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
