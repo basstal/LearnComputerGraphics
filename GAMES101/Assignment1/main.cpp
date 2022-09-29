@@ -57,6 +57,25 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     return projection;
 }
 
+Eigen::Matrix4f get_rotation(Vector3f axis, float angle)
+{
+    Eigen::Matrix4f free_rotation = Eigen::Matrix4f::Identity();
+
+    float rotation_radians = (angle / 180.0f) * acos(-1);
+    float cos_angle = cos(rotation_radians);
+    float sin_angle = sin(rotation_radians);
+    float one_minus_cos_angle = 1 - cos_angle;
+    float n_x = axis[0];
+    float n_y = axis[1];
+    float n_z = axis[2];
+    free_rotation << pow(n_x, 2) * one_minus_cos_angle + cos_angle, n_x * n_y * one_minus_cos_angle - n_z * sin_angle, n_x * n_z * one_minus_cos_angle + n_y * sin_angle, 
+                    n_x * n_y * one_minus_cos_angle + n_z * sin_angle, pow(n_y, 2) * one_minus_cos_angle + cos_angle, n_y * n_z * one_minus_cos_angle - n_x * sin_angle,
+                    n_x * n_z * one_minus_cos_angle - n_y * sin_angle, n_y * n_z * one_minus_cos_angle + n_x * sin_angle, pow(n_z, 2) * one_minus_cos_angle + cos_angle;
+
+
+    return free_rotation;
+}
+
 int main(int argc, const char **argv)
 {
     float angle = 0;
