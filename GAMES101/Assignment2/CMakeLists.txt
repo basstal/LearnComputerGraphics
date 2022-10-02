@@ -5,21 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(Eigen3_DIR "../Plugins/eigen-3.4.0/share/eigen3/cmake")
 set(OpenCV_DIR "../Plugins/opencv-4.6.0/install")
-
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 
-message("OpenCV_INCLUDE_DIRS : ${OpenCV_INCLUDE_DIRS}")
-message("EIGEN3_INCLUDE_DIR : ${EIGEN3_INCLUDE_DIR}")
 include_directories("${EIGEN3_INCLUDE_DIR}" "${OpenCV_INCLUDE_DIRS}")
-
-# message("Path : $ENV{Path}")
-# set(ENV{Path} "$ENV{Path}${_OpenCV_LIB_PATH}")
-# message("Path : $ENV{Path}")
 
 file(GLOB TARGET_CPP_FILES "*.cpp")
 add_executable(${PROJECT_NAME} ${TARGET_CPP_FILES})
-target_link_libraries(${PROJECT_NAME} "${OpenCV_LIBS}")
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 
 file(GLOB COPY_OPENCV_DLLS "${_OpenCV_LIB_PATH}/*.dll")
 foreach(DLL_TO_COPY IN LISTS COPY_OPENCV_DLLS)
