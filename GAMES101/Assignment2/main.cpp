@@ -57,7 +57,8 @@ int main(int argc, const char** argv)
         filename = std::string(argv[1]);
     }
 
-    rst::rasterizer r(700, 700);
+    const int width = 700, height = 700;
+    rst::rasterizer r(width, height);
 
     Eigen::Vector3f eye_pos = {0,0,5};
 
@@ -104,7 +105,7 @@ int main(int argc, const char** argv)
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
         r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
-        cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
+        cv::Mat image(height, width, CV_32FC3, r.frame_buffer().data());
         image.convertTo(image, CV_8UC3, 1.0f);
         cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
 
@@ -123,8 +124,9 @@ int main(int argc, const char** argv)
 
         r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
 
-        cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
+        cv::Mat image(height, width, CV_32FC3, r.frame_buffer().data());
         image.convertTo(image, CV_8UC3, 1.0f);
+        cv::flip(image, image, -1);
         cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
         cv::imshow("image", image);
         key = cv::waitKey(10);
