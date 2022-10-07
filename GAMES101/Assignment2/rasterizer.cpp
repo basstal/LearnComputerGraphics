@@ -160,14 +160,14 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
             }
             if (sample_inside_count > 0)
             {
-                std::vector<float> v = super_sample_depth_buf[index];
-                float sum = std::accumulate(v.begin(), v.end(),
-                                decltype(v)::value_type(0));
+                std::vector<float> depth_buf = super_sample_depth_buf[index];
+                float sum = std::accumulate(depth_buf.begin(), depth_buf.end(),
+                                decltype(depth_buf)::value_type(0));
                 std::vector<Vector3f> colorV = super_sample_frame_buf[index];
                 Vector3f color = Vector3f{0, 0, 0};
-                for(auto &v : colorV)
+                for(auto &sample_color : colorV)
                 {
-                    color += v;
+                    color += sample_color;
                 }
                 // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
                 set_pixel(Vector3f(i_x, i_y, sum / super_sample), color / super_sample);

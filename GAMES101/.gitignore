@@ -306,6 +306,7 @@ _deps
 
 # except 3D model resources
 !**/Assets/**/*.obj
+!**/models/**/*.obj
 
 .vscode
 *.a
