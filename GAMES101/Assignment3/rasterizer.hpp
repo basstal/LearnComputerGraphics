@@ -69,6 +69,7 @@ namespace rst
         void set_model(const Eigen::Matrix4f& m);
         void set_view(const Eigen::Matrix4f& v);
         void set_projection(const Eigen::Matrix4f& p);
+        void set_sample_color_bilinear(bool flag);
 
         void set_texture(Texture tex) { texture = tex; }
 
@@ -114,6 +115,7 @@ namespace rst
 
         int width, height;
 
+        bool sample_color_bilinear;
         int next_id = 0;
         int get_next_id() { return next_id++; }
     };

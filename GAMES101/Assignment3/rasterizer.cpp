@@ -345,6 +345,7 @@ void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eig
                     // _ASSERT(interpolated_texcoords.y() < 1.0f);
                     fragment_shader_payload payload(interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
                     payload.view_pos = interpolated_shadingcoords;
+                    payload.use_bilinear = sample_color_bilinear;
                     Vector3f pixel_color = fragment_shader(payload);
 
                     set_pixel(Vector2i(i_x, i_y), pixel_color);
@@ -352,6 +353,11 @@ void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eig
             }
         }
     }
+}
+
+void rst::rasterizer::set_sample_color_bilinear(bool flag)
+{
+    sample_color_bilinear = flag;
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f &m)

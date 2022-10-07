@@ -118,7 +118,14 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload &payload)
     if (payload.texture)
     {
         // TODO: Get the texture value at the texture coordinates of the current fragment
-        return_color = payload.texture->getColor(payload.tex_coords.x(), payload.tex_coords.y());
+        if (payload.use_bilinear)
+        {
+            return_color = payload.texture->getColorBilinear(payload.tex_coords.x(), payload.tex_coords.y());
+        }
+        else
+        {
+            return_color = payload.texture->getColor(payload.tex_coords.x(), payload.tex_coords.y());
+        }
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -299,8 +306,8 @@ int main(int argc, const char **argv)
     std::string obj_path = "../models/spot/";
 
     // Load .obj File
-    // bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
-    bool loadout = Loader.LoadFile("../models/bunny/bunny.obj");
+    bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
+    // bool loadout = Loader.LoadFile("../models/bunny/bunny.obj");
     if (!loadout)
     {
         cout << "load model failed!" << endl;
@@ -336,7 +343,8 @@ int main(int argc, const char **argv)
         {
             std::cout << "Rasterizing using the texture shader\n";
             active_shader = texture_fragment_shader;
-            texture_path = "spot_texture.png";
+            // texture_path = "spot_texture.png";
+            texture_path = "spot_texture_bilinear_test.png";
             r.set_texture(Texture(obj_path + texture_path));
         }
         else if (argc == 3 && std::string(argv[2]) == "normal")
@@ -365,6 +373,7 @@ int main(int argc, const char **argv)
 
     r.set_vertex_shader(vertex_shader);
     r.set_fragment_shader(active_shader);
+    r.set_sample_color_bilinear(true);
 
     int key = 0;
     int frame_count = 0;
