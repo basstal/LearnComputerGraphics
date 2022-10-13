@@ -32,6 +32,8 @@ public:
     Bounds3 WorldBound() const;
     ~BVHAccel();
 
+    Bounds3 calculateBoundsOfObjects(const std::vector<Object*>& objects);
+    
     Intersection Intersect(const Ray &ray) const;
     Intersection getIntersection(BVHBuildNode* node, const Ray& ray)const;
     bool IntersectP(const Ray &ray) const;
