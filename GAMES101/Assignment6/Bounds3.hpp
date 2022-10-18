@@ -124,7 +124,7 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     float tenter = std::max(tmin_x, std::max(tmin_y, tmin_z));
     float texit = std::min(tmax_x, std::min(tmax_y, tmax_z));
 
-    return tenter < texit && texit >= 0;
+    return tenter <= texit && texit >= 0;
     
 }
 

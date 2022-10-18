@@ -322,3 +322,4 @@ __MACOSX/
 /opencv-4.6.0/
 /opencv/
 *.pdf
+*.exe
