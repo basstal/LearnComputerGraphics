@@ -192,8 +192,9 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
             // vec3 radiance = lightColors[i] * attenuation;
 
             Vector3f F0 = Vector3f(0.04f);
-            // ** Kd as albedo ??
-            F0 = lerp(F0, Kd, metallic);
+            // ** Kd as surfaceColor ??
+            Vector3f surfaceColor = Kd;
+            F0 = lerp(F0, surfaceColor, metallic);
 
             // cook-torrance brdf
             float NDF = DistributionGGX(N, H, roughness);
@@ -210,7 +211,7 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
             kD = kD * (1.0f - metallic);
             
             float NdotL = std::max(dotProduct(N, wi), 0.0f);
-            return (kD * Kd / M_PI + specular) * NdotL;
+            return (kD * surfaceColor / M_PI + specular) * NdotL;
             break;
         }
     }
