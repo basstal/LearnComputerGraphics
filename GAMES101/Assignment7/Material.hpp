@@ -7,7 +7,7 @@
 
 #include "Vector.hpp"
 
-enum MaterialType { DIFFUSE};
+enum MaterialType { DIFFUSE, MICROFACET};
 
 class Material{
 private:
@@ -94,6 +94,9 @@ public:
     float specularExponent;
     //Texture tex;
 
+    float roughness;
+    float metallic;
+
     inline Material(MaterialType t=DIFFUSE, Vector3f e=Vector3f(0,0,0));
     inline MaterialType getType();
     //inline Vector3f getColor();
@@ -132,6 +135,7 @@ Vector3f Material::getColorAt(double u, double v) {
 Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
+        case MICROFACET:
         {
             // uniform sample on the hemisphere
             float x_1 = get_random_float(), x_2 = get_random_float();
@@ -148,6 +152,7 @@ Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
 float Material::pdf(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
+        case MICROFACET:
         {
             // uniform sample probability 1 / (2 * PI)
             if (dotProduct(wo, N) > 0.0f)
@@ -171,6 +176,41 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
             }
             else
                 return Vector3f(0.0f);
+            break;
+        }
+        case MICROFACET:
+        {
+            // calculate radiance
+            // vec3 V = normalize(camPos - WorldPos);
+            // V is wo
+            // vec3 L = normalize(lightPositions[i] - WorldPos);
+            // L is wi
+
+            Vector3f H = normalize(wo + wi);
+            // float dist = length(lightPositions[i] - WorldPos);
+            // float attenuation = 1.0 / (dist * dist);
+            // vec3 radiance = lightColors[i] * attenuation;
+
+            Vector3f F0 = Vector3f(0.04f);
+            // ** Kd as albedo ??
+            F0 = lerp(F0, Kd, metallic);
+
+            // cook-torrance brdf
+            float NDF = DistributionGGX(N, H, roughness);
+            float G = GeometrySmith(N, wo, wi, roughness);
+            Vector3f F = fresnelSchlick(std::max(dotProduct(H, wo), 0.0f), F0);
+
+            Vector3f numerator = NDF * G * F;
+            float denominator = 4.0 * std::max(dotProduct(N, wo), 0.0f) * std::max(dotProduct(N, wi), 0.0f);
+            Vector3f specular = numerator / std::max(denominator, 0.001f);
+
+            Vector3f kS = F;
+            Vector3f kD = Vector3f(1.0f) - kS;
+
+            kD = kD * (1.0f - metallic);
+            
+            float NdotL = std::max(dotProduct(N, wi), 0.0f);
+            return (kD * Kd / M_PI + specular) * NdotL;
             break;
         }
     }

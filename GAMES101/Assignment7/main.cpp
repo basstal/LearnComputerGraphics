@@ -16,12 +16,21 @@ int main(int argc, char** argv)
     // Change the definition here to change resolution
     Scene scene(1600, 1600);
 
-    Material* red = new Material(DIFFUSE, Vector3f(0.0f));
+    Material* red = new Material(MICROFACET, Vector3f(0.0f));
     red->Kd = Vector3f(0.63f, 0.065f, 0.05f);
-    Material* green = new Material(DIFFUSE, Vector3f(0.0f));
+    red->metallic = 0.5f;
+    red->roughness = 0.2f;
+
+    Material* green = new Material(MICROFACET, Vector3f(0.0f));
     green->Kd = Vector3f(0.14f, 0.45f, 0.091f);
-    Material* white = new Material(DIFFUSE, Vector3f(0.0f));
+    green->metallic = 0.3f;
+    green->roughness = 0.7f;
+
+    Material* white = new Material(MICROFACET, Vector3f(0.0f));
     white->Kd = Vector3f(0.725f, 0.71f, 0.68f);
+    white->metallic = 0.9f;
+    white->roughness = 0.7f;
+    
     Material* light = new Material(DIFFUSE, (8.0f * Vector3f(0.747f+0.058f, 0.747f+0.258f, 0.747f) + 15.6f * Vector3f(0.740f+0.287f,0.740f+0.160f,0.740f) + 18.4f *Vector3f(0.737f+0.642f,0.737f+0.159f,0.737f)));
     light->Kd = Vector3f(0.65f);
 

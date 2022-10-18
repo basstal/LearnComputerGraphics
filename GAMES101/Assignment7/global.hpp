@@ -51,3 +51,44 @@ inline void UpdateProgress(float progress)
     std::cout << "] " << int(progress * 100.0) << " %\r";
     std::cout.flush();
 };
+
+
+inline float DistributionGGX(Vector3f N, Vector3f H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = std::max(dotProduct(N, H), 0.0f);
+    float NdotH2 = NdotH * NdotH;
+
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = M_PI * denom * denom;
+
+    return num / denom;
+}
+
+inline float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float num = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return num / denom;
+}
+
+inline float GeometrySmith(Vector3f N, Vector3f V, Vector3f L, float roughness)
+{
+    float NdotV = std::max(dotProduct(N, V), 0.0f);
+    float NdotL = std::max(dotProduct(N, L), 0.0f);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+inline Vector3f fresnelSchlick(float cosTheta, Vector3f F0)
+{
+    return F0 + (Vector3f(1.0f) - F0) * pow(std::max(1.0f - cosTheta, 0.0f), 5.0f);
+}

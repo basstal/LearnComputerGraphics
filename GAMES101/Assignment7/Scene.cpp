@@ -99,7 +99,7 @@ Vector3f Scene::shade(Intersection inInter, Vector3f wo) const
     if (x2pInter.happened && x2pInter.obj == inInter.obj)
     {
         // std::cout <<  "lDir " << std::endl;
-        lDir = emit * m->eval(ws, wo, n) * dotProduct(-ws, n) * dotProduct(ws, nn) / pow((x - p).norm(), 2) / pdfLight;
+        lDir = emit * m->eval(-ws, wo, n) * dotProduct(-ws, n) * dotProduct(ws, nn) / pow((x - p).norm(), 2) / pdfLight;
     }
 
     Vector3f lIndir = Vector3f();
